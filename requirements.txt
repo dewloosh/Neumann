@@ -1,0 +1,6 @@
+#dewloosh.core>=1.0.9
+numba
+numpy
+scipy
+awkward
+sympy
