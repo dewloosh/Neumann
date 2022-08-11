@@ -27,18 +27,6 @@ The implementations in this module are created on top of
 * | the `awkward` library for its high performance data structures, gpu support
   | and general `Numba` compliance.
 
-
-Gallery
--------
-
-.. nbgallery::
-    :caption: Gallery
-    :name: rst-gallery
-    :glob:
-    :reversed:
-
-    _notebooks/*
-    
         
 Contents
 --------
@@ -49,6 +37,7 @@ Contents
    
     user_guide
     notebooks
+    auto_examples/index
 
 API
 ---

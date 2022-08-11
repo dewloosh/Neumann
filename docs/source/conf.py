@@ -15,6 +15,7 @@
 import subprocess
 import os
 import sys
+import neumann
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('..'))
@@ -85,6 +86,8 @@ extensions = [
 
     # Napoleon is a extension that enables Sphinx to parse both NumPy and Google style docstrings
     'sphinx.ext.napoleon',
+    
+    'sphinx_gallery.gen_gallery',
 
     'nbsphinx',  # to handle jupyter notebooks
     'nbsphinx_link',  # for including notebook files from outside the sphinx source root
@@ -93,10 +96,16 @@ extensions = [
     'sphinx.ext.mathjax',  # for math equations
     'sphinxcontrib.bibtex',  # for bibliographic references
     'sphinxcontrib.rsvgconverter',  # for SVG->PDF conversion in LaTeX output
-    'sphinx_gallery.load_style',  # load CSS for gallery (needs SG >= 0.6)
+    #'sphinx_gallery.load_style',  # load CSS for gallery (needs SG >= 0.6)
 
     # 'sphinx.ext.coverage',
 ]
+
+sphinx_gallery_conf = {
+     'examples_dirs': '../../examples',   # path to your example scripts
+     'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
+     'capture_repr': ('_repr_html_', '__repr__'),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -105,6 +114,7 @@ templates_path = ['_templates']
 # You can specify multiple suffix as a list of string:
 #
 source_suffix = ['.rst', '.md']
+#source_suffix = {".ipynb": None}
 # source_suffix = '.rst'
 
 # The master toctree document.
