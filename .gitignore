@@ -2,7 +2,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
-*.pyc
 
 # C extensions
 *.so
@@ -128,7 +127,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-# VSCode workspace file
-.code-workspace
-_README.md
