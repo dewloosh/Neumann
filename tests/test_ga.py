@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from dewloosh.math.optimize import BinaryGeneticAlgorithm
+from neumann.optimize import BinaryGeneticAlgorithm
 
 
 def Rosenbrock(a, b, x, y):

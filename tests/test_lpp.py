@@ -2,9 +2,9 @@
 import unittest
 import numpy as np
 
-from dewloosh.math.array import atleast2d
-from dewloosh.math.function import Function, Equality, InEquality
-from dewloosh.math.optimize import LinearProgrammingProblem as LPP, \
+from neumann.array import atleast2d
+from neumann.function import Function, Equality, InEquality
+from neumann.optimize import LinearProgrammingProblem as LPP, \
     DegenerateProblemError, NoSolutionError
 import sympy as sy
 

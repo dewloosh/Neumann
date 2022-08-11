@@ -5,6 +5,10 @@ import numpy as np
 from .hist import *
 from .utils import *
 
+__version__ = "v0.0.1a"
+
+__description__ = "A Python Library for Applied Mathematics."
+
 def squeeze_if_array(arr): return np.squeeze(
     arr) if isinstance(arr, np.ndarray) else arr
 

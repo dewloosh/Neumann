@@ -3,10 +3,10 @@ from hypothesis import given, settings, strategies as st, HealthCheck
 import unittest
 import numpy as np
 
-from dewloosh.math.array import random_pos_semidef_matrix, random_posdef_matrix, \
+from neumann.array import random_pos_semidef_matrix, random_posdef_matrix, \
     ispossemidef, isposdef
-from dewloosh.math.linalg import ReferenceFrame, Vector, inv3x3, det3x3, inv3x3u
-from dewloosh.math.linalg.solve import solve, reduce, _measure
+from neumann.linalg import ReferenceFrame, Vector, inv3x3, det3x3, inv3x3u
+from neumann.linalg.solve import solve, reduce, _measure
 
 settings.register_profile(
     "linalg_test",

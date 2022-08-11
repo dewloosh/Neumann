@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
-from ...core.tools.alphabet import latinrange
+from .alphabet import latinrange
 
 from .frame import ReferenceFrame as Frame
 from .vector import Vector, VectorBase

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from dewloosh.math.topology import Graph
+from neumann.topology import Graph
 import networkx as nx
 
 

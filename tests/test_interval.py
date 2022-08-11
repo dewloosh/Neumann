@@ -4,7 +4,7 @@ import numpy as np
 #from numba import jit
 from hypothesis import settings
 
-from dewloosh.math.interval import Interval
+from neumann.interval import Interval
 
 
 settings.register_profile(

@@ -36,16 +36,15 @@ with open('requirements.txt') as f:
     required = f.read().splitlines()
 
 
-_module = os.listdir(os.path.join(os.path.dirname(__file__), "src/dewloosh"))[0]
-_init_path = "src/engopt/__init__.py".format(_module)
+_init_path = "src/neumann/__init__.py"
 _version = get_version(_init_path)
 _description = get_description(_init_path)
-_url = 'https://github.com/dewloosh/EngOpt'
+_url = 'https://github.com/dewloosh/Neumann'
 _download_url = _url + '/archive/refs/tags/{}.zip'.format(_version)
 
 
 setup(
-	name="engopt",
+	name="neumann",
     version=_version,                        
     author="Bence Balogh",
     author_email = 'dewloosh@gmail.com',                   

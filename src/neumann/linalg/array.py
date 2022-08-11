@@ -2,8 +2,8 @@
 import numpy as np
 from numpy.lib.mixins import NDArrayOperatorsMixin
 
-from ...core import Wrapper
-from ...core.abc import ABC_Safe
+from dewloosh.core import Wrapper
+from dewloosh.core.abc import ABC_Safe
 
 from ..array import ascont
 

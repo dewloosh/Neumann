@@ -4,8 +4,8 @@ import sympy as sy
 from sympy import symbols
 import numpy as np
 
-from dewloosh.math.function import VariableManager, Function
-from dewloosh.math.function import Equality, InEquality
+from neumann.function import VariableManager, Function
+from neumann.function import Equality, InEquality
 
 
 class TestFunction(unittest.TestCase):

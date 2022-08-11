@@ -4,7 +4,7 @@ import numpy as np
 from numba import njit
 from scipy.sparse import csr_matrix as csr_scipy
 
-from dewloosh.math.linalg.sparse.csr import csr_matrix, csr_matrix_nb
+from neumann.linalg.sparse.csr import csr_matrix, csr_matrix_nb
 
 
 class TestCSR(unittest.TestCase):

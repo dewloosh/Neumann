@@ -6,7 +6,7 @@ from sympy.core.numbers import One
 import numpy as np
 from collections import OrderedDict
 
-from ...core.tools import getasany
+from dewloosh.core.tools import getasany
 
 from .meta import MetaFunction, substitute
 
