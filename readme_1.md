@@ -1,15 +1,15 @@
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dewloosh/dewloosh-core/main?labpath=examples%2Flpp.ipynb?urlpath=lab)
-[![CircleCI](https://circleci.com/gh/dewloosh/dewloosh-math.svg?style=shield)](https://circleci.com/gh/dewloosh/dewloosh-math) 
-[![Documentation Status](https://readthedocs.org/projects/dewloosh-math/badge/?version=latest)](https://dewloosh-math.readthedocs.io/en/latest/?badge=latest) 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dewloosh/Neumann/main?labpath=examples%2Flpp.ipynb?urlpath=lab)
+[![CircleCI](https://circleci.com/gh/dewloosh/Neumann.svg?style=shield)](https://circleci.com/gh/dewloosh/Neumann) 
+[![Documentation Status](https://readthedocs.org/projects/Neumann/badge/?version=latest)](https://Neumann.readthedocs.io/en/latest/?badge=latest) 
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PyPI](https://badge.fury.io/py/dewloosh.math.svg)](https://pypi.org/project/dewloosh.math) 
+[![PyPI](https://badge.fury.io/py/Neumann.svg)](https://pypi.org/project/Neumann) 
 
-# **dewloosh.math**
+# **Neumann**
 
 > **Warning**
 > This package is under active development and in an **beta stage**. Come back later, or star the repo to make sure you don’t miss the first stable release!
 
-`dewloosh.math` is a rapid prototyping platform focused on numerical calculations mainly corcerned with simulations of natural phenomena. It provides a set of common functionalities and interfaces with a number of state-of-the-art open source packages to combine their power seamlessly under a single development environment.
+`Neumann` is a rapid prototyping platform focused on numerical calculations mainly corcerned with simulations of natural phenomena. It provides a set of common functionalities and interfaces with a number of state-of-the-art open source packages to combine their power seamlessly under a single development environment.
 
 The most important features:
 
@@ -36,10 +36,10 @@ Once the enviroment is created, activate it via typing
 >>> .\venv_name\Scripts\activate
 ```
 
-`dewloosh.math` can be installed (either in a virtual enviroment or globally) from PyPI using `pip` on Python >= 3.6:
+`Neumann` can be installed (either in a virtual enviroment or globally) from PyPI using `pip` on Python >= 3.6:
 
 ```console
->>> pip install dewloosh.math
+>>> pip install neumann
 ```
 
 ## **Crash Course**
@@ -48,7 +48,7 @@ Once the enviroment is created, activate it via typing
 
 Define a reference frame (B) relative to the ambient frame (A):
 ```python
->>> from dewloosh.math.linalg import ReferenceFrame
+>>> from neumann.linalg import ReferenceFrame
 >>> A = ReferenceFrame(name='A', axes=np.eye(3))
 >>> B = A.orient_new('Body', [0, 0, 90*np.pi/180], 'XYZ', name='B')
 ```
@@ -73,7 +73,7 @@ Solve a following Linear Programming Problem (LPP) with one
 unique solution:
 
 ```python
->>> from dewloosh.math.optimize import LinearProgrammingProblem as LPP
+>>> from neumann.optimize import LinearProgrammingProblem as LPP
 >>> import sympy as sy
 >>> variables = ['x1', 'x2', 'x3', 'x4']
 >>> x1, x2, x3, x4 = syms = sy.symbols(variables, positive=True)
@@ -90,7 +90,7 @@ array([0., 6., 0., 4.])
 Find the minimizer of the Rosenbrock function:
 
 ```python
->>> from dewloosh.math.optimize import BinaryGeneticAlgorithm
+>>> from neumann.optimize import BinaryGeneticAlgorithm
 >>> def Rosenbrock(x, y):
 >>>     a = 1, b = 100
 >>>     return (a-x)**2 + b*(y-x**2)**2

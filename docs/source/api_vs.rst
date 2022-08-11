@@ -92,29 +92,29 @@ and the base vectors as
 Vectors
 =======
 
-.. autoclass:: engopt.linalg.vector.VectorBase
+.. autoclass:: neumann.linalg.vector.VectorBase
     :members:
 
-.. autoclass:: engopt.linalg.Vector
+.. autoclass:: neumann.linalg.Vector
     :members:
 
 Frames
 ======
 
-.. autoclass:: engopt.linalg.ReferenceFrame
+.. autoclass:: neumann.linalg.ReferenceFrame
     :members:
 
 Arrays
 ======
 
-.. autoclass:: engopt.linalg.array.ArrayBase
+.. autoclass:: neumann.linalg.array.ArrayBase
     :members:
 
-.. autoclass:: engopt.linalg.array.Array
+.. autoclass:: neumann.linalg.array.Array
     :members:
 
-.. autoclass:: engopt.linalg.sparse.JaggedArray
+.. autoclass:: neumann.linalg.sparse.JaggedArray
     :members:
 
-.. autoclass:: engopt.linalg.sparse.csr_matrix
+.. autoclass:: neumann.linalg.sparse.csr_matrix
     :members:

@@ -10,8 +10,8 @@ For a good explanation of how Genetic Algorithms work, read
 from 
 `MathWorks <https://www.mathworks.com/?s_tid=gn_logo>`_.
 
-.. autoclass:: engopt.optimize.GeneticAlgorithm
+.. autoclass:: neumann.optimize.GeneticAlgorithm
     :members: solve, populate, decode, mutate, crossover, select
 
-.. autoclass:: engopt.optimize.BinaryGeneticAlgorithm
+.. autoclass:: neumann.optimize.BinaryGeneticAlgorithm
     :members: populate, decode, mutate, crossover, select

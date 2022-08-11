@@ -2,17 +2,17 @@
 Functions and Relations
 =======================
 
-.. autoclass:: engopt.function.Function
+.. autoclass:: neumann.function.Function
     :members: 
 
-.. autoclass:: engopt.function.Equality
+.. autoclass:: neumann.function.Equality
     :members: 
 
-.. autoclass:: engopt.function.InEquality
+.. autoclass:: neumann.function.InEquality
     :members: 
 
 Test Functions
 ==============
 
-.. automodule:: engopt.function.functions
+.. automodule:: neumann.function.functions
     :members: 

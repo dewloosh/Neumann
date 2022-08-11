@@ -2,5 +2,5 @@
 Array Routines
 ==============
 
-.. automodule:: engopt.array
+.. automodule:: neumann.array
     :members: 

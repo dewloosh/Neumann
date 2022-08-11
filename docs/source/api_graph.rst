@@ -2,5 +2,5 @@
 Graphs and Graph Routines
 =========================
 
-.. automodule:: engopt.topology.graph
+.. automodule:: neumann.topology.graph
     :members: 

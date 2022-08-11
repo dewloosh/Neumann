@@ -13,17 +13,17 @@ Once the enviroment is created, activate it via typing
 >>> .\venv_name\Scripts\activate
 ```
 
-`engopt` can be installed (either in a virtual enviroment or globally) from PyPI using `pip` on Python >= 3.6:
+`neumann` can be installed (either in a virtual enviroment or globally) from PyPI using `pip` on Python >= 3.6:
 
 ```console
->>> pip install engopt
+>>> pip install neumann
 ```
 
 ## Linear Algebra
 
 Define a reference frame (B) relative to the ambient frame (A):
 ```python
->>> from engopt.linalg import ReferenceFrame
+>>> from neumann.linalg import ReferenceFrame
 >>> A = ReferenceFrame(name='A', axes=np.eye(3))
 >>> B = A.orient_new('Body', [0, 0, 90*np.pi/180], 'XYZ', name='B')
 ```
@@ -58,7 +58,7 @@ $$
 $$
 
 ```python
->>> from engopt.optimize import LinearProgrammingProblem as LPP
+>>> from neumann.optimize import LinearProgrammingProblem as LPP
 >>> import sympy as sy
 >>> variables = ['x1', 'x2', 'x3', 'x4']
 >>> x1, x2, x3, x4 = syms = sy.symbols(variables, positive=True)
@@ -79,7 +79,7 @@ minimize  \quad  (a-x)^2 + b (y-x^2)^2
 $$
 
 ```python
->>> from engopt.optimize import BinaryGeneticAlgorithm
+>>> from neumann.optimize import BinaryGeneticAlgorithm
 >>> def Rosenbrock(x, y):
 >>>     a = 1, b = 100
 >>>     return (a-x)**2 + b*(y-x**2)**2

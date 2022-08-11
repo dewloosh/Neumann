@@ -9,7 +9,7 @@ as an LPP.
 
 .. tip::
    For problems starting from medium size, it is suggested to use the 
-   :func:`solve_standard_form <engopt.optimize.LinearProgrammingProblem.solve_standard_form>` 
+   :func:`solve_standard_form <neumann.optimize.LinearProgrammingProblem.solve_standard_form>` 
    to solve linear problems.
 
 The definition of an LPP is expected in **General Form**:
@@ -41,11 +41,11 @@ where :math:`\mathbf{b} \in \mathbf{R}^m, \mathbf{c} \in \mathbf{R}^n` and :math
 an :math:`m \times n` matrix with :math:`n>m` and typically :math:`n` much
 greater than :math:`m`.
 
-.. autoclass:: engopt.optimize.LinearProgrammingProblem
+.. autoclass:: neumann.optimize.LinearProgrammingProblem
     :members:
 
-.. autoclass:: engopt.optimize.DegenerateProblemError
+.. autoclass:: neumann.optimize.DegenerateProblemError
     :members:
 
-.. autoclass:: engopt.optimize.NoSolutionError
+.. autoclass:: neumann.optimize.NoSolutionError
     :members:
