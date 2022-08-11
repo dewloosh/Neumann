@@ -21,36 +21,31 @@ sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../src'))
 
+def read(rel_path):
+    here = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(here, rel_path), 'r') as fp:
+        return fp.read()
+
+
+def get_version(rel_path):
+    for line in read(rel_path).splitlines():
+        if line.startswith('__version__'):
+            delim = '"' if '"' in line else "'"
+            return line.split(delim)[1]
+    else:
+        raise RuntimeError("Unable to find version string.")
+
 # -- Project information -----------------------------------------------------
 
-project = 'neumann'
+project = 'Neumann'
 copyright = '2022, Bence Balogh'
 author = 'Bence Balogh'
-
-# The short X.Y version
-
-"""here = os.path.dirname(__file__)
-print('HERE : {}'.format(here))
-#repo = os.path.join(here, '..', '..')
-repo = os.path.abspath('../..')
-print('REPO : {}'.format(repo))
-print(os.path.join(repo, "/src/dewloosh"))
-_module = os.listdir(os.path.join(repo, "/src/dewloosh"))[0]
-_version_py = os.path.join(repo, "/src/dewloosh/{}/__init__.py".format(_module))"""
 
 # get version from python package:
 here = os.path.dirname(__file__)
 repo = os.path.join(here, '..', '..')
 _version_py = os.path.join(repo, 'src', 'neumann', '__init__.py')
-version_ns = {}
-with open(_version_py) as f:
-    exec(f.read(), version_ns)
-
-# The short X.Y version.
-#version = '%i.%i' % version_ns['version_info'][:2]
-# The full version, including alpha/beta/rc tags.
-release = version_ns['__version__']
-
+release = get_version(_version_py)
 try:
     git_rev = subprocess.check_output(
         ['git', 'describe', '--exact-match', 'HEAD'], universal_newlines=True)
@@ -213,7 +208,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'neumann.tex', 'Neumann Documentation',
+    (master_doc, 'neumann.tex', 'Neumann',
      'Bence Balogh', 'manual'),
 ]
 
@@ -223,7 +218,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'neumann', 'Neumann Documentation',
+    (master_doc, 'neumann', 'Neumann',
      [author], 1)
 ]
 
@@ -234,8 +229,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'neumann', 'Neumann Documentation',
-     author, 'neumann', 'One line description of project.',
+    (master_doc, 'neumann', 'Neumann',
+     author, 'neumann', 'A Python Library for Applied Mathemathics.',
      'Miscellaneous'),
 ]
 

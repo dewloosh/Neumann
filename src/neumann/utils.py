@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+from typing import Callable
 from numba import njit, prange
 import numpy as np
 from numpy import ndarray
 
 __cache = True
 
-__all__ = ['to_range']
+__all__ = ['to_range', 'squeeze_if_array', 'config', 'is_none_or_false']
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
@@ -30,3 +31,37 @@ def to_range(vals: ndarray, *args, source: ndarray, target: ndarray=None,
         return np.squeeze(_to_range(vals, source, target))
     else:
         return _to_range(vals, source, target)
+    
+
+def squeeze_if_array(arr): return np.squeeze(
+    arr) if isinstance(arr, np.ndarray) else arr
+
+
+def squeeze(default=True):
+    def decorator(fnc: Callable):
+        def inner(*args, **kwargs):
+            if kwargs.get('squeeze', default):
+                res = fnc(*args, **kwargs)
+                if isinstance(res, tuple):
+                    return list(map(squeeze_if_array, res))
+                return squeeze_if_array(res)
+            else:
+                return fnc(*args, **kwargs)
+        return inner
+    return decorator
+
+
+def config(*args, **kwargs):
+    def decorator(fnc: Callable):
+        def inner(*args, **kwargs):
+            return fnc(*args, **kwargs)
+        return inner
+    return decorator
+
+
+def is_none_or_false(a):
+    if isinstance(a, bool):
+        return not a
+    elif a is None:
+        return True
+    return False
