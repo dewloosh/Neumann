@@ -27,24 +27,28 @@ The implementations in this module are created on top of
 * | the `awkward` library for its high performance data structures, gpu support
   | and general `Numba` compliance.
 
-        
-Contents
---------
 
+.. toctree::
+    :caption: Contents
+    :maxdepth: 2
+   
+    user_guide
+    
 .. toctree::
     :caption: Contents
     :maxdepth: 3
    
-    user_guide
     notebooks
-    auto_examples/index
 
-API
----
+.. toctree::
+    :maxdepth: 3
+    :caption: Examples Gallery
+
+    auto_examples/index.rst
 
 .. toctree::
     :caption: API
-    :maxdepth: 3
+    :maxdepth: 2
    
     api
    

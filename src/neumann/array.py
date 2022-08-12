@@ -218,7 +218,7 @@ def isposdef(A: np.ndarray, tol=0):
 
     Example
     -------
-    >>> from dewloosh.math.array import random_posdef_matrix, isposdef
+    >>> from neumann.array import random_posdef_matrix, isposdef
     >>> A = random_posdef_matrix(3, 0.1)
     >>> isposdef(A)
     True
@@ -237,7 +237,7 @@ def ispossemidef(A: np.ndarray):
 
     Example
     -------
-    >>> from dewloosh.math.array import random_pos_semidef_matrix, ispossemidef
+    >>> from neumann.array import random_pos_semidef_matrix, ispossemidef
     >>> A = random_pos_semidef_matrix(3)
     >>> ispossemidef(A)
     True
@@ -252,7 +252,7 @@ def random_pos_semidef_matrix(N) -> nparray:
 
     Example
     -------
-    >>> from dewloosh.math.array import random_pos_semidef_matrix
+    >>> from neumann.array import random_pos_semidef_matrix
     >>> random_pos_semidef_matrix(3)
     ...
     """
@@ -268,7 +268,7 @@ def random_posdef_matrix(N, alpha=1e-12) -> nparray:
 
     Example
     -------
-    >>> from dewloosh.math.array import random_posdef_matrix
+    >>> from neumann.array import random_posdef_matrix
     >>> random_posdef_matrix(3, 0.1)
     ...
     """
@@ -277,22 +277,22 @@ def random_posdef_matrix(N, alpha=1e-12) -> nparray:
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def repeat(a: np.ndarray, N=1) -> nparray:
+def repeat(a: np.ndarray, N:int=1) -> nparray:
     """
     Repeats an array N-times.
     
     Parameters
     ----------
-    a : ndarray
+    a : :py:class:`numpy.ndarray`
         Input array.
     
-    N : int, Optional.
+    N : int, Optional
         Number of repetitions. Default is 1.
     
     Returns
     -------
-    ndarray
-        Output array with shape
+    :py:class:`numpy.ndarray`
+        A NumPy array with shape (N, a.shape[0], a.shape[1]).
     
     Example
     -------
@@ -301,8 +301,9 @@ def repeat(a: np.ndarray, N=1) -> nparray:
     in the same coordinate frame, we need to stack up 10 identical
     identity matrices. This can be done the quickest by:
     
-    >>> from dewloosh.math.array import repeat
+    >>> from neumann.array import repeat
     >>> axes = repeat(np.eye(3), 10)
+    
     """
     res = np.zeros((N, a.shape[0], a.shape[1]), dtype=a.dtype)
     for i in prange(N):

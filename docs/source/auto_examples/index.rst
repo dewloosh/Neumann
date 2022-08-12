@@ -1,8 +1,7 @@
 :orphan:
 
-# Example files
-
-These are examples.
+Examples Gallery
+================
 
 
 .. raw:: html

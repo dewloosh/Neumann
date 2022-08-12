@@ -25,7 +25,7 @@ Approximation over precalculated data using the MLS method.
 
 .. GENERATED FROM PYTHON SOURCE LINES 9-31
 
-.. code-block:: default
+.. code-block:: python3
 
     import numpy as np
 
@@ -64,7 +64,7 @@ Approximation over precalculated data using the MLS method.
 
 .. GENERATED FROM PYTHON SOURCE LINES 32-65
 
-.. code-block:: default
+.. code-block:: python3
 
     from matplotlib import pyplot as plt
     from matplotlib import cm
@@ -104,7 +104,7 @@ Approximation over precalculated data using the MLS method.
 
 .. image-sg:: /auto_examples/images/sphx_glr_plot_0_mls_001.png
    :alt: plot 0 mls
-   :srcset: /auto_examples/images/sphx_glr_plot_0_mls_001.png
+   :srcset: /auto_examples/images/sphx_glr_plot_0_mls_001.png, /auto_examples/images/sphx_glr_plot_0_mls_001_2_0x.png 2.0x
    :class: sphx-glr-single-img
 
 
@@ -114,7 +114,9 @@ Approximation over precalculated data using the MLS method.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  9.042 seconds)
+   **Total running time of the script:** ( 0 minutes  16.276 seconds)
+
+**Estimated memory usage:**  67 MB
 
 
 .. _sphx_glr_download_auto_examples_plot_0_mls.py:

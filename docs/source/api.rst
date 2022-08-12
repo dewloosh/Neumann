@@ -1,5 +1,5 @@
-dewloosh.math API reference
-===========================
+Neumann API reference
+=====================
 
 .. toctree::
     api_vs
