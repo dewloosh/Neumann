@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI](https://badge.fury.io/py/Neumann.svg)](https://pypi.org/project/Neumann) 
 
-# **Neumann**
+# **Neumann** - A Python Library for Applied Mathematics in Physical Sciences
 
 > **Warning**
 > This package is under active development and in an **beta stage**. Come back later, or star the repo to make sure you don’t miss the first stable release!
