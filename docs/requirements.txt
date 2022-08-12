@@ -8,3 +8,4 @@ sphinxcontrib-svg2pdfconverter
 networkx
 plotly
 furo
+neumann
