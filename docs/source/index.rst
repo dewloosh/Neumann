@@ -35,7 +35,7 @@ The implementations in this module are created on top of
     user_guide
     
 .. toctree::
-    :caption: Contents
+    :caption: Notebooks
     :maxdepth: 3
    
     notebooks
