@@ -6,7 +6,7 @@ from numpy import ndarray
 
 __cache = True
 
-__all__ = ['to_range', 'squeeze_if_array', 'config', 'is_none_or_false']
+__all__ = ['to_range', 'squeeze_if_array', 'config', 'is_none_or_false', 'squeeze']
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
