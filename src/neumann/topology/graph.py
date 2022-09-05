@@ -32,7 +32,7 @@ try:
         --------
         A basic example with `networkx`:
 
-        >>> from dewloosh.math.topology import Graph
+        >>> from neumann.topology import Graph
         >>> import networkx as nx
         >>> grid = nx.grid_2d_graph(5, 5)  # 5x5 grid
         >>> G = Graph(grid)
@@ -63,7 +63,7 @@ try:
             Examples
             --------
 
-            >>> from dewloosh.math.topology import Graph
+            >>> from neumann.topology import Graph
             >>> G = Graph([(1, 1)])
             >>> A = G.adjacency_matrix()
             >>> print(A.todense())

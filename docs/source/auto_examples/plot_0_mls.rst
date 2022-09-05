@@ -114,9 +114,9 @@ Approximation over precalculated data using the MLS method.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  16.276 seconds)
+   **Total running time of the script:** ( 0 minutes  15.690 seconds)
 
-**Estimated memory usage:**  67 MB
+**Estimated memory usage:**  61 MB
 
 
 .. _sphx_glr_download_auto_examples_plot_0_mls.py:

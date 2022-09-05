@@ -14,19 +14,6 @@ def GaussPoints(*args):
     """
     Returns data for numerical integration using the Gauss-Legendre rule.
     
-    Parameters
-    ----------
-    Self evident from the examples.
-    
-    Returns
-    -------
-    Self evident from the examples.
-    
-    
-    Examples
-    --------
-    
-    
     """
     nD = len(args)
     if nD == 1:

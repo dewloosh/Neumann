@@ -313,6 +313,9 @@ def repeat(a: np.ndarray, N:int=1) -> nparray:
 
 @njit(nogil=True, parallel=True, cache=__cache)
 def repeat1d(a: np.ndarray, N=1) -> nparray:
+    """
+    Repeats a 1d array N times.
+    """
     M = a.shape[0]
     res = np.zeros(N * M, dtype=a.dtype)
     for i in prange(N):
@@ -377,7 +380,10 @@ def indices_of_equal_rows_square_njit(x: np.ndarray, y: np.ndarray,
 
 
 @njit(nogil=True, parallel=True, fastmath=True, cache=__cache)
-def count_cols(arr: np.ndarray):
+def count_cols(arr: np.ndarray) -> np.ndarray:
+    """
+    Count and return the number of columns for each row in `arr`.
+    """
     n = len(arr)
     res = np.zeros(n, dtype=np.int64)
     for i in prange(n):

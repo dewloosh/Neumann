@@ -47,16 +47,6 @@ Define the same vector in frame B:
 Solve a following Linear Programming Problem (LPP) with one 
 unique solution:
 
-$$
-\begin{eqnarray}
-    & minimize&  \quad  3 x_1 + x_2 + 9 x_3 + x_4  \\
-    & subject \, to& & \\
-    & & x_1 + 2 x_3 + x_4 \,=\, 4, \\
-    & & x_2 + x_3 - x_4 \,=\, 2, \\
-    & & x_i \,\geq\, \, 0, \qquad i=1, \ldots, 4.
-\end{eqnarray}
-$$
-
 ```python
 >>> from neumann.optimize import LinearProgrammingProblem as LPP
 >>> import sympy as sy
@@ -73,10 +63,6 @@ array([0., 6., 0., 4.])
 ## NonLinear Programming
 
 Find the minimizer of the Rosenbrock function:
-
-$$
-minimize  \quad  (a-x)^2 + b (y-x^2)^2
-$$
 
 ```python
 >>> from neumann.optimize import BinaryGeneticAlgorithm

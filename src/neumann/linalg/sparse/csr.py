@@ -28,15 +28,15 @@ class csr_matrix(object):
         right and top to bottom. If this is a CSC matrix, the walk
         happens along the columns.
 
-    indices : np.ndarray, Optional.
+    indices : np.ndarray, Optional
         The indices of the columns (rows) during the walk.
         Default is None.
 
-    indptr : np.ndarray, Optional.
+    indptr : np.ndarray, Optional
         Stores row (column) boundaries.
         Default is None.
 
-    shape : Tuple, Optinal.
+    shape : Tuple, Optional
         Default is None.
         
     Note
@@ -44,13 +44,6 @@ class csr_matrix(object):
     At the moment, this class does not support `NumPy`'s array protocoll.
     If you want this to be the argument to a numpy function, use the 
     :func:`to_scipy` method of this class.
-
-    Examples
-    --------
-    >>> from dewloosh.math.linalg.sparse import csr_matrix
-    >>> csr = csr_matrix()
-    
-    >>> from numba import njit
     
     """
 

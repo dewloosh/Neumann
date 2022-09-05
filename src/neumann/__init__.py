@@ -2,6 +2,6 @@
 from .hist import *
 from .utils import *
 
-__version__ = "v0.0.1b"
+__version__ = "v0.0.1"
 
 __description__ = "A Python Library for Applied Mathematics in Physical Sciences."

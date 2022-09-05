@@ -261,7 +261,8 @@ class LinearProgrammingProblem:
         return y
 
     def has_standardform(self) -> bool:
-        """Tells if the object admits the standard form of a linear program or not.
+        """
+        Tells if the object admits the standard form of a linear program or not.
 
         Notes
         -----
@@ -739,7 +740,7 @@ class LinearProgrammingProblem:
 
         Parameters
         ----------
-        order : Iterable, Optional.
+        order : Iterable, Optional
             The order of the variables. This might speed up finding the
             basic solution. Default is None.
 

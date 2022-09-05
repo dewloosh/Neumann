@@ -54,7 +54,7 @@ class Function(MetaFunction):
     Examples
     --------
 
-    >>> from dewloosh.math.function import Function
+    >>> from neumann.function import Function
     >>> import sympy as sy
     >>> variables = ['x1', 'x2', 'x3', 'x4']
     >>> x1, x2, x3, x4 = syms = sy.symbols(variables, positive=True)

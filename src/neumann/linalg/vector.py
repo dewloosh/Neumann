@@ -63,7 +63,7 @@ class Vector(Array):
     --------
     Import the necessary classes:
     
-    >>> from dewloosh.math import Vector, ReferenceFrame as Frame
+    >>> from neumann import Vector, ReferenceFrame as Frame
     
     Create a default frame in 3d space, and create 2 others, each
     being rotated with 30 degrees around the third axis.
@@ -96,9 +96,9 @@ class Vector(Array):
     
     See Also
     --------
-    :class:`dewloosh.math.linalg.vector.VectorBase`
-    :class:`dewloosh.math.linalg.array.Array`
-    :class:`dewloosh.math.linalg.frame.frame.ReferenceFrame`
+    :class:`neumann.linalg.vector.VectorBase`
+    :class:`neumann.linalg.array.Array`
+    :class:`neumann.linalg.frame.frame.ReferenceFrame`
     
     """
 
