@@ -47,6 +47,7 @@ def squeeze(default=True):
                 return squeeze_if_array(res)
             else:
                 return fnc(*args, **kwargs)
+        inner.__doc__ = fnc.__doc__
         return inner
     return decorator
 
