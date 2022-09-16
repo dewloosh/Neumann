@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from abc import abstractmethod
-from typing import Iterable, Callable
+from typing import Iterable, Callable, Tuple, List
 import numpy as np
+from numpy import ndarray
 
 
 __all__ = ['GeneticAlgorithm', 'BinaryGeneticAlgorithm']
@@ -12,7 +13,8 @@ def odd(n): return not even(n)
 
 
 class GeneticAlgorithm:
-    """Base class for Genetic Algorithms (GA). Use this as a base 
+    """
+    Base class for Genetic Algorithms (GA). Use this as a base 
     class to your custom implementation of a GA.
                 
     """
@@ -107,7 +109,10 @@ class GeneticAlgorithm:
                                       dtype=float)
         return self._fittness
 
-    def best_phenotype(self, lastknown=False):
+    def best_phenotype(self, lastknown=False) -> ndarray:
+        """
+        Returns the best phenotype.
+        """
         if lastknown:
             fittness = self._fittness
         else:
@@ -115,7 +120,7 @@ class GeneticAlgorithm:
         best = np.argmin(fittness)
         return self.phenotypes[best]
 
-    def divide(self, fittness=None):
+    def divide(self, fittness=None) -> Tuple[List]:
         """Divides population to elit and others, and returns the corresponding 
         index arrays.
 
@@ -160,6 +165,11 @@ class GeneticAlgorithm:
         ----------
         genotypes : Iterable
             Genotypes of the parents as a 2d integer array.
+            
+        Yields
+        ------
+        ndarray, ndarray
+            The two parents.
 
         """
         n = len(genotypes)
@@ -345,17 +355,17 @@ class BinaryGeneticAlgorithm(GeneticAlgorithm):
 
         return self.mutate(child1), self.mutate(child2)
 
-    def mutate(self, child=None):
+    def mutate(self, child: ndarray=None) -> ndarray:
         """
-        Mutates a child.
+        Returns a mutated genotype.
         
         """
         p = np.random.rand(self.dim*self.length)
         return np.where(p > self.p_m, child, 1-child)
 
-    def select(self, genotypes=None, phenotypes=None):
+    def select(self, genotypes=None, phenotypes=None) -> ndarray:
         """
-        Organizes a tournament and returns the winners.
+        Organizes a tournament and returns the genotypes of the winners.
         
         """
         fittness = self.fittness(phenotypes)
