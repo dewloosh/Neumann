@@ -1,6 +1,6 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dewloosh/Neumann/main?labpath=examples%2Flpp.ipynb?urlpath=lab)
 [![CircleCI](https://circleci.com/gh/dewloosh/Neumann.svg?style=shield)](https://circleci.com/gh/dewloosh/Neumann) 
-[![Documentation Status](https://readthedocs.org/projects/Neumann/badge/?version=latest)](https://Neumann.readthedocs.io/en/latest/?badge=latest) 
+[![Documentation Status](https://readthedocs.org/projects/neumann/badge/?version=latest)](https://neumann.readthedocs.io/en/latest/?badge=latest) 
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI](https://badge.fury.io/py/Neumann.svg)](https://pypi.org/project/Neumann) 
 
