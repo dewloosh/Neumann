@@ -1,7 +1,7 @@
 
 
-Examples using ``numpy.ndarray``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Examples using ``neumann.approx.lagrange.gen_Lagrange_1d``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. raw:: html
 

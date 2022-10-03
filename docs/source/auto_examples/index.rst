@@ -28,6 +28,23 @@ Examples Gallery
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Generation of Lagrange polynomials for approximation on a grid.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_plot_1_lagrange_1d_thumb.png
+    :alt: Lagrange Polynomials in 1d
+
+  :ref:`sphx_glr_auto_examples_plot_1_lagrange_1d.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Lagrange Polynomials in 1d</div>
+    </div>
+
+
+.. raw:: html
+
     </div>
 
 
@@ -35,6 +52,7 @@ Examples Gallery
    :hidden:
 
    /auto_examples/plot_0_mls
+   /auto_examples/plot_1_lagrange_1d
 
 
 .. only:: html

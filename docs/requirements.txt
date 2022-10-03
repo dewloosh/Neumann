@@ -9,4 +9,3 @@ sphinx-rtd-theme
 networkx
 plotly
 furo
-neumann

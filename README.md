@@ -42,7 +42,7 @@ Once the enviroment is created, activate it via typing
 >>> pip install neumann
 ```
 
-## **Crash Course**
+## **A Quick Tour**
 
 ### Linear Algebra
 

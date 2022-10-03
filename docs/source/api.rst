@@ -8,3 +8,4 @@ Neumann API reference
     api_ga
     api_array
     api_graph
+    api_approx
