@@ -187,7 +187,7 @@ class LinearProgrammingProblem:
         :math:`\quad \mathbf{x} = (0., 6., 0., 4.), \quad f(\mathbf{x}) = 10.`
 
         Example
-        --------
+        -------
 
         >>> from dewloosh.math.optimize import LinearProgrammingProblem as LPP
         >>> problem = LPP.example_unique()
