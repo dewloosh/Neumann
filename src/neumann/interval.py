@@ -143,3 +143,39 @@ def box_interval(typ, val, c):
     c.pyapi.decref(data_obj)
     c.pyapi.decref(class_obj)
     return res
+
+
+if __name__ == "__main__":
+    from numba import njit
+
+    @njit()
+    def inside_interval(interval, x):
+        return interval.lo <= x < interval.hi
+
+
+    @njit()
+    def interval_width(interval):
+        return interval.width
+
+
+    @njit()
+    def interval_data(interval):
+        return interval.data
+
+
+    @njit()
+    def interval_getitem(interval, i):
+        return interval[i]
+
+
+    @njit()
+    def new_interval(lo, hi, data):
+        return Interval(lo, hi, data)
+    
+   
+    lo = 1.0
+    hi = 3.0
+    data = np.array([1.1, 3.1, 2.1])
+    new_interval(lo, hi, data)._arr
+    interval_data(new_interval(lo, hi, data))
+    interval_getitem(new_interval(lo, hi, data), 0)
