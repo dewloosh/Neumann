@@ -50,4 +50,4 @@ if __name__ == "__main__":
     interval_data(new_interval(lo, hi, data))
     interval_getitem(new_interval(lo, hi, data), 0)"""
 
-    unittest.main()
+    #unittest.main()
