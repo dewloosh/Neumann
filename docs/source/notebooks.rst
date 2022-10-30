@@ -2,8 +2,9 @@ Notebooks
 =========
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
     
+    _notebooks/vectors
     _notebooks/lpp
     _notebooks/genetic
     _notebooks/graph

@@ -126,7 +126,7 @@ class GeneticAlgorithm:
 
         Parameters
         ----------
-        fittness : Iterable, optional
+        fittness : Iterable, Optional
             Fittness values. If not provided, values from the latest
             evaluation are used.
 
@@ -156,9 +156,10 @@ class GeneticAlgorithm:
 
     @classmethod
     def random_parents_generator(cls, genotypes=None):
-        """Yields random pairs from a list of genotypes.
+        """
+        Yields random pairs from a list of genotypes.
 
-        The implamantation assumes theat the length of the input array 
+        The implemantation assumes that the length of the input array 
         is a multiple of 2.
 
         Parameters
@@ -168,8 +169,11 @@ class GeneticAlgorithm:
             
         Yields
         ------
-        ndarray, ndarray
-            The two parents.
+        numpy.ndarray 
+            The first parent.
+            
+        numpy.ndarray
+            The second parent.
 
         """
         n = len(genotypes)
@@ -220,34 +224,34 @@ class BinaryGeneticAlgorithm(GeneticAlgorithm):
     In other words, it solves the following problem:
     
     .. math::
-            :nowrap:
+        :nowrap:
 
-            \\begin{eqnarray}
-                & minimize&  \quad  f(\mathbf{x}) \quad in \quad \mathbf{x} \in \mathbf{R}^n. 
-            \\end{eqnarray}
+        \\begin{eqnarray}
+            & minimize&  \quad  f(\mathbf{x}) \quad in \quad \mathbf{x} \in \mathbf{R}^n. 
+        \\end{eqnarray}
     
     Parameters
     ----------
-        fnc : Callable
-            The fittness function.
+    fnc : Callable
+        The fittness function.
 
-        ranges : Iterable
-            sequence of pairs of limits for each variable
+    ranges : Iterable
+        sequence of pairs of limits for each variable
 
-        length : int, Optional.
-            Chromosome length (string length). Default is 5.
+    length : int, Optional
+        Chromosome length (string length). Default is 5.
 
-        p_c : float, Optional. 
-            Probability of crossover, 0 <= p_c <= 1. Default is 1.
+    p_c : float, Optional
+        Probability of crossover, 0 <= p_c <= 1. Default is 1.
 
-        p_m : float, Optional.
-            Probability of mutation, 0 <= p_m <= 1. Default is 0.2.
+    p_m : float, Optional
+        Probability of mutation, 0 <= p_m <= 1. Default is 0.2.
 
-        nPop : int, Optional
-            Number of members in the population. Default is 100.
+    nPop : int, Optional
+        Number of members in the population. Default is 100.
 
-        elitism : float or integer, Optional.
-            Value to control elitism. Default is 1.
+    elitism : float or integer, Optional
+        Value to control elitism. Default is 1.
 
     Examples
     --------

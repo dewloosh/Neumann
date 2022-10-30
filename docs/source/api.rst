@@ -1,5 +1,5 @@
-Neumann API reference
-=====================
+API Reference
+=============
 
 .. toctree::
     api_vs

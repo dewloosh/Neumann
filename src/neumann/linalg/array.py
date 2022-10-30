@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+from typing import Tuple
 import numpy as np
 from numpy.lib.mixins import NDArrayOperatorsMixin
 
 from dewloosh.core import Wrapper
 from dewloosh.core.abc import ABC_Safe
 
-from ..array import ascont
+from ..array import ascont, minmax
 
 
 __all__ = ['ArrayBase', 'Array']
@@ -77,8 +78,21 @@ class Array(NDArrayOperatorsMixin, Wrapper):
         super(Array, self).__init__(wrap=self._array)
 
     @property
-    def dim(self):
+    def dim(self) -> int:
+        """
+        Returns the dimension of the array.
+        """
         return len(self._array.shape)
+    
+    @property
+    def minmax(self) -> Tuple:
+        """
+        Returns the minimum and maximum values of the array.
+        
+        .. versionadded:: 0.0.4
+        
+        """
+        return minmax(self._array)
 
     def __repr__(self):
         return f"{self.__class__.__name__}\n({self._array})"
@@ -97,5 +111,8 @@ class Array(NDArrayOperatorsMixin, Wrapper):
     def __len__(self):
         return self._array.shape[0]
 
-    def to_numpy(self):
+    def to_numpy(self) -> np.ndarray:
+        """
+        Returns the data as a pure NumPy array.
+        """
         return self.__array__()

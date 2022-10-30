@@ -127,7 +127,7 @@ def rooted_level_structure(adj: csr_matrix, root: int = 0) -> Dict:
 
     Returns
     -------
-    Dict
+    dict
         A `numba` dictionary <int[:] : int[:, :]>, where the keys
         refer to different levels, and the values are the indices
         of nodes on that level.
@@ -162,7 +162,7 @@ def rooted_level_structure(adj: csr_matrix, root: int = 0) -> Dict:
 
 
 @jit(nopython=True, nogil=True, fastmath=False, cache=True)
-def pseudo_peripheral_nodes(adj: csr_matrix):
+def pseudo_peripheral_nodes(adj: csr_matrix) -> np.ndarray:
     """
     Returns the indices of nodes that are possible candidates
     for being peripheral nodes of a graph.
@@ -174,7 +174,7 @@ def pseudo_peripheral_nodes(adj: csr_matrix):
 
     Returns
     -------
-    np.ndarray
+    numpy.ndarray
         Integer array of nodal indices.
 
     """

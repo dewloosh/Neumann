@@ -33,7 +33,7 @@ def minmax(a: nparray) -> Tuple[float]:
 def ascont(array: nparray) -> nparray:
     """
     Returns the input as contiguous array (ndim >= 1).
-    It is basically a shortcut to `np.ascontiguousarray`.
+    It is basically a shortcut to `numpy.ascontiguousarray`.
     """
     return np.ascontiguousarray(array)
 
@@ -53,7 +53,7 @@ def atleastnd(a: nparray, n=2, front=True, back=False) -> nparray:
     """
     Returns an array that is at least 'n' dimensional.
     The required shape is obtained by inserting new axes either
-    before or after the existing data. This behaviour can be controlled
+    before or after existing ones. This behaviour can be controlled
     using the parameters 'front' and 'back'. If front is True and back 
     is False, new axes are crated before the first existing data index,
     and the opposite happens in every other case.
@@ -283,7 +283,7 @@ def repeat(a: np.ndarray, N:int=1) -> nparray:
     
     Parameters
     ----------
-    a : :py:class:`numpy.ndarray`
+    a : numpy.ndarray
         Input array.
     
     N : int, Optional
@@ -291,7 +291,7 @@ def repeat(a: np.ndarray, N:int=1) -> nparray:
     
     Returns
     -------
-    :py:class:`numpy.ndarray`
+    numpy.ndarray
         A NumPy array with shape (N, a.shape[0], a.shape[1]).
     
     Example

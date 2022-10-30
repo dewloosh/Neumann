@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import numpy as np
 import sympy as sy
+
+from neumann.function import Function
 from neumann.approx.lagrange import gen_Lagrange_1d
 
 inds = [1, 2, 3]
@@ -25,11 +27,9 @@ for i, ind in enumerate(inds):
     ax = fig.add_subplot(gs[i])
     label = '$' + data[ind]['symbol'] + '$'
     ax.set_title(label)
-    fnc = data[ind][0]
-    shp = sy.lambdify('x', fnc, 'numpy')
-    fdata = list(map(shp, xdata))
+    fnc = Function(data[ind][0])
+    fdata = fnc([xdata])
     ax.plot(xdata, fdata)
-    #
     ax.hlines(y=0, xmin=-1, xmax=1, colors='k', zorder=-10, lw=1.0)
 
 fig.tight_layout()

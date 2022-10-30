@@ -23,37 +23,36 @@ class Function(MetaFunction):
 
     Parameters
     ----------
-        f0 : Callable
-            A callable object that returns function evaluations.
+    f0 : Callable
+        A callable object that returns function evaluations.
 
-        f1 : Callable
-            A callable object that returns evaluations of the 
-            gradient of the function.
+    f1 : Callable
+        A callable object that returns evaluations of the 
+        gradient of the function.
 
-        f2 : Callable
-            A callable object that returns evaluations of the 
-            Hessian of the function.
+    f2 : Callable
+        A callable object that returns evaluations of the 
+        Hessian of the function.
 
-        variables : List, Optional.
-            Symbolic variables. Only if the function is defined by 
-            a string or `sympy` expression.
+    variables : List, Optional
+        Symbolic variables. Only if the function is defined by 
+        a string or `sympy` expression.
 
-        value : Callable, Optional.
-            Same as `f0`.
+    value : Callable, Optional
+        Same as `f0`.
 
-        gradient : Callable, Optional.
-            Same as `f1`.
+    gradient : Callable, Optional
+        Same as `f1`.
 
-        Hessian : Callable, Optional.
-            Same as `f2`.
+    Hessian : Callable, Optional
+        Same as `f2`.
 
-        or dimension or dim d : int, Optional.
-            The number of dimensions of the domain of the function. Required only when
-            going full blind, in most of the cases it can be derived from other properties.
+    dimension or dim or d : int, Optional
+        The number of dimensions of the domain of the function. Required only when
+        going full blind, in most of the cases it can be derived from other properties.
 
     Examples
     --------
-
     >>> from neumann.function import Function
     >>> import sympy as sy
     >>> variables = ['x1', 'x2', 'x3', 'x4']
@@ -92,7 +91,7 @@ class Function(MetaFunction):
 
     """
     # FIXME domain is missing from the possible parameters
-    # NOTE dimensions should be derived
+    # NOTE investigate if dimensions should be derived
 
     def __init__(self, f0: FuncionLike = None, f1: Callable = None,
                  f2: Callable = None, *args, variables=None, **kwargs):
@@ -134,18 +133,13 @@ class Function(MetaFunction):
     @property
     def linear(self):
         """
-        Returns true if the function is at most linear in all of its variables.
+        Returns True if the function is at most linear in all of its variables.
         """
         if self.symbolic:
             return all(np.array([degree(self.expr, v)
                                  for v in self.variables], dtype=int) <= 1)
         else:
-            try:
-                G = self.G().astype(int)
-                assert np.all((G == 0))
-                return True
-            except AssertionError:
-                return False
+            return self.f2 is None
 
     def linear_coefficients(self, normalize=False):
         d = self.coefficients(normalize)
@@ -187,6 +181,7 @@ class Function(MetaFunction):
     def subs(self, values, variables=None, inplace=False):
         """
         Substitites values for variables.
+        
         """
         assert self.symbolic, "This is exclusive to symbolic functions."
         if self.expr is None:

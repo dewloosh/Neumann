@@ -74,7 +74,7 @@ class LinearProgrammingProblem:
             & & x_i \,\geq\, \, 0, \qquad i=1, \ldots, 4.
         \\end{eqnarray}
 
-    >>> from dewloosh.math.optimize import LinearProgrammingProblem as LPP
+    >>> from neumann.optimize import LinearProgrammingProblem as LPP
     >>> import sympy as sy
     >>> variables = ['x1', 'x2', 'x3', 'x4']
     >>> x1, x2, x3, x4 = syms = sy.symbols(variables, positive=True)
@@ -189,7 +189,7 @@ class LinearProgrammingProblem:
         Example
         -------
 
-        >>> from dewloosh.math.optimize import LinearProgrammingProblem as LPP
+        >>> from neumann.optimize import LinearProgrammingProblem as LPP
         >>> problem = LPP.example_unique()
         >>> problem.solve()['x']
         array([0., 6., 0., 4.])
@@ -303,11 +303,10 @@ class LinearProgrammingProblem:
 
         Parameters
         ----------
-
         maximize : bool
             Set this true if the problem is a maximization. Default is False.
 
-        inplace : Boolean
+        inplace : bool
             If `True`, transformation happend in place, changing the internal structure
             ob the instance it is invoked by. In this case, `self` gets returned for
             possible continuation.
@@ -321,7 +320,7 @@ class LinearProgrammingProblem:
         LinearProgrammingProblem
             An LPP that admits a standard form.
 
-        dict, Optional.
+        dict, Optional
             A mapping between variables of the standard and the general form.
             Only if `return_inverse` is `True`.
 
@@ -437,10 +436,10 @@ class LinearProgrammingProblem:
 
         Parameters
         ----------
-        A : ndarray
+        A : numpy.ndarray
             An :math:`m \times n` matrix with :math:`n>m`
 
-        b : ndarray
+        b : numpy.ndarray
             Right-hand sides. :math:`\mathbf{b} \in \mathbf{R}^m`
 
         order : Iterable[int], Optional
@@ -448,19 +447,19 @@ class LinearProgrammingProblem:
 
         Returns
         -------
-        ndarray : 
+        numpy.ndarray 
             Coefficient matrix :math:`\mathbf{B}`
 
-        ndarray
+        numpy.ndarray
             Inverse of coefficient matrix :math:`\mathbf{B}^{-1}`
 
-        ndarray
+        numpy.ndarray
             Coefficient matrix :math:`\mathbf{N}`
 
-        ndarray
+        numpy.ndarray
             Basic solution :math:`\mathbf{x}_{B}`
 
-        ndarray
+        numpy.ndarray
             Remaining solution :math:`\mathbf{x}_{N}`
 
         """
@@ -521,13 +520,13 @@ class LinearProgrammingProblem:
 
         Parameters
         ----------
-        A : np.ndarray
+        A : numpy.ndarray
             2d float array.
 
-        b : np.ndarray
+        b : numpy.ndarray
             1d float array.
 
-        c : np.ndarray
+        c : numpy.ndarray
             1d float array.
 
         order : Iterable, Optional
@@ -538,7 +537,7 @@ class LinearProgrammingProblem:
 
         Returns
         -------
-        ndarray
+        numpy.ndarray
             Results as a 1d (unique solution) or a 2d (multiple solutions) 
             numpy array.
 
@@ -681,7 +680,8 @@ class LinearProgrammingProblem:
                 break
 
     def to_numpy(self, maximize=False, return_coeffs=False):
-        """Returns the complete numerical representation of the standard 
+        """
+        Returns the complete numerical representation of the standard 
         form of the problem:
 
             :math:`minimize \quad \mathbf{c} \mathbf{x} \quad under \quad \mathbf{A}\mathbf{x} = \mathbf{b}`.
@@ -728,7 +728,8 @@ class LinearProgrammingProblem:
         return A, b
 
     def maximize(self, *args, **kwargs):
-        """Solves the LPP as a maximization. For the possible arguments, see `solve`.
+        """
+        Solves the LPP as a maximization. For the possible arguments, see `solve`.
 
         """
         kwargs['maximize'] = True
@@ -736,7 +737,8 @@ class LinearProgrammingProblem:
 
     def solve(self, order=None, return_all=True, maximize=False,
               as_dict=False, raise_errors=False, tol: float = 1e-10):
-        """Solves the problem and return the solution(s) if there are any.
+        """
+        Solves the problem and return the solution(s) if there are any.
 
         Parameters
         ----------
@@ -826,5 +828,3 @@ class LinearProgrammingProblem:
                     raise summary['e'][0]    
             return summary
         
-    def show(self, *args, **kwargs):
-        pass

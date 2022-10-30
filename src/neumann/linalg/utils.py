@@ -13,10 +13,10 @@ def show_vector(dcm: np.ndarray, arr: np.ndarray):
     
     Parameters
     ----------
-    dcm : ndarray
+    dcm : numpy.ndarray
         The dcm matrix of the transformation as a 2d float array.
     
-    arr : ndarray
+    arr : numpy.ndarray
         1d float array of coordinates of a single vector.
     
     Returns
@@ -36,10 +36,10 @@ def show_vectors(dcm: np.ndarray, arr: np.ndarray):
     
     Parameters
     ----------
-    dcm : ndarray
+    dcm : numpy.ndarray
         The dcm matrix of the transformation as a 2d float array.
     
-    arr : ndarray
+    arr : numpy.ndarray
         2d float array of coordinates of multiple vectors.
     
     Returns
@@ -61,10 +61,10 @@ def show_vectors_multi(dcm: np.ndarray, arr: np.ndarray):
     
     Parameters
     ----------
-    dcm : ndarray
+    dcm : numpy.ndarray
         The dcm matrix of the transformation as a 3d float array.
     
-    arr : ndarray
+    arr : numpy.ndarray
         2d float array of coordinates of multiple vectors.
     
     Returns

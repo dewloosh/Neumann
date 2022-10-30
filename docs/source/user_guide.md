@@ -13,13 +13,13 @@ Once the enviroment is created, activate it via typing
 >>> .\venv_name\Scripts\activate
 ```
 
-`neumann` can be installed (either in a virtual enviroment or globally) from PyPI using `pip` on Python >= 3.6:
+`neumann` can be installed (either in a virtual enviroment or globally) from PyPI using `pip` on Python >= 3.7:
 
 ```console
 >>> pip install neumann
 ```
 
-## Linear Algebra
+## Vector Algebra
 
 Define a reference frame (B) relative to the ambient frame (A):
 ```python

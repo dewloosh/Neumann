@@ -15,40 +15,22 @@ Features
   | to assure well posedness, or other properties of test problems.
 
 
-Requirements
-------------
-
-The implementations in this module are created on top of 
-
-* | `NumPy`, `SciPy` and `Numba` to speed up computationally sensitive parts,
-
-* | `SymPy` for symbolic operations and some vector algebra,
-
-* | the `awkward` library for its high performance data structures, gpu support
-  | and general `Numba` compliance.
-
+.. include:: user_guide.md
+    :parser: myst_parser.sphinx_
 
 .. toctree::
-    :caption: Contents
     :maxdepth: 2
-   
-    user_guide
-    
-.. toctree::
-    :caption: Notebooks
-    :maxdepth: 3
+    :glob:
+    :caption: Contents
    
     notebooks
+    auto_examples/index.rst 
 
 .. toctree::
-    :maxdepth: 3
-    :caption: Examples Gallery
-
-    auto_examples/index.rst
-
-.. toctree::
+    :maxdepth: 6
+    :glob:
+    :hidden:
     :caption: API
-    :maxdepth: 2
    
     api
    

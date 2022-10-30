@@ -11,8 +11,11 @@ __all__ = ['Vector']
 
 
 class VectorBase(ArrayBase):
-    """Base class for vector backends. Use it like if it 
-    was a ``numpy.ndarray`` instance."""
+    """
+    Base class for vector backends. Use it like if it 
+    was a ``numpy.ndarray`` instance.
+    
+    """
 
     def __new__(subtype, shape=None, dtype=float, buffer=None,
                 offset=0, strides=None, order=None, frame=None):
@@ -28,10 +31,16 @@ class VectorBase(ArrayBase):
 
     @property
     def frame(self) -> Frame:
+        """
+        Returns the frame of the vector.
+        """
         return self._frame
 
     @frame.setter
     def frame(self, value: Frame):
+        """
+        Sets the frame.
+        """
         if isinstance(value, Frame):
             self._frame = value
         else:
@@ -48,15 +57,17 @@ class Vector(Array):
     All parameters are identical to those of ``numpy.ndarray``, except that
     this class allows to specify an embedding frame.
     
+    This class is a subclass of :class:`Array`.
+    
     Parameters
     ----------
-    args : Tuple, Optional.
+    args : tuple, Optional
         Positional arguments forwarded to `numpy.ndarray`.
     
-    frame : ndarray, Optional.
+    frame : numpy.ndarray, Optional
         The reference frame the vector is represented by its coordinates.
     
-    kwargs : Dict, Optional.
+    kwargs : dict, Optional
         Keyword arguments forwarded to `numpy.ndarray`.
     
     Examples
@@ -116,12 +127,16 @@ class Vector(Array):
 
     @property
     def array(self) -> VectorBase:
-        """Returns the coordinates of the vector."""
+        """
+        Returns the coordinates of the vector.
+        """
         return self._array
 
     @array.setter
     def array(self, value):
-        """Sets the coordinates of the vector."""
+        """
+        Sets the coordinates of the vector.
+        """
         buf = np.array(value)
         assert buf.shape == self._array.shape
         self._array = self._array_cls_(shape=buf.shape, buffer=buf,
@@ -136,11 +151,11 @@ class Vector(Array):
         
         Parameters
         ----------
-        target : ndarray, Optional.
+        target : numpy.ndarray, Optional
             Target frame.
         
-        dcm : ndarray, Optional.
-            The dcm matrix of the transformation.
+        dcm : numpy.ndarray, Optional
+            The DCM matrix of the transformation.
 
         Returns
         -------      
@@ -158,12 +173,39 @@ class Vector(Array):
         else:
             return show_vectors(dcm, self.array)  # dcm @ arr 
         
-    def orient(self, *args, **kwargs):
+    def orient(self, *args, **kwargs) -> 'Vector':
+        """
+        Orients the vector inplace. All arguments are forwarded to
+        `orient_new`.
+        
+        Returns
+        -------
+        Vector
+            The same vector the function is called upon.
+        
+        See Also
+        --------
+        :func:`orient_new`
+        
+        """
         dcm = Frame.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
         self.array = dcm.T @ self._array
         return self
 
-    def orient_new(self, *args, keep_frame=True, **kwargs):
+    def orient_new(self, *args, keep_frame=True, **kwargs) -> 'Vector':
+        """
+        Returns a transformed version of the instance.
+        
+        Returns
+        -------
+        Vector
+            A new vector.
+        
+        See Also
+        --------
+        :func:`orient`
+        
+        """
         dcm = Frame.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
         if keep_frame:
             array = dcm.T @ self._array

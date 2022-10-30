@@ -4,10 +4,9 @@ from numpy import ndarray
 from sympy.physics.vector import ReferenceFrame as SymPyFrame
 from typing import Iterable
 
-
 from .utils import transpose_dcm_multi
-from ...array import repeat
 from ..array import Array
+from ...array import repeat
 
 
 class ReferenceFrame(Array):
@@ -21,16 +20,19 @@ class ReferenceFrame(Array):
 
     Parameters
     ----------
-    axes : ndarray, Optional.
+    axes : numpy.ndarray, Optional
         2d numpy array of floats specifying cartesian reference frames.
         Dafault is None.
         
-    parent : ReferenceFrame, Optional.
+    parent : ReferenceFrame, Optional
         A parent frame in which this the current frame is embedded in.
         Default is False.
     
     dim : int, Optional
         Dimension of the mesh. Deafult is 3.
+        
+    name : str, Optional
+        The name of the frame.
             
     Examples
     --------
@@ -53,9 +55,13 @@ class ReferenceFrame(Array):
 
     Notes
     -----
-    The `dewloosh.geom.CartesianFrame` class takes the idea of the reference 
+    The `polymesh.CartesianFrame` class takes the idea of the reference 
     frame a step further by introducing the idea of the 'origo'. 
 
+    See Also
+    --------
+    :class:`polymesh.CartesianFrame`
+    
     """
 
     def __init__(self, axes: ndarray = None, parent=None, *args,
@@ -81,12 +87,28 @@ class ReferenceFrame(Array):
         self._order = 0 if order == 'C' else 1
 
     @classmethod
-    def eye(cls, *args, dim=3, **kwargs):
+    def eye(cls, *args, dim=3, **kwargs) -> 'ReferenceFrame':
+        """
+        Returns a standard orthonormal frame.
+        
+        Returns
+        -------
+        ReferenceFrame
+        
+        """
         if len(args) > 0 and isinstance(args[0], int):
             dim = args[0]
         return cls(np.eye(dim), *args, **kwargs)
 
-    def root(self):
+    def root(self) -> 'ReferenceFrame':
+        """
+        Returns the top level object.
+        
+        Returns
+        -------
+        ReferenceFrame
+        
+        """
         if self.parent is None:
             return self
         else:
@@ -102,11 +124,19 @@ class ReferenceFrame(Array):
         Returns a matrix, where each row (or column) is the component array
         of a basis vector with respect to the parent frame, or ambient
         space if there is none.
+        
+        Returns
+        -------
+        numpy.ndarray
+        
         """
         return self._array
 
     @axes.setter
     def axes(self, value: ndarray):
+        """
+        Sets the array of the frame.
+        """
         if isinstance(value, np.ndarray):
             if value.shape == self._array.shape:
                 self._array = value
@@ -119,6 +149,11 @@ class ReferenceFrame(Array):
         """
         Returns the components of the current frame in a target frame.
         If the target is None, the componants are returned in the ambient frame.
+        
+        Returns
+        -------
+        numpy.ndarray
+        
         """
         return self.dcm(target=target)
 
@@ -148,14 +183,22 @@ class ReferenceFrame(Array):
         -------     
         numpy.ndarray
             DCM matrix from S to T.
+            
+        Example
+        -------
+        >>> from neumann.linalg import ReferenceFrame
+        >>> import numpy as np
+        >>> source = ReferenceFrame(dim=3)
+        >>> target = source.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
+        >>> DCM = source.dcm(target=target)
+        >>> arr_source = np.array([3 ** 0.5 / 2, 0.5, 0])
+        >>> arr_target = DCM @ arr_source        
 
         """
         if source is not None:
-            # source must be a 3x3 array
             S, T = source.dcm(), self.dcm() 
             return T @ S.T
         elif target is not None:
-            # target must be a 3x3 array
             S, T = self.dcm(), target.dcm()
             if len(S.shape) == 3:
                 return T @ transpose_dcm_multi(S)
@@ -170,7 +213,6 @@ class ReferenceFrame(Array):
         if self.parent is None:
             return self.axes
         else:
-            # parent should (but not must) be a 3x3 array
             return self.axes @ self.parent.dcm()
 
     def orient(self, *args, **kwargs) -> 'ReferenceFrame':
@@ -186,7 +228,15 @@ class ReferenceFrame(Array):
 
         kwargs : dict, Optional
             A dictionary of keyword arguments to pass to the 
-            `orientnew` function in `sympy`. 
+            `orientnew` function in `sympy`.
+            
+        Returns
+        -------
+        ReferenceFrame
+        
+        See Also
+        --------
+        :func:`orient_new`
 
         """
         source = SymPyFrame('source')
@@ -199,11 +249,10 @@ class ReferenceFrame(Array):
         """
         Returns a new frame, oriented relative to the called object. 
         The orientation can be provided by all ways supported in 
-        `sympy.orientnew`.
+        `sympy.physics.vector.ReferenceFrame.orientnew`.
 
         Parameters
         ----------
-        
         name : str
             Name for the new reference frame.
 
@@ -220,7 +269,7 @@ class ReferenceFrame(Array):
             - ``'Quaternion'``: rotations defined by four parameters which
               result in a singularity free direction cosine matrix
 
-        amounts :
+        amounts : str
             Expressions defining the rotation angles or direction cosine
             matrix. These must match the ``rot_type``. See examples below for
             details. The input types are:
@@ -232,26 +281,84 @@ class ReferenceFrame(Array):
             - ``'Quaternion'``: 4-tuple of expressions, symbols, or
               functions
 
-        rot_order : str or int, optional
+        rot_order : str or int, Optional
             If applicable, the order of the successive of rotations. The string
             ``'123'`` and integer ``123`` are equivalent, for example. Required
             for ``'Body'`` and ``'Space'``.
+            
+        *args : tuple, Optional
+            Extra positional arguments forwarded to `sympy.orientnew`.
+            Default is None.
+            
+        **kwargs : dict, Optional
+            Extra keyword arguments forwarded to `sympy.orientnew`.
+            Default is None.
 
         Returns
         -------    
-
         ReferenceFrame
             A new ReferenceFrame object.
+            
+        See Also
+        --------
+        :func:`sympy.physics.vector.ReferenceFrame.orientnew`
+            
+        Examples
+        --------
+        Define a standard Cartesian frame and rotate it around axis 'Z'
+        with 180 degrees:
+        
+        >>> A = ReferenceFrame(dim=3)
+        >>> B = A.orient_new('Body', [0, 0, np.pi], 'XYZ')
 
         """
         source = SymPyFrame('source')
         target = source.orientnew('target', *args, **kwargs)
         dcm = np.array(target.dcm(source).evalf()).astype(float)
         return self.__class__(axes=dcm, parent=self, name=name)
-
-
-if __name__ == '__main__':
-
-    A = ReferenceFrame()
-    B = A.orient_new('Body', [0, 0, 30*np.pi/180],  'XYZ')
-    C = B.orient_new('Body', [0, 0, 30*np.pi/180],  'XYZ')
+    
+    def rotate(self, *args, inplace=True, **kwargs) -> 'ReferenceFrame':
+        """
+        Alias for `orient` and `orient_new`, all extra arguments are forwarded.
+        
+        .. versionadded:: 0.0.4
+        
+        Parameters
+        ----------
+        inplace : bool, optional
+            If True, transformation is carried out on the instance the function call
+            is made upon, otherwise a new frame is returned. Default is True. 
+        
+        Returns
+        -------    
+        ReferenceFrame
+            An exisitng (if inplace is True) or a new ReferenceFrame object.
+        
+        See Also
+        --------
+        :func:`orient`
+        :func:`orient_new`
+        
+        """
+        if inplace:
+            return self.orient(*args, **kwargs)
+        else:
+            return self.orient_new(*args, **kwargs)
+        
+    def rotate_new(self, *args, **kwargs) -> 'ReferenceFrame':
+        """
+        Alias for `orient_new`, all extra arguments are forwarded.
+        
+        .. versionadded:: 0.0.4
+                
+        Returns
+        -------    
+        ReferenceFrame
+            A new ReferenceFrame object.
+        
+        See Also
+        --------
+        :func:`orient_new`
+        
+        """
+        return self.orient_new(*args, **kwargs)

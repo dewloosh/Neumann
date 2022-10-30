@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+from typing import List, Iterable
 import sympy as sy
 from sympy import latex
 import numpy as np
 
 
-def gen_Lagrange_1d(*args, x=None, i=None, xsym: str=None, 
-                    fsym: str=None, sym=False, **kwargs) -> dict:
+def gen_Lagrange_1d(*args, x:Iterable=None, i:List[int]=None, xsym: str=None, 
+                    fsym: str=None, sym:bool=False, N:int=None, **kwargs) -> dict:
     r"""
     Generates Lagrange polynomials and their derivatives up to 3rd, for appeoximation 
     in 1d space, based on N input pairs of position and value. Geometrical parameters 
@@ -36,6 +37,10 @@ def gen_Lagrange_1d(*args, x=None, i=None, xsym: str=None,
         If True, locations of the data points are left in a symbolic state. This requires
         the inversion of a symbolic matrix, which has some reasonable limitations.
         Default is False.
+        
+    N : int, Optional
+        If neither 'x' nor 'i' is specified, this controls the number of functions to generate.
+        Default is None.
 
     Returns
     -------
@@ -62,6 +67,10 @@ def gen_Lagrange_1d(*args, x=None, i=None, xsym: str=None,
     
     >>> gen_Lagrange_1d(x=[-1, 1])
     
+    or equivalently
+    
+    >>> gen_Lagrange_1d(N=2)
+    
     To generate the same functions in symbolic form:
     
     >>> gen_Lagrange_1d(i=[1, 2], sym=True)
@@ -78,7 +87,8 @@ def gen_Lagrange_1d(*args, x=None, i=None, xsym: str=None,
     fsym = fsym if fsym is not None else r'\phi'
     module_data = {}
     xvar = sy.symbols(xsym)
-    N = len(x) if x is not None else len(i)
+    if not isinstance(N, int):
+        N = len(x) if x is not None else len(i)
     inds = list(range(1, N + 1)) if i is None else i
     def var_tmpl(i): return r'\Delta_{}'.format(i)
     def var_str(i): return var_tmpl(inds[i])

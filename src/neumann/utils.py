@@ -33,8 +33,8 @@ def to_range(vals: ndarray, *args, source: ndarray, target: ndarray=None,
         return _to_range(vals, source, target)
     
 
-def squeeze_if_array(arr): return np.squeeze(
-    arr) if isinstance(arr, np.ndarray) else arr
+def squeeze_if_array(arr): 
+    return np.squeeze(arr) if isinstance(arr, np.ndarray) else arr
 
 
 def squeeze(default=True):
