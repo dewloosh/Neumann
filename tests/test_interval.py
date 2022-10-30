@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 import numpy as np
-from numba import jit
+from numba import njit
 
 from neumann.interval import Interval
 
@@ -10,27 +10,27 @@ class TestInterval(unittest.TestCase):
 
     def test_interval(self, lo=1.0, hi=3.0):
         
-        @jit(nopython=True)
+        @njit()
         def inside_interval(interval, x):
             return interval.lo <= x < interval.hi
 
 
-        @jit(nopython=True)
+        @njit()
         def interval_width(interval):
             return interval.width
 
 
-        @jit(nopython=True)
+        @njit()
         def interval_data(interval):
             return interval.data
 
 
-        @jit(nopython=True)
+        @njit()
         def interval_getitem(interval, i):
             return interval[i]
 
 
-        @jit(nopython=True)
+        @njit()
         def new_interval(lo, hi, data):
             return Interval(lo, hi, data)
         
