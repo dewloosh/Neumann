@@ -39,40 +39,34 @@ try:
 
         """
 
-        def adjacency_matrix(self, *args, to_csr=False, **kwargs):
+        def adjacency_matrix(self, *args, to_csr:bool=False, **kwargs):
             """
             Returns the adjacency matrix of the graph.
 
             Parameters
             ----------
             to_csr : bool, Optional
-                If `True`, the result of `networkx.adjacency_matrix` is 
-                returned as a `csr_matrix`.
+                If `True`, the result of networkx.adjacency_matrix is 
+                returned as a csr_matrix.
 
             *args : Tuple, Optional
-                Forwarded to `networkx.adjacency_matrix`
+                Forwarded to networkx.adjacency_matrix
 
-            **args, dict, Optional
-                Forwarded to `networkx.adjacency_matrix`
+            **kwargs, dict, Optional
+                Forwarded to networkx.adjacency_matrix
 
             Returns
             -------
-            NumPy array, SciPy array or `csr_matrix`
+            NumPy array, SciPy array or csr_matrix
                 The adjacency representation of the graph.
 
             Examples
             --------
-
             >>> from neumann.topology import Graph
             >>> G = Graph([(1, 1)])
             >>> A = G.adjacency_matrix()
             >>> print(A.todense())
             [[1]]
-
-            See Also
-            --------
-            Graph.rooted_level_structure
-            Graph.pseudo_peripheral_nodes
 
             """
             adj = adjacency_matrix(self, *args, **kwargs)
@@ -87,7 +81,7 @@ try:
 
             See Also
             --------
-            rooted_level_structure
+            :func:`rooted_level_structure`
 
             """
             return rooted_level_structure(csr_matrix(adjacency_matrix(self)), root)
@@ -102,7 +96,7 @@ try:
 
             See Also
             --------
-            pseudo_peripheral_nodes
+            :func:`pseudo_peripheral_nodes`
 
             """
             return pseudo_peripheral_nodes(csr_matrix(adjacency_matrix(self)))

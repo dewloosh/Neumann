@@ -169,7 +169,8 @@ class LinearProgrammingProblem:
 
     @staticmethod
     def example_unique() -> 'LinearProgrammingProblem':
-        """Returns teh following LPP:
+        """
+        Returns the following LPP:
 
         .. math::
             :nowrap:
@@ -182,13 +183,12 @@ class LinearProgrammingProblem:
                 & & x_i \,\geq\, \, 0, \qquad i=1, \ldots, 4.
             \\end{eqnarray}
 
-        The LPP has a unique solution:
+        The returned LPP has a unique solution:
 
         :math:`\quad \mathbf{x} = (0., 6., 0., 4.), \quad f(\mathbf{x}) = 10.`
 
         Example
         -------
-
         >>> from neumann.optimize import LinearProgrammingProblem as LPP
         >>> problem = LPP.example_unique()
         >>> problem.solve()['x']
@@ -205,7 +205,9 @@ class LinearProgrammingProblem:
         return P
 
     def add_constraint(self, *args, **kwargs):
-        """Adds a new constraint to the system."""
+        """
+        Adds a new constraint to the system.
+        """
         if isinstance(args[0], Function):
             if isinstance(args[0], InEquality):
                 assert args[0].op in [Relations.ge, Relations.le], \
@@ -227,7 +229,9 @@ class LinearProgrammingProblem:
         self.vmanager.add_variables(s)
 
     def _shift_variables(self):
-        """Handle variables not restricted in sign."""
+        """
+        Handle variables not restricted in sign.
+        """
         vmap = dict()
         tmpl = self.__class__.__tmpl_shift__
         count = 1
@@ -239,7 +243,9 @@ class LinearProgrammingProblem:
         self.vmanager.substitute(vmap)
 
     def get_system_variables(self) -> list:
-        """Returns all variables of the system."""
+        """
+        Returns all variables of the system.
+        """
         s = set()
         s.update(self.obj.variables)
         for c in self.constraints:
@@ -281,25 +287,40 @@ class LinearProgrammingProblem:
         return all_pos and all_eq
 
     def simplify(self, maximize=False, inplace=False) -> 'LinearProgrammingProblem':
-        """Simplifies the problem so that it admits the standard form. 
+        """
+        Simplifies the problem so that it admits the standard form. 
 
         This is done in 3 steps:
 
-            1) Decomposing variables not restricted in sign according to
-                    :math:`x = x^{+} - x^{-}, \quad \mid x \mid = x^{+} + x^{-}`,
-               where 
-                    :math:`x^{+} = max(0, x) \geq 0, \quad x^{-} = max(0, -x) \geq 0`.
-               Then the variable :math:`x` can be substituted by         
-                    :math:`x = x^{+} - x^{-}` and the conditions :math:`\quad x^{+}, x^{-} \geq 0`. 
-            2) Transforming inequalities into equalities using slack variables.
-                We introduce new variables
-                    :math:`\mathbf{y} = \mathbf{b} - \mathbf{A} \mathbf{x} \geq \mathbf{0}`,
-                and formulate the extended problem
-                    :math:`\hat{\mathbf{A}} \mathbf{X} = \mathbf{b}`,
-                where 
-                    :math:`\mathbf{X} = (\mathbf{x} \, \, \mathbf{y}), \quad \hat{\mathbf{A}} = (\mathbf{A} \, \, \mathbf{1})`.
-            3) Transform to minimization problem if necessary using the simple rule
-                :math:`max(f) = -min(-f)`.
+        1) Decomposing variables not restricted in sign according to
+        
+            :math:`x = x^{+} - x^{-}, \quad \mid x \mid = x^{+} + x^{-}`, 
+            
+            where 
+            
+            :math:`x^{+} = max(0, x) \geq 0, \quad x^{-} = max(0, -x) \geq 0`.
+            
+            Then the variable :math:`x` can be substituted by         
+            
+            :math:`x = x^{+} - x^{-}` and the conditions :math:`\quad x^{+}, x^{-} \geq 0`.
+            
+        2) Transforming inequalities into equalities using slack variables.
+            
+            We introduce new variables
+            
+            :math:`\mathbf{y} = \mathbf{b} - \mathbf{A} \mathbf{x} \geq \mathbf{0}`,
+            
+            and formulate the extended problem
+            
+            :math:`\hat{\mathbf{A}} \mathbf{X} = \mathbf{b}`,
+            
+            where 
+            
+            :math:`\mathbf{X} = (\mathbf{x} \, \, \mathbf{y}), \quad \hat{\mathbf{A}} = (\mathbf{A} \, \, \mathbf{1})`.
+            
+        3) Transform to minimization problem if necessary using the simple rule
+            
+            :math:`max(f) = -min(-f)`.
 
         Parameters
         ----------
@@ -405,11 +426,14 @@ class LinearProgrammingProblem:
             return lpp
 
     def eval_constraints(self, x: Iterable) -> Iterable:
-        """Evaluates the constraints at `x`."""
+        """
+        Evaluates the constraints at `x`.
+        """
         return np.array([c.f0(x) for c in self.constraints], dtype=float)
 
     def feasible(self, x: Iterable = None) -> bool:
-        """Returns `True` if `x` is a feasible candidate to the current problem,
+        """
+        Returns `True` if `x` is a feasible candidate to the current problem,
         `False` othwerise.
         """
         c = [c.relate(x) for c in self.constraints]
@@ -420,7 +444,8 @@ class LinearProgrammingProblem:
 
     @staticmethod
     def basic_solution(A=None, b=None, order=None) -> Tuple[ndarray]:
-        """Returns a basic solution to a problem the form
+        """
+        Returns a basic solution to a problem the form
 
         .. math::
             :nowrap:
@@ -769,13 +794,16 @@ class LinearProgrammingProblem:
         -------
         dict
             A dictionary with the following items:
-                x : numpy.ndarray or dict
-                    The solution as an array or a dictionary, depending on your input.
-                e : Iterable
-                    A list of errors that occured during solution.
-                time : dict
-                    A dictionary with information of execution times of the main stages
-                    of the calculation.
+            
+            x : numpy.ndarray or dict
+                The solution as an array or a dictionary, depending on your input.
+            
+            e : Iterable
+                A list of errors that occured during solution.
+            
+            time : dict
+                A dictionary with information of execution times of the main stages
+                of the calculation.
 
         """
         summary = {'time' : {}, 'x' : None, 'e': []}
