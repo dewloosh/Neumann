@@ -83,7 +83,7 @@ def atleast2d(a: nparray, **kwargs) -> nparray:
 
 
 def matrixform(f: np.ndarray) -> nparray:
-    """    Returns an array that is at least 2 dimensional."""
+    """Returns an array that is at least 2 dimensional."""
     size = len(f.shape)
     assert size <= 2, "Input array must be at most 2 dimensional."
     if size == 1:
