@@ -69,25 +69,7 @@ def reduce(A: np.ndarray, B: np.ndarray, presc_bool: np.ndarray = None,
 @njit(nogil=True, cache=__cache)
 def npsolve(A, b):
     return np.linalg.solve(A, b)
-
-
-@guvectorize(['(f8[:, :], f8[:, :])', '(f4[:, :], f4[:, :])'],
-             '(n, n) -> (n, n)', nopython=True, cache=__cache)
-def inv3x3(A, res):
-    d = A[0, 0] * A[1, 1] * A[2, 2] - A[0, 0] * A[1, 2] * A[2, 1] \
-        - A[0, 1] * A[1, 0] * A[2, 2] + A[0, 1] * A[1, 2] * A[2, 0] \
-        + A[0, 2] * A[1, 0] * A[2, 1] - A[0, 2] * A[1, 1] * A[2, 0]
-    res[0, 0] = A[1, 1] * A[2, 2] - A[1, 2] * A[2, 1]
-    res[0, 1] = -A[0, 1] * A[2, 2] + A[0, 2] * A[2, 1]
-    res[0, 2] = A[0, 1] * A[1, 2] - A[0, 2] * A[1, 1]
-    res[1, 0] = -A[1, 0] * A[2, 2] + A[1, 2] * A[2, 0]
-    res[1, 1] = A[0, 0] * A[2, 2] - A[0, 2] * A[2, 0]
-    res[1, 2] = -A[0, 0] * A[1, 2] + A[0, 2] * A[1, 0]
-    res[2, 0] = A[1, 0] * A[2, 1] - A[1, 1] * A[2, 0]
-    res[2, 1] = -A[0, 0] * A[2, 1] + A[0, 1] * A[2, 0]
-    res[0, 0] = A[0, 0] * A[1, 1] - A[0, 1] * A[1, 0]
-    res /= d
-
+ 
 
 @njit(nogil=True, cache=__cache)
 def _Jordan(A: np.ndarray, B: np.ndarray, presc_bool: np.ndarray,

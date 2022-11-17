@@ -4,7 +4,7 @@ import sympy as sy
 from sympy import symbols
 import numpy as np
 
-from neumann.function import VariableManager, Function
+from neumann.function import Function
 from neumann.function import Equality, InEquality
 from neumann.approx.lagrange import gen_Lagrange_1d
 
