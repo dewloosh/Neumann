@@ -161,8 +161,8 @@ class ReferenceFrame(Array):
             source: 'ReferenceFrame' = None, **kwargs) -> ndarray:
         """
         Returns the direction cosine matrix (DCM) of a transformation
-        from a source (S) to a target (T) frame. The current frame can be the 
-        source or the target, depending on the arguments. 
+        from a source (S) to a target (T) frame. The current frame can be 
+        the source or the target, depending on the arguments. 
 
         If called without arguments, it returns the DCM matrix from the 
         root frame to the current frame (S=root, T=self).
@@ -317,7 +317,7 @@ class ReferenceFrame(Array):
         dcm = np.array(target.dcm(source).evalf()).astype(float)
         return self.__class__(axes=dcm, parent=self, name=name)
     
-    def rotate(self, *args, inplace=True, **kwargs) -> 'ReferenceFrame':
+    def rotate(self, *args, inplace:bool=True, **kwargs) -> 'ReferenceFrame':
         """
         Alias for `orient` and `orient_new`, all extra arguments are forwarded.
         

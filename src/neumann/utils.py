@@ -40,12 +40,13 @@ def squeeze_if_array(arr):
 
 def squeeze(default=True):
     def decorator(fnc: Callable):
-        def inner(*args, **kwargs):
-            if kwargs.get('squeeze', default):
+        def inner(*args, squeeze:bool=default, **kwargs):
+            if squeeze:
                 res = fnc(*args, **kwargs)
                 if isinstance(res, tuple):
                     return list(map(squeeze_if_array, res))
-                return squeeze_if_array(res)
+                else:
+                    return squeeze_if_array(res)
             else:
                 return fnc(*args, **kwargs)
         inner.__doc__ = fnc.__doc__
