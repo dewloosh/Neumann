@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 from dewloosh.core.tools import getasany
 
-from .meta import MetaFunction, substitute
+from .metafunction import MetaFunction, substitute
 
 
 __all__ = ['Function', 'VariableManager', 'FuncionLike']
