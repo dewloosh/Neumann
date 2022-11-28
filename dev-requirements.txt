@@ -1,5 +1,6 @@
 hypothesis
-flake8 
+flake8
 pytest
 coverage
+coverage-badge
 networkx
