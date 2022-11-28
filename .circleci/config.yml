@@ -87,7 +87,7 @@ jobs:
             git config --global user.email $GITHUB_EMAIL
             git config --global user.name $GITHUB_NAME
             git add coverage.svg
-            git commit -m "Coverage Badge"
+            https://workflowr:$GITHUB_PAT@github.com/dewloosh/Neumann.git
 
   tox-test:  # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a docker executors: https://circleci.com/docs/2.0/executor-types/
