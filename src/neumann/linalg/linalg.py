@@ -2,7 +2,26 @@
 import numpy as np
 from numba import njit, prange, guvectorize as guv
 from numpy import ndarray
+import sympy as sy
+from sympy import symbols, Matrix
+
 __cache = True
+
+
+def inv_sym_3x3(m: Matrix, as_adj_det=False):
+    P11, P12, P13, P21, P22, P23, P31, P32, P33 = \
+        symbols('P_{11} P_{12} P_{13} P_{21} P_{22} P_{23} P_{31} \
+                P_{32} P_{33}', real=True)
+    Pij = [[P11, P12, P13], [P21, P22, P23], [P31, P32, P33]]
+    P = sy.Matrix(Pij)
+    detP = P.det()
+    adjP = P.adjugate()
+    invP = adjP / detP
+    subs = {s: r for s, r in zip(sy.flatten(P), sy.flatten(m))}
+    if as_adj_det:
+        return detP.subs(subs), adjP.subs(subs)
+    else:
+        return invP.subs(subs)
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
@@ -63,6 +82,26 @@ def det3x3(A, res):
 @guv(['(f8[:, :], f8)'], '(n, n) -> ()', nopython=True, cache=__cache)
 def det2x2(A, res):
     res = A[0, 0] * A[1, 1] - A[0, 1] * A[1, 0]
+
+
+@njit(nogil=True, cache=__cache)
+def inv2x2(A):
+    res = np.zeros_like(A)
+    d = A[0, 0] * A[1, 1] - A[0, 1] * A[1, 0]
+    res[0, 0] = A[1, 1] / d
+    res[1, 1] = A[0, 0] / d
+    res[0, 1] = - A[0, 1] / d
+    res[1, 0] = - A[1, 0] / d
+    return res
+
+
+@guv(['(f8[:, :], f8[:, :])'], '(n, n) -> (n, n)', nopython=True, cache=__cache)
+def inv2x2u(A, res):
+    d = A[0, 0] * A[1, 1] - A[0, 1] * A[1, 0]
+    res[0, 0] = A[1, 1] / d
+    res[1, 1] = A[0, 0] / d
+    res[0, 1] = - A[0, 1] / d
+    res[1, 0] = - A[1, 0] / d
 
 
 @guv(['(f8[:, :], f8[:, :])'], '(n, n) -> (n, n)', nopython=True, cache=__cache)
@@ -170,7 +209,7 @@ def norm2d(A):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def _to_range(vals: ndarray, source: ndarray, target: ndarray):
+def _to_range_1d(vals: ndarray, source: ndarray, target: ndarray):
     res = np.zeros_like(vals)
     s0, s1 = source
     t0, t1 = target
@@ -181,16 +220,16 @@ def _to_range(vals: ndarray, source: ndarray, target: ndarray):
     return res
 
 
-def to_range(vals: ndarray, *args, source: ndarray, target: ndarray = None,
+def to_range_1d(vals: ndarray, *args, source: ndarray, target: ndarray = None,
              squeeze=False, **kwargs):
     if not isinstance(vals, ndarray):
         vals = np.array([vals, ])
     source = np.array([0., 1.]) if source is None else np.array(source)
     target = np.array([-1., 1.]) if target is None else np.array(target)
     if squeeze:
-        return np.squeeze(_to_range(vals, source, target))
+        return np.squeeze(_to_range_1d(vals, source, target))
     else:
-        return _to_range(vals, source, target)
+        return _to_range_1d(vals, source, target)
 
 
 @njit(nogil=True, parallel=True, cache=__cache)

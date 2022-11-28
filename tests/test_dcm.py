@@ -5,7 +5,7 @@ import numpy as np
 from numpy import vstack
 
 
-class TestDirectionCosineMatrix(unittest.TestCase):
+class TestDCM(unittest.TestCase):
 
     def test_dcm_1(self):
         """

@@ -15,15 +15,15 @@ def frontal_sym_bulk_uniform(A: np.ndarray, topology: np.ndarray,
     topology += 1
     topo_sig = signed_topo_bulk(topology, epath)
     maxwidth = max_frontwidth_bulk(topo_sig, epath)
-    A_front = np.zeros(flatsize_sym(maxwidth), dtype=np.float64)
-    B_front = np.zeros((maxwidth, nRHS), dtype=np.float64)
-    front_to_glob = np.zeros(maxwidth, dtype=np.int64)
-    loc_to_front = np.zeros(nXE, dtype=np.int64)
-    lhs = np.zeros((nEQ, maxwidth), dtype=np.float64)
-    rhs = np.zeros((nEQ, nRHS), dtype=np.float64)
-    glob_to_width = np.zeros(nEQ, dtype=np.int64)
-    glob_to_front = np.zeros(nEQ, dtype=np.int64)
-    eqpath = np.zeros(nEQ, dtype=np.int64)
+    A_front = np.zeros(flatsize_sym(maxwidth), dtype=A.dtype)
+    B_front = np.zeros((maxwidth, nRHS), dtype=A.dtype)
+    front_to_glob = np.zeros(maxwidth, dtype=topology.dtype)
+    loc_to_front = np.zeros(nXE, dtype=topology.dtype)
+    lhs = np.zeros((nEQ, maxwidth), dtype=A.dtype)
+    rhs = np.zeros((nEQ, nRHS), dtype=A.dtype)
+    glob_to_width = np.zeros(nEQ, dtype=topology.dtype)
+    glob_to_front = np.zeros(nEQ, dtype=topology.dtype)
+    eqpath = np.zeros(nEQ, dtype=topology.dtype)
     frontwidth = 0
 
     # ASSEMBLY & ELIMINATION

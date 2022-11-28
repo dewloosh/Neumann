@@ -8,16 +8,17 @@ from ...topology.graph import pseudo_peripheral_nodes
 
 @jit(nopython=True, nogil=True, fastmath=False, cache=True)
 def optimal_node_order(adj: CSR):
+    itype = adj.indptr
     nN = len(adj.indptr) - 1  # number of nodes
     roots = pseudo_peripheral_nodes(adj)
-    renum = np.full(nN, -1, dtype=np.int64)
-    order = np.arange(0, nN, dtype=np.int64)
+    renum = np.full(nN, -1, dtype=itype)
+    order = np.arange(0, nN, dtype=itype)
     minwidth = nN
 
     # 0  == virgin
     # -1 == eliminated
     # n  == age
-    status = np.zeros(nN, dtype=np.int64)
+    status = np.zeros(nN, dtype=itype)
 
     def iseliminated(status, i):
         return status[i] < 0

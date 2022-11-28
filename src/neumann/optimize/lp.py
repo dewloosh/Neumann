@@ -18,7 +18,7 @@ from dewloosh.core.tools import getasany
 
 from ..function import Function, InEquality, Equality, VariableManager
 from ..function.relation import Relations, Relation
-from ..function.meta import coefficients
+from ..function.metafunction import coefficients
 from .errors import DegenerateProblemError, NoSolutionError
 from ..array import atleast2d
 
@@ -704,7 +704,7 @@ class LinearProgrammingProblem:
                 degenerate = False
                 break
 
-    def to_numpy(self, maximize=False, return_coeffs=False):
+    def to_numpy(self, maximize:bool=False, return_coeffs:bool=False):
         """
         Returns the complete numerical representation of the standard 
         form of the problem:
@@ -760,8 +760,8 @@ class LinearProgrammingProblem:
         kwargs['maximize'] = True
         return self.solve(*args, **kwargs)
 
-    def solve(self, order=None, return_all=True, maximize=False,
-              as_dict=False, raise_errors=False, tol: float = 1e-10):
+    def solve(self, order=None, return_all:bool=True, maximize:bool=False,
+              as_dict:bool=False, raise_errors:bool=False, tol: float = 1e-10):
         """
         Solves the problem and return the solution(s) if there are any.
 

@@ -16,7 +16,7 @@ def signed_topo_flattened(a: np.ndarray, path: np.ndarray):
     a_max = np.max(a)
     a_min = np.min(a)
     res = a + 1 - a_min
-    found = np.full(a_max + 1 - a_min, 0, dtype=np.int8)
+    found = np.full(a_max + 1 - a_min, 0, dtype=a.dtype)
     for i in range(len(res) - 1, -1, -1):
         if found[a[path[i]] - a_min] == 0:
             found[a[path[i]] - a_min] = 1
@@ -31,7 +31,7 @@ def signed_topo_bulk(a: np.ndarray, path: np.ndarray):
     a_min = np.min(a)
     res = a + 1 - a_min
     I, J = a.shape
-    found = np.full(a_max + 1 - a_min, 0, dtype=np.int8)
+    found = np.full(a_max + 1 - a_min, 0, dtype=a.dtype)
     for i in range(I - 1, -1, -1):
         for j in range(J):
             if found[a[path[i], j] - a_min] == 0:

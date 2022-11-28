@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from numpy import ndarray as nparray
+from numpy import ndarray
 from numba import njit, prange
 from typing import Union, Tuple
 try:
@@ -9,37 +9,40 @@ except ImportError:
     from collections import Iterable
 __cache = True
 
-ArrayOrFloat = Union[float, np.ndarray, list]
+ArrayOrFloat = Union[float, ndarray, list]
 
 
 def itype_of_ftype(dtype):
+    """
+    Returns a matching NumPy integer type to a float type.
+    """
     name = np.dtype(dtype).name
     if '32' in name:
         return np.int32
     elif '64' in name:
         return np.int64
     else:
-        raise TypeError
+        raise TypeError('Unrecognized float type.')
     
 
 @njit(nogil=True, cache=__cache)
-def minmax(a: nparray) -> Tuple[float]:
+def minmax(a: ndarray) -> Tuple[float]:
     """
     Returns the minimum and maximum values of an array.
     """
     return a.min(), a.max()
 
 
-def ascont(array: nparray) -> nparray:
+def ascont(array: ndarray) -> ndarray:
     """
-    Returns the input as contiguous array (ndim >= 1).
+    Returns the input as contiguous array.
     It is basically a shortcut to `numpy.ascontiguousarray`.
     """
     return np.ascontiguousarray(array)
 
 
 @njit(nogil=True, cache=__cache)
-def clip1d(a: nparray, a_min: float, a_max: float) -> nparray:
+def clip1d(a: ndarray, a_min: float, a_max: float) -> ndarray:
     """
     Clips the values outside the interval [a_min, a_max] to 
     either a_min or a_max.
@@ -49,7 +52,8 @@ def clip1d(a: nparray, a_min: float, a_max: float) -> nparray:
     return a
 
 
-def atleastnd(a: nparray, n=2, front=True, back=False) -> nparray:
+def atleastnd(a: ndarray, n:int=2, front:bool=True, 
+              back:bool=False) -> ndarray:
     """
     Returns an array that is at least 'n' dimensional.
     The required shape is obtained by inserting new axes either
@@ -70,20 +74,20 @@ def atleastnd(a: nparray, n=2, front=True, back=False) -> nparray:
         return np.reshape(a, newshape)
 
 
-def atleast1d(a: ArrayOrFloat) -> nparray:
+def atleast1d(a: ArrayOrFloat) -> ndarray:
     """Returns an array that is at least 1 dimensional."""
     if not isinstance(a, Iterable):
         a = [a,]
     return np.array(a)
 
 
-def atleast2d(a: nparray, **kwargs) -> nparray:
+def atleast2d(a: ndarray, **kwargs) -> ndarray:
     """Returns an array that is at least 2 dimensional."""
     return atleastnd(a, 2, **kwargs)
 
 
-def matrixform(f: np.ndarray) -> nparray:
-    """    Returns an array that is at least 2 dimensional."""
+def matrixform(f: ndarray) -> ndarray:
+    """Returns an array that is at least 2 dimensional."""
     size = len(f.shape)
     assert size <= 2, "Input array must be at most 2 dimensional."
     if size == 1:
@@ -92,18 +96,18 @@ def matrixform(f: np.ndarray) -> nparray:
     return f
 
 
-def atleast3d(a: nparray, **kwargs) -> nparray:
+def atleast3d(a: ndarray, **kwargs) -> ndarray:
     """Returns an array that is at least 3 dimensional."""
     return atleastnd(a, 3, **kwargs)
 
 
-def atleast4d(a: nparray, **kwargs) -> nparray:
+def atleast4d(a: ndarray, **kwargs) -> ndarray:
     """Returns an array that is at least 4 dimensional."""
     return atleastnd(a, 4, **kwargs)
 
 
 @njit(nogil=True, cache=__cache)
-def flatten2dC(a: np.ndarray) -> nparray:
+def flatten2dC(a: ndarray) -> ndarray:
     I, J = a.shape
     res = np.zeros(I * J, dtype=a.dtype)
     ind = 0
@@ -115,7 +119,7 @@ def flatten2dC(a: np.ndarray) -> nparray:
 
 
 @njit(nogil=True, cache=__cache)
-def flatten2dF(a: np.ndarray) -> nparray:
+def flatten2dF(a: ndarray) -> ndarray:
     I, J = a.shape
     res = np.zeros(I * J, dtype=a.dtype)
     ind = 0
@@ -126,7 +130,7 @@ def flatten2dF(a: np.ndarray) -> nparray:
     return res
 
 
-def flatten2d(a: np.ndarray, order: str = 'C') -> nparray:
+def flatten2d(a: ndarray, order: str = 'C') -> ndarray:
     """
     Returns a flattened view of `a`.
     """
@@ -136,49 +140,49 @@ def flatten2d(a: np.ndarray, order: str = 'C') -> nparray:
         return flatten2dF(a)
 
 
-def isfloatarray(a: np.ndarray) -> bool:
+def isfloatarray(a: ndarray) -> bool:
     """
     Returns `True` if `a` is a float array.
     """
     return np.issubdtype(a.dtype, float)
 
 
-def isintegerarray(a: np.ndarray) -> bool:
+def isintegerarray(a: ndarray) -> bool:
     """
     Returns `True` if `a` is an integer array.
     """
     return np.issubdtype(a.dtype, int)
 
 
-def isintarray(a: np.ndarray) -> bool:
+def isintarray(a: ndarray) -> bool:
     """
     Returns `True` if `a` is a integer array.
     """
     return isintegerarray(a)
 
 
-def isboolarray(a: np.ndarray) -> bool:
+def isboolarray(a: ndarray) -> bool:
     """
     Returns `True` if `a` is a boolean array.
     """
     return np.issubdtype(a.dtype, bool)
 
 
-def is1dfloatarray(a: np.ndarray) -> bool:
+def is1dfloatarray(a: ndarray) -> bool:
     """
     Returns `True` if `a` is a 1d float array.
     """
     return isfloatarray(a) and len(a.shape) == 1
 
 
-def is1dintarray(a: np.ndarray) -> bool:
+def is1dintarray(a: ndarray) -> bool:
     """
     Returns `True` if `a` is a 1d integer array.
     """
     return isintarray(a) and len(a.shape) == 1
 
 
-def issymmetric(a: np.ndarray, tol:float=1e-8) -> bool:
+def issymmetric(a: ndarray, tol:float=1e-8) -> bool:
     """
     Returns `True` if `a` is symmetric with a given tolerance
     prescribed by `tol`. 
@@ -186,7 +190,7 @@ def issymmetric(a: np.ndarray, tol:float=1e-8) -> bool:
     return np.linalg.norm(a-a.T) < tol
 
 
-def bool_to_float(a: np.ndarray, true=1.0, false=0.0) -> nparray:
+def bool_to_float(a: ndarray, true=1.0, false=0.0) -> ndarray:
     """
     Transforms a boolean array to a float array using the specified
     values for `True` and `False`. 
@@ -196,7 +200,7 @@ def bool_to_float(a: np.ndarray, true=1.0, false=0.0) -> nparray:
     return res
 
 
-def choice(choices, size, probs=None) -> nparray:
+def choice(choices, size, probs=None) -> ndarray:
     """
     Returns a numpy array, whose elements are selected from
     'choices' under probabilities provided with 'probs' (optionally).
@@ -212,7 +216,7 @@ def choice(choices, size, probs=None) -> nparray:
     return np.random.choice(a=choices, size=size, p=probs)
 
 
-def isposdef(A: np.ndarray, tol=0):
+def isposdef(A: ndarray, tol=0):
     """
     Returns `True` if `A` is positive definite.
 
@@ -231,7 +235,7 @@ def isposdef(A: np.ndarray, tol=0):
     return np.all(np.linalg.eigvals(A) > tol)
 
 
-def ispossemidef(A: np.ndarray):
+def ispossemidef(A: ndarray):
     """
     Returns `True` if `A` is positive semidefinite.
 
@@ -246,7 +250,7 @@ def ispossemidef(A: np.ndarray):
     return np.all(np.linalg.eigvals(A) >= 0)
 
 
-def random_pos_semidef_matrix(N) -> nparray:
+def random_pos_semidef_matrix(N) -> ndarray:
     """
     Returns a random positive semidefinite matrix of shape (N, N).
 
@@ -260,7 +264,7 @@ def random_pos_semidef_matrix(N) -> nparray:
     return A.T @ A
 
 
-def random_posdef_matrix(N, alpha=1e-12) -> nparray:
+def random_posdef_matrix(N, alpha=1e-12) -> ndarray:
     """
     Returns a random positive definite matrix of shape (N, N).
     
@@ -277,7 +281,7 @@ def random_posdef_matrix(N, alpha=1e-12) -> nparray:
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def repeat(a: np.ndarray, N:int=1) -> nparray:
+def repeat(a: ndarray, N:int=1) -> ndarray:
     """
     Repeats an array N-times.
     
@@ -312,7 +316,7 @@ def repeat(a: np.ndarray, N:int=1) -> nparray:
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def repeat1d(a: np.ndarray, N=1) -> nparray:
+def repeat1d(a: ndarray, N=1) -> ndarray:
     """
     Repeats a 1d array N times.
     """
@@ -324,7 +328,7 @@ def repeat1d(a: np.ndarray, N=1) -> nparray:
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def tile(a: np.ndarray, da: np.ndarray, N=1) -> nparray:
+def tile(a: ndarray, da: ndarray, N=1) -> ndarray:
     res = np.zeros((N, a.shape[0], a.shape[1]), dtype=a.dtype)
     for i in prange(N):
         res[i, :, :] = a + i*da
@@ -332,7 +336,7 @@ def tile(a: np.ndarray, da: np.ndarray, N=1) -> nparray:
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def tile1d(a: np.ndarray, da: np.ndarray, N=1) -> nparray:
+def tile1d(a: ndarray, da: ndarray, N=1) -> ndarray:
     M = a.shape[0]
     res = np.zeros(N * M, dtype=a.dtype)
     for i in prange(N):
@@ -340,7 +344,7 @@ def tile1d(a: np.ndarray, da: np.ndarray, N=1) -> nparray:
     return res
 
 
-def indices_of_equal_rows(x: np.ndarray, y: np.ndarray, tol=1e-12):
+def indices_of_equal_rows(x: ndarray, y: ndarray, tol=1e-12):
     nX, dX = x.shape
     nY, dY = y.shape
     assert dX == dY, "Input arrays must have identical second dimensions."
@@ -360,7 +364,8 @@ def indices_of_equal_rows(x: np.ndarray, y: np.ndarray, tol=1e-12):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def indices_of_equal_rows_njit(x: np.ndarray, y: np.ndarray, tol=1e-12):
+def indices_of_equal_rows_njit(x: ndarray, y: ndarray, 
+                               tol:float=1e-12):
     R = np.zeros((x.shape[0], y.shape[0]), dtype=x.dtype)
     for i in prange(R.shape[0]):
         for j in prange(R.shape[1]):
@@ -369,7 +374,7 @@ def indices_of_equal_rows_njit(x: np.ndarray, y: np.ndarray, tol=1e-12):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def indices_of_equal_rows_square_njit(x: np.ndarray, y: np.ndarray,
+def indices_of_equal_rows_square_njit(x: ndarray, y: ndarray,
                                       tol=1e-12):
     n = np.min([x.shape[0], y.shape[0]])
     R = np.zeros((n, n), dtype=x.dtype)
@@ -380,14 +385,45 @@ def indices_of_equal_rows_square_njit(x: np.ndarray, y: np.ndarray,
 
 
 @njit(nogil=True, parallel=True, fastmath=True, cache=__cache)
-def count_cols(arr: np.ndarray) -> np.ndarray:
+def count_cols(arr: ndarray) -> ndarray:
     """
-    Count and return the number of columns for each row in `arr`.
+    Count and return the number of columns for each row in
+    the input array.
     """
     n = len(arr)
     res = np.zeros(n, dtype=np.int64)
     for i in prange(n):
         res[i] = len(arr[i])
+    return res
+
+
+@njit(nogil=True, parallel=True, cache=__cache)
+def repeat_diagonal_2d(a: ndarray, N:int=2) -> ndarray:
+    """
+    Assembles a 2d dense block-diagonal matrix by repeating.
+    
+    Parameters
+    ----------
+    a : numpy.ndarray
+        A 2d array. This is the block that gets repeated.
+    
+    N : int, Optional
+        The number of copies.
+        
+    Returns
+    -------
+    numpy.ndarray
+        A 2d numpy array.
+        
+    """
+    nR, nC = a.shape[:2]
+    res = np.zeros((nR * N, nC * N), dtype=a.dtype)
+    for i in prange(N):
+        _iR = i * nR
+        iR_ = _iR + nR
+        _iC = i * nC
+        iC_ = _iC + nC
+        res[_iR:iR_, _iC:iC_] = a
     return res
 
 

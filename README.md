@@ -2,7 +2,8 @@
 [![CircleCI](https://circleci.com/gh/dewloosh/Neumann.svg?style=shield)](https://circleci.com/gh/dewloosh/Neumann) 
 [![Documentation Status](https://readthedocs.org/projects/neumann/badge/?version=latest)](https://neumann.readthedocs.io/en/latest/?badge=latest) 
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PyPI](https://badge.fury.io/py/Neumann.svg)](https://pypi.org/project/Neumann) 
+[![PyPI](https://badge.fury.io/py/Neumann.svg)](https://pypi.org/project/Neumann)
+[![codecov](https://codecov.io/gh/dewloosh/Neumann/branch/main/graph/badge.svg?token=TBI6GG4ECG)](https://codecov.io/gh/dewloosh/Neumann)
 
 # **Neumann** - A Python Library for Applied Mathematics in Physical Sciences
 

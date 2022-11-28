@@ -7,6 +7,7 @@ orbs:
   # so you dont have to copy and paste it everywhere.
   # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
   python: circleci/python@2.0.3
+  codecov: codecov/codecov@3
 
 jobs:
   test38:  # This is the name of the job, feel free to change it to better match what you're trying to do!
@@ -39,7 +40,8 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: python -m pytest
+          command: pytest --cov
+      - codecov/upload
   
   test310:  # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a docker executors: https://circleci.com/docs/2.0/executor-types/
@@ -67,12 +69,14 @@ jobs:
           pkg-manager: pip
           pip-dependency-file: dev-requirements.txt
       - run:
-          command: pip install -e .
+          command: |
+            pip install -e .
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: python -m pytest
-
+          command: pytest --cov
+      - codecov/upload
+      
   tox-test:  # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a docker executors: https://circleci.com/docs/2.0/executor-types/
     # You can specify an image from dockerhub or use one of the convenience images from CircleCI's Developer Hub

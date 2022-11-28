@@ -21,8 +21,8 @@ def frsolve(A: np.ndarray, B: np.ndarray, presc_bool: np.ndarray = None,
                 epath = np.arange(len(A))
         pre = presc_val is not None
         if not pre:
-            presc_bool = np.zeros((nEQ,), dtype=np.int64)
-            presc_val = np.zeros((nEQ,), dtype=np.float64)
+            presc_bool = np.zeros((nEQ,), dtype=int)
+            presc_val = np.zeros((nEQ,), dtype=float)
         lhs, rhs, eqpath, glob_to_front, glob_to_width = \
             frontal_sym_bulk_uniform(A, topology, B,
                                      presc_bool, presc_val, epath)
