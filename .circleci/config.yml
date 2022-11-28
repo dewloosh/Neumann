@@ -83,7 +83,7 @@ jobs:
       - store_artifacts:
           path: coverage.svg
       - codecov/upload:
-          file : coverage.svg
+          file : 
       
   tox-test:  # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a docker executors: https://circleci.com/docs/2.0/executor-types/
