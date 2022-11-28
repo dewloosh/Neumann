@@ -74,15 +74,7 @@ jobs:
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
-          command: |
-            coverage run -m pytest
-            coverage report
-            coverage html
-            coverage-badge -o coverage.svg
-      - store_artifacts:
-          path: htmlcov
-      - store_artifacts:
-          path: coverage.svg
+          command: pytest --cov
       - codecov/upload
       
   tox-test:  # This is the name of the job, feel free to change it to better match what you're trying to do!
@@ -113,4 +105,4 @@ workflows:
     # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
     jobs:
       #- tox-test
-      - test38
+      - test310
