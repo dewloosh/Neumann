@@ -7,6 +7,7 @@ orbs:
   # so you dont have to copy and paste it everywhere.
   # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
   python: circleci/python@2.0.3
+  codecov: codecov/codecov@1.0.2
 
 jobs:
   test38:  # This is the name of the job, feel free to change it to better match what you're trying to do!
@@ -81,14 +82,9 @@ jobs:
           path: htmlcov
       - store_artifacts:
           path: coverage.svg
-      - run:
-          name: Upload Coverage Badge
-          command: |
-            git config --global user.email $GITHUB_EMAIL
-            git config --global user.name $GITHUB_NAME
-            git add coverage.svg
-            https://workflowr:$GITHUB_PAT@github.com/dewloosh/Neumann.git
-
+      - codecov/upload:
+          file : coverage.svg
+      
   tox-test:  # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a docker executors: https://circleci.com/docs/2.0/executor-types/
     # You can specify an image from dockerhub or use one of the convenience images from CircleCI's Developer Hub
