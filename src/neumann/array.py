@@ -140,56 +140,6 @@ def flatten2d(a: ndarray, order: str = 'C') -> ndarray:
         return flatten2dF(a)
 
 
-def isfloatarray(a: ndarray) -> bool:
-    """
-    Returns `True` if `a` is a float array.
-    """
-    return np.issubdtype(a.dtype, float)
-
-
-def isintegerarray(a: ndarray) -> bool:
-    """
-    Returns `True` if `a` is an integer array.
-    """
-    return np.issubdtype(a.dtype, int)
-
-
-def isintarray(a: ndarray) -> bool:
-    """
-    Returns `True` if `a` is a integer array.
-    """
-    return isintegerarray(a)
-
-
-def isboolarray(a: ndarray) -> bool:
-    """
-    Returns `True` if `a` is a boolean array.
-    """
-    return np.issubdtype(a.dtype, bool)
-
-
-def is1dfloatarray(a: ndarray) -> bool:
-    """
-    Returns `True` if `a` is a 1d float array.
-    """
-    return isfloatarray(a) and len(a.shape) == 1
-
-
-def is1dintarray(a: ndarray) -> bool:
-    """
-    Returns `True` if `a` is a 1d integer array.
-    """
-    return isintarray(a) and len(a.shape) == 1
-
-
-def issymmetric(a: ndarray, tol:float=1e-8) -> bool:
-    """
-    Returns `True` if `a` is symmetric with a given tolerance
-    prescribed by `tol`. 
-    """
-    return np.linalg.norm(a-a.T) < tol
-
-
 def bool_to_float(a: ndarray, true=1.0, false=0.0) -> ndarray:
     """
     Transforms a boolean array to a float array using the specified
@@ -214,40 +164,6 @@ def choice(choices, size, probs=None) -> ndarray:
     if probs is None:
         probs = np.full((len(choices),), 1/len(choices))
     return np.random.choice(a=choices, size=size, p=probs)
-
-
-def isposdef(A: ndarray, tol=0):
-    """
-    Returns `True` if `A` is positive definite.
-
-    Example
-    -------
-    >>> from neumann.array import random_posdef_matrix, isposdef
-    >>> A = random_posdef_matrix(3, 0.1)
-    >>> isposdef(A)
-    True
-    
-    >>> A[0, 0] = 0
-    >>> isposdef(A)
-    False
-    
-    """
-    return np.all(np.linalg.eigvals(A) > tol)
-
-
-def ispossemidef(A: ndarray):
-    """
-    Returns `True` if `A` is positive semidefinite.
-
-    Example
-    -------
-    >>> from neumann.array import random_pos_semidef_matrix, ispossemidef
-    >>> A = random_pos_semidef_matrix(3)
-    >>> ispossemidef(A)
-    True
-        
-    """
-    return np.all(np.linalg.eigvals(A) >= 0)
 
 
 def random_pos_semidef_matrix(N) -> ndarray:

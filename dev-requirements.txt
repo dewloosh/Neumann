@@ -1,7 +1,6 @@
 hypothesis
 flake8
+coverage
 pytest
 pytest-cov
-coverage
-coverage-badge
 networkx
