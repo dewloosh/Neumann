@@ -2,8 +2,8 @@
 import unittest
 import numpy as np
 
-from neumann.array import (random_pos_semidef_matrix, random_posdef_matrix,
-                           ispossemidef, isposdef)
+from neumann.array import random_pos_semidef_matrix, random_posdef_matrix
+from neumann.logical import ispossemidef, isposdef
 from neumann.linalg import (ReferenceFrame, Vector, inv3x3, det3x3, 
                             inv2x2u, inv3x3u, inv2x2, det2x2)
 from neumann.linalg.solve import solve, reduce, _measure

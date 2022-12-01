@@ -104,6 +104,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.neumann
 env/
 venv/
 ENV/
