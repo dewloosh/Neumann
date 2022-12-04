@@ -45,6 +45,8 @@ def squeeze(default=True):
                 res = fnc(*args, **kwargs)
                 if isinstance(res, tuple):
                     return list(map(squeeze_if_array, res))
+                elif isinstance(res, dict):
+                    return {k : squeeze_if_array(v) for k, v in res.items()}
                 else:
                     return squeeze_if_array(res)
             else:

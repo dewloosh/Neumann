@@ -90,14 +90,7 @@ try:
             """
             Returns the indices of nodes that are possible candidates
             for being peripheral nodes of a graph.
-
-            The call is forwarded to `pseudo_peripheral_nodes`, go there
-            to read about the possible arguments.
-
-            See Also
-            --------
-            :func:`pseudo_peripheral_nodes`
-
+            
             """
             return pseudo_peripheral_nodes(csr_matrix(adjacency_matrix(self)))
 except:
