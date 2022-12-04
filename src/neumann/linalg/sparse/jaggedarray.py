@@ -21,27 +21,21 @@ class JaggedArray(Array):
     ----------
     data : Iterable
         A 2d numpy array or a list of such objects.
-
     behaviour
         Passed forward to `awkward.Array`, see it's documentation
         for the details.
-
     with_name
         Passed forward to `awkward.Array`, see it's documentation
         for the details.
-
     check_valid
         Passed forward to `awkward.Array`, see it's documentation
         for the details.
-
     cache
         Passed forward to `awkward.Array`, see it's documentation
         for the details.
-
     kernels
         Passed forward to `awkward.Array`, see it's documentation
         for the details.
-
     cuts : Iterable
         An iterable that tells how to unflatten an 1d array into a 
         2d jagged shape.
