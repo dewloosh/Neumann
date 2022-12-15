@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 from .hist import *
 from .utils import *
+from .decorate import *
 
 __version__ = "0.0.7"
 

@@ -108,7 +108,6 @@ def rooted_level_structure(adj: csr_matrix, root: int = 0) -> Dict:
     ----------
     adj : csr_matrix
         Adjacency matrix in CSR format.
-
     root : int, Optional
         Index of the root node. Default is 0.
 
@@ -134,7 +133,7 @@ def rooted_level_structure(adj: csr_matrix, root: int = 0) -> Dict:
     while nE < nN:
         levelset[:] = 0
         for node in rls[level]:
-            _, neighbours = adj.row(node)
+            neighbours = adj.irow(node)
             levelset[neighbours] = 1
         for iN in range(nN):
             if nodes[iN] == 1:

@@ -1,4 +1,3 @@
-""  # -*- coding: utf-8 -*-
 from numba import njit
 import numpy as np
 from scipy.special import factorial as fact
@@ -41,22 +40,16 @@ def weighted_least_squares(points, values, *args, deg=1, order=2, w=None, **kwar
     ----------
     points : Iterable 
         [[X11, X12, ..., X1d], ..., [Xn1, Xn2, ..., Xnd]]
-
     values : Iterable
         [[f11, f12, ..., f1r], ..., [fn1, fn2, ..., fnr]]
-
     deg : int, Optional
         The degree of the approximation. Default is 1.
-
     dim : int, Optional
         The dimension of the dataset. Default is 1.
-
     n : int, Optional
         Number of data points per dimension. Default is 20.
-
     w : MLSWeightFunction, Optional
         A proper weight function. Default is a ConstantWeightFunction.
-
     order : int, Optional.
         The order of the approximation. Default is 2.
 

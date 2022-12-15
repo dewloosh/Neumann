@@ -19,25 +19,20 @@ def gen_Lagrange_1d(*args, x:Iterable=None, i:List[int]=None, xsym: str=None,
         of [-1, 1] is assumed and the locations are generated as `np.linspace(-1, 1, N)`, 
         where N is the number of data points. If `sym=True`, the calculation is entirely
         symbolic. Default is None.
-
     i : List[int]
         If not specified, indices are assumed as [1, ..., N], but this is only relevant 
         for symbolic representation, not the calculation itself, which only cares about 
         the number of data points, regardless of their actual indices.
-    
     xsym : str, Optional
         Symbol of the variable in the symbolic representation of the generated functions.
         Default is :math:`x`.
-
     fsym : str, Optional
         Symbol of the function in the symbolic representation of the generated functions.
         Default is 'f'.
-
     sym : bool, Optional.
         If True, locations of the data points are left in a symbolic state. This requires
         the inversion of a symbolic matrix, which has some reasonable limitations.
         Default is False.
-        
     N : int, Optional
         If neither 'x' nor 'i' is specified, this controls the number of functions to generate.
         Default is None.

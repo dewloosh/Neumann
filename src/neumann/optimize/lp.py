@@ -20,7 +20,7 @@ from ..function import Function, InEquality, Equality, VariableManager
 from ..function.relation import Relations, Relation
 from ..function.metafunction import coefficients
 from .errors import DegenerateProblemError, NoSolutionError
-from ..array import atleast2d
+from ..utils import atleast2d
 
 
 __all__ = ['LinearProgrammingProblem']

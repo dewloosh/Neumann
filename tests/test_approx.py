@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import unittest
 from neumann.approx.lagrange import gen_Lagrange_1d
 

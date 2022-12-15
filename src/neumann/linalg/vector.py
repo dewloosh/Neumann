@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 from numpy import ndarray
 
 from .utils import show_vector, show_vectors
 from .frame import ReferenceFrame as Frame
-from .array import ArrayBase, Array
+from ._array import ArrayBase, Array
 
 
 __all__ = ['Vector']
@@ -45,7 +44,7 @@ class VectorBase(ArrayBase):
             self._frame = value
         else:
             raise TypeError('Value must be a {} instance'.format(Frame))
-
+        
 
 class Vector(Array):
     """
@@ -63,10 +62,8 @@ class Vector(Array):
     ----------
     args : tuple, Optional
         Positional arguments forwarded to `numpy.ndarray`.
-    
     frame : numpy.ndarray, Optional
         The reference frame the vector is represented by its coordinates.
-    
     kwargs : dict, Optional
         Keyword arguments forwarded to `numpy.ndarray`.
     
@@ -153,7 +150,6 @@ class Vector(Array):
         ----------
         target : numpy.ndarray, Optional
             Target frame.
-        
         dcm : numpy.ndarray, Optional
             The DCM matrix of the transformation.
 
@@ -212,20 +208,10 @@ class Vector(Array):
             return Vector(array, frame=self.frame)
         else:
             raise NotImplementedError
-
+        
     def __repr__(self):
-        return np.ndarray.__repr__(self._array)
+        return f"Vector({self._wrapped})"
 
     def __str__(self):
-        return np.ndarray.__str__(self._array)
+        return f"Vector({self._wrapped})"
 
-
-if __name__ == '__main__':
-
-    A = Frame(dim=3)
-    B = A.orient_new('Body', [0, 0, 30*np.pi/180], 'XYZ')
-    C = B.orient_new('Body', [0, 0, 30*np.pi/180], 'XYZ')
-
-    vA = Vector([1.0, 1.0, 0.0], frame=A)
-    vB = vA.orient_new('Body', [0, 0, -30*np.pi/180], 'XYZ')
-    vC = Vector(vA.show(C), frame=C)

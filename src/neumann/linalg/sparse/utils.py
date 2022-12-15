@@ -31,3 +31,18 @@ def count_cols(arr: np.ndarray):
     for i in prange(n):
         res[i] = len(arr[i])
     return res
+
+
+@njit(nogil=True)
+def _jagged_to_csr_data_(indices, indptr, counts):
+    indptr.begin_list()
+    indptr.integer(0)
+    c = 0
+    for i in range(len(counts)):
+        c += counts[i]
+        indptr.integer(c)
+        indices.begin_list()
+        for j in range(counts[i]):
+            indices.integer(j)
+        indices.end_list()
+    indptr.end_list()

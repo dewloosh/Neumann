@@ -8,8 +8,8 @@ from numba.typed import Dict
 from typing import Union
 import awkward as ak
 
-from .array import flatten2dC
-from .array import count_cols
+from .utils import flatten2dC
+from .utils import count_cols
 
 __cache = True
 

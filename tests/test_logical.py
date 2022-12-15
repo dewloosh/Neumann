@@ -5,7 +5,7 @@ from neumann.logical import (isclose, allclose,
                              isfloatarray, is1dfloatarray,
                              isboolarray,
                              issymmetric)
-from neumann.array import random_posdef_matrix
+from neumann.utils import random_posdef_matrix
 import numpy as np
 
 
