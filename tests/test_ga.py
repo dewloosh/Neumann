@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import unittest
 from neumann.optimize import BinaryGeneticAlgorithm
 

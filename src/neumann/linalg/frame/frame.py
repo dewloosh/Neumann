@@ -5,8 +5,8 @@ from sympy.physics.vector import ReferenceFrame as SymPyFrame
 from typing import Iterable
 
 from .utils import transpose_dcm_multi
-from ..array import Array
-from ...array import repeat
+from .._array import Array
+from ...utils import repeat
 
 
 class ReferenceFrame(Array):
@@ -23,14 +23,11 @@ class ReferenceFrame(Array):
     axes : numpy.ndarray, Optional
         2d numpy array of floats specifying cartesian reference frames.
         Dafault is None.
-        
     parent : ReferenceFrame, Optional
         A parent frame in which this the current frame is embedded in.
         Default is False.
-    
     dim : int, Optional
         Dimension of the mesh. Deafult is 3.
-        
     name : str, Optional
         The name of the frame.
             
@@ -175,7 +172,6 @@ class ReferenceFrame(Array):
         ----------
         source : 'ReferenceFrame', Optional
             Source frame. Default is None.
-
         target : 'ReferenceFrame', Optional
             Target frame. Default is None.
 
@@ -225,7 +221,6 @@ class ReferenceFrame(Array):
         args : tuple, Optional
             A tuple of arguments to pass to the `orientnew` 
             function in `sympy`. 
-
         kwargs : dict, Optional
             A dictionary of keyword arguments to pass to the 
             `orientnew` function in `sympy`.
@@ -255,7 +250,6 @@ class ReferenceFrame(Array):
         ----------
         name : str
             Name for the new reference frame.
-
         rot_type : str
             The method used to generate the direction cosine matrix. Supported
             methods are:
@@ -268,7 +262,6 @@ class ReferenceFrame(Array):
               frames' unit vectors
             - ``'Quaternion'``: rotations defined by four parameters which
               result in a singularity free direction cosine matrix
-
         amounts : str
             Expressions defining the rotation angles or direction cosine
             matrix. These must match the ``rot_type``. See examples below for
@@ -280,16 +273,13 @@ class ReferenceFrame(Array):
             - ``'Space'``: 3-tuple of expressions, symbols, or functions
             - ``'Quaternion'``: 4-tuple of expressions, symbols, or
               functions
-
         rot_order : str or int, Optional
             If applicable, the order of the successive of rotations. The string
             ``'123'`` and integer ``123`` are equivalent, for example. Required
             for ``'Body'`` and ``'Space'``.
-            
         *args : tuple, Optional
             Extra positional arguments forwarded to `sympy.orientnew`.
             Default is None.
-            
         **kwargs : dict, Optional
             Extra keyword arguments forwarded to `sympy.orientnew`.
             Default is None.

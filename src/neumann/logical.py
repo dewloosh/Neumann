@@ -1,7 +1,15 @@
 from typing import Union
 import numpy as np
 from numpy import ndarray
-from .array import atleast1d
+from .utils import atleast1d
+
+
+def is_none_or_false(a):
+    if isinstance(a, bool):
+        return not a
+    elif a is None:
+        return True
+    return False
 
 
 def isfloatarray(a: ndarray) -> bool:
@@ -60,7 +68,7 @@ def isposdef(A: ndarray, tol=0) -> bool:
 
     Example
     -------
-    >>> from neumann.array import random_posdef_matrix
+    >>> from neumann import random_posdef_matrix
     >>> from neumann.logical import isposdef
     >>> A = random_posdef_matrix(3, 0.1)
     >>> isposdef(A)
@@ -80,7 +88,7 @@ def ispossemidef(A: ndarray) -> bool:
 
     Example
     -------
-    >>> from neumann.array import random_pos_semidef_matrix
+    >>> from neumann import random_pos_semidef_matrix
     >>> from neumann.logical import ispossemidef
     >>> A = random_pos_semidef_matrix(3)
     >>> ispossemidef(A)
@@ -107,14 +115,11 @@ def isclose(x1: ndarray, x2: ndarray, *, atol:float=1e-8,
     ----------
     x1 : ndarray or float
         Values of the first array.
-        
     x2 : ndarray or float
-        Values of the second array.
-        
+        Values of the second array.  
     atol : float, Optional
         Absolute tolerance. It must be a positive number, or None to
-        turn this check off. Default is 1e-8.
-        
+        turn this check off. Default is 1e-8. 
     rtol : float, Optional
         Relative tolerance. It must be a positive number or None to
         turn this check off. In the latter case, the input arrays are only

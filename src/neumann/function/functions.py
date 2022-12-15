@@ -2,7 +2,7 @@
 import sympy as sy
 
 from .testfunction import TestMinFunction2D
-from .meta import symbolize, substitute
+from .metafunction import symbolize, substitute
 
 
 def Rosenbrock(a=1, b=100):

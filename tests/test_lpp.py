@@ -2,7 +2,7 @@
 import unittest
 import numpy as np
 
-from neumann.array import atleast2d
+from neumann.utils import atleast2d
 from neumann.function import Function, Equality, InEquality
 from neumann.optimize import LinearProgrammingProblem as LPP, \
     DegenerateProblemError, NoSolutionError

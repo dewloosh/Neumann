@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from typing import Tuple
 import numpy as np
+from numpy import array_repr, array_str
 from numpy.lib.mixins import NDArrayOperatorsMixin
 
 from dewloosh.core import Wrapper
 from dewloosh.core.abc import ABC_Safe
 
-from ..array import ascont, minmax
+from ..utils import ascont, minmax
 
 
 __all__ = ['ArrayBase', 'Array']
@@ -56,7 +57,19 @@ class ArrayBase(ABC_Safe, np.ndarray):
         # method sees all creation of default objects - with the
         # InfoArray.__new__ constructor, but also with
         # arr.view(InfoArray).
-
+        
+    def __repr__(self):
+        if self.ndim > 0:
+            return array_repr(self)
+        else:
+            return "(" + array_repr(self) + ")"
+        
+    def __str__(self):
+        if self.ndim > 0:
+            return array_str(self)
+        else:
+            return "(" + array_str(self) + ")"
+        
 
 class Array(NDArrayOperatorsMixin, Wrapper):
     """
@@ -95,7 +108,10 @@ class Array(NDArrayOperatorsMixin, Wrapper):
         return minmax(self._array)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}\n({self._array})"
+        return f"Array({self._array})"
+
+    def __str__(self):
+        return f"Array({self._array})"
 
     def __array__(self, dtype=None):
         if dtype is not None:

@@ -25,28 +25,21 @@ class Function(MetaFunction):
     ----------
     f0 : Callable
         A callable object that returns function evaluations.
-
     f1 : Callable
         A callable object that returns evaluations of the 
         gradient of the function.
-
     f2 : Callable
         A callable object that returns evaluations of the 
         Hessian of the function.
-
     variables : List, Optional
         Symbolic variables. Only if the function is defined by 
         a string or `sympy` expression.
-
     value : Callable, Optional
         Same as `f0`.
-
     gradient : Callable, Optional
         Same as `f1`.
-
     Hessian : Callable, Optional
         Same as `f2`.
-
     dimension or dim or d : int, Optional
         The number of dimensions of the domain of the function. Required only when
         going full blind, in most of the cases it can be derived from other properties.
