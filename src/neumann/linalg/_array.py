@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
 from typing import Tuple
+import numbers
+
 import numpy as np
 from numpy import array_repr, array_str
 from numpy.lib.mixins import NDArrayOperatorsMixin
@@ -24,7 +25,7 @@ class ArrayBase(ABC_Safe, np.ndarray):
                 offset=0, strides=None, order=None, frame=None,
                 inds=None):
         # Create the ndarray instance of our type, given the usual
-        # ndarray input arguments.  This will call the standard
+        # ndarray input arguments. This will call the standard
         # ndarray constructor, but return an object of our type.
         # It also triggers a call to InfoArray.__array_finalize__
         obj = super().__new__(subtype, shape, dtype,
@@ -75,7 +76,6 @@ class Array(NDArrayOperatorsMixin, Wrapper):
     """
     Base frontend class for array-like classes. Use it like if it 
     was a ``numpy.ndarray`` instance.
-    
     """
 
     _array_cls_ = ArrayBase
@@ -107,12 +107,6 @@ class Array(NDArrayOperatorsMixin, Wrapper):
         """
         return minmax(self._array)
 
-    def __repr__(self):
-        return f"Array({self._array})"
-
-    def __str__(self):
-        return f"Array({self._array})"
-
     def __array__(self, dtype=None):
         if dtype is not None:
             return self._array.astype(dtype)
@@ -132,3 +126,42 @@ class Array(NDArrayOperatorsMixin, Wrapper):
         Returns the data as a pure NumPy array.
         """
         return self.__array__()
+    
+    # One might also consider adding the built-in list type to this
+    # list, to support operations like np.add(array_like, list)
+    _HANDLED_TYPES = (np.ndarray, numbers.Number, list)
+
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        out = kwargs.get('out', ())
+        for x in inputs + out:
+            # Only support operations with instances of _HANDLED_TYPES.
+            # Use ArrayLike instead of type(self) for isinstance to
+            # allow subclasses that don't override __array_ufunc__ to
+            # handle ArrayLike objects.
+            if not isinstance(x, self._HANDLED_TYPES + (Array,)):
+                return NotImplementedError
+
+        # Defer to the implementation of the ufunc on unwrapped values.
+        inputs = tuple(x._array if isinstance(x, Array) else x
+                        for x in inputs)
+        if out:
+            kwargs['out'] = tuple(
+                x._array if isinstance(x, Array) else x
+                for x in out)
+        result = getattr(ufunc, method)(*inputs, **kwargs)
+
+        if type(result) is tuple:
+            # multiple return values
+            return tuple(type(self)(x) for x in result)
+        elif method == 'at':
+            # no return value
+            return None
+        else:
+            # one return value
+            return type(self)(result)
+
+    def __repr__(self):
+        return '%s(%r)' % (type(self).__name__, self.value)
+    
+    def __str__(self):
+        return '%s(%r)' % (type(self).__name__, self.value)

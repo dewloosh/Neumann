@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 from numpy import ndarray
 from sympy.physics.vector import ReferenceFrame as SymPyFrame
 from typing import Iterable
 
-from .utils import transpose_dcm_multi
-from .._array import Array
-from ...utils import repeat
+from .meta import Tensorial
+from .utils import transpose_dcm_multi, is_cartesian_frame, is_orthonormal_frame
+from ._array import Array
+from ..utils import repeat
 
 
 class ReferenceFrame(Array):
@@ -57,13 +57,13 @@ class ReferenceFrame(Array):
 
     See Also
     --------
-    :class:`polymesh.CartesianFrame`
+    :class:`CartesianFrame`
     
     """
 
     def __init__(self, axes: ndarray = None, parent=None, *args,
                  order: str = 'row', name: str = None, dim: int = None, 
-                 **kwargs):
+                 cartesian:bool=None, **kwargs):
         order = 'C' if order in ['row', 'C'] else 'F'
         try:
             if not isinstance(axes, ndarray):
@@ -82,6 +82,18 @@ class ReferenceFrame(Array):
         self.name = name
         self.parent = parent
         self._order = 0 if order == 'C' else 1
+        self._cartesian = cartesian
+    
+    @property
+    def is_cartesian(self):
+        if isinstance(self._cartesian, bool):
+            return self._cartesian
+        else:
+            return is_cartesian_frame(self.axes)
+    
+    @property
+    def is_orthonormal(self):
+        return is_orthonormal_frame(self.axes)
 
     @classmethod
     def eye(cls, *args, dim=3, **kwargs) -> 'ReferenceFrame':
@@ -96,6 +108,26 @@ class ReferenceFrame(Array):
         if len(args) > 0 and isinstance(args[0], int):
             dim = args[0]
         return cls(np.eye(dim), *args, **kwargs)
+    
+    def Gram(self) -> ndarray:
+        """
+        Returns the Gram-matrix of the frame.
+        """
+        a = self.axes
+        return a @ a.T if self._order == 0 else a.T @ a
+    
+    def metric_tensor(self) -> Tensorial:
+        """
+        Returns the metric tensor of the frame.
+        """
+        from .tensor import Tensor
+        return Tensor(self.Gram(), frame=self)
+    
+    def dual(self) -> 'ReferenceFrame':
+        """
+        Returns the dual (or reciprocal) frame.
+        """
+        pass
 
     def root(self) -> 'ReferenceFrame':
         """
@@ -232,7 +264,6 @@ class ReferenceFrame(Array):
         See Also
         --------
         :func:`orient_new`
-
         """
         source = SymPyFrame('source')
         target = source.orientnew('target', *args, **kwargs)
@@ -352,3 +383,9 @@ class ReferenceFrame(Array):
         
         """
         return self.orient_new(*args, **kwargs)
+
+
+class CartesianFrame(ReferenceFrame):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

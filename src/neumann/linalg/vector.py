@@ -104,16 +104,14 @@ class Vector(Array):
     
     See Also
     --------
-    :class:`neumann.linalg.vector.VectorBase`
-    :class:`neumann.linalg.array.Array`
-    :class:`neumann.linalg.frame.frame.ReferenceFrame`
-    
+    :class:`~neumann.linalg.array.Array`
+    :class:`~neumann.linalg.frame.frame.ReferenceFrame`
     """
 
     _array_cls_ = VectorBase
     _frame_cls_ = Frame
 
-    def __init__(self, *args, frame=None, **kwargs):
+    def __init__(self, *args, frame:Frame=None, **kwargs):
         cls_params = kwargs.get('cls_params', dict())
         if frame is not None:
             cls_params['frame'] = frame

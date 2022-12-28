@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 import numpy as np
+from numpy import ndarray
 from numba import njit, prange, prange
 
 __cache = True
@@ -71,3 +71,26 @@ def show_vectors_multi(dcm: np.ndarray, arr: np.ndarray):
     for i in prange(arr.shape[0]):
         res[i] = dcm[i] @ arr[i, :]
     return res
+
+
+@njit(nogil=True, parallel=True, cache=__cache)
+def transpose_dcm_multi(dcm: np.ndarray):
+    N = dcm.shape[0]
+    res = np.zeros_like(dcm)
+    for i in prange(N):
+        res[i] = dcm[i].T
+    return res
+
+
+def is_cartesian_frame(axes: ndarray):
+    assert len(axes.shape) == 2, "Input is not a matrix!"
+    assert axes.shape[0] == axes.shape[1], "Input is not a square matrix!"
+    gram = axes @ axes.T
+    return np.isclose(np.trace(gram), np.sum(gram))
+
+
+def is_orthonormal_frame(axes: ndarray):
+    if not is_cartesian_frame(axes):
+        return False
+    else:
+        return np.allclose(np.linalg.norm(axes, axis=1), 1.0)
