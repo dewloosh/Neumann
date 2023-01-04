@@ -3,50 +3,13 @@ from numpy import ndarray
 
 from .utils import show_vector, show_vectors
 from .frame import ReferenceFrame as Frame
-from ._array import ArrayBase, Array
+from .meta import TensorLike
 
 
 __all__ = ['Vector']
+   
 
-
-class VectorBase(ArrayBase):
-    """
-    Base class for vector backends. Use it like if it 
-    was a ``numpy.ndarray`` instance.
-    
-    """
-
-    def __new__(subtype, shape=None, dtype=float, buffer=None,
-                offset=0, strides=None, order=None, frame=None):
-        obj = super().__new__(subtype, shape, dtype, buffer,
-                              offset, strides, order)
-        obj._frame = frame
-        return obj
-
-    def __array_finalize__(self, obj):
-        if obj is None:
-            return
-        self._frame = getattr(obj, '_frame', None)
-
-    @property
-    def frame(self) -> Frame:
-        """
-        Returns the frame of the vector.
-        """
-        return self._frame
-
-    @frame.setter
-    def frame(self, value: Frame):
-        """
-        Sets the frame.
-        """
-        if isinstance(value, Frame):
-            self._frame = value
-        else:
-            raise TypeError('Value must be a {} instance'.format(Frame))
-        
-
-class Vector(Array):
+class Vector(TensorLike):
     """
     Extends `NumPy`'s ``ndarray`` class to handle arrays with associated
     reference frames. The class also provides a mechanism to transform
@@ -55,9 +18,7 @@ class Vector(Array):
     
     All parameters are identical to those of ``numpy.ndarray``, except that
     this class allows to specify an embedding frame.
-    
-    This class is a subclass of :class:`Array`.
-    
+        
     Parameters
     ----------
     args : tuple, Optional
@@ -71,12 +32,12 @@ class Vector(Array):
     --------
     Import the necessary classes:
     
-    >>> from neumann import Vector, ReferenceFrame as Frame
+    >>> from neumann import Vector, ReferenceFrame
     
     Create a default frame in 3d space, and create 2 others, each
     being rotated with 30 degrees around the third axis.
     
-    >>> A = Frame(dim=3)
+    >>> A = ReferenceFrame(dim=3)
     >>> B = A.orient_new('Body', [0, 0, 30*np.pi/180], 'XYZ')
     >>> C = B.orient_new('Body', [0, 0, 30*np.pi/180], 'XYZ')
 
@@ -88,17 +49,17 @@ class Vector(Array):
     
     >>> vB = vA.orient_new('Body', [0, 0, -30*np.pi/180], 'XYZ')
     
-    Use the `array` property to query the componets of a `Vector`:
+    Use the `array` property to get the componets of a `Vector`:
     
     >>> vB.array
     
     If you want to obtain the components of a vector in a specific
-    target frame (C), do this:
+    target frame C, do this:
     
     >>> vB.show(C)
     
-    Hence, to create a vector in a target frame (C), knowing the components in a 
-    source frame (A):
+    Hence, to create a vector in a target frame C, knowing the components in a 
+    source frame A:
     
     >>> vC = Vector(vA.show(C), frame=C)
     
@@ -108,36 +69,16 @@ class Vector(Array):
     :class:`~neumann.linalg.frame.frame.ReferenceFrame`
     """
 
-    _array_cls_ = VectorBase
     _frame_cls_ = Frame
-
-    def __init__(self, *args, frame:Frame=None, **kwargs):
-        cls_params = kwargs.get('cls_params', dict())
-        if frame is not None:
-            cls_params['frame'] = frame
-        kwargs['cls_params'] = cls_params
-        super().__init__(*args, **kwargs)
-        if self._array._frame is None:
-            self._array._frame = self._frame_cls_(dim=self._array.shape)
-
-    @property
-    def array(self) -> VectorBase:
+            
+    def dual(self) -> 'Vector':
         """
-        Returns the coordinates of the vector.
+        Returns the vector described in the dual (or reciprocal) frame.
         """
-        return self._array
-
-    @array.setter
-    def array(self, value):
-        """
-        Sets the coordinates of the vector.
-        """
-        buf = np.array(value)
-        assert buf.shape == self._array.shape
-        self._array = self._array_cls_(shape=buf.shape, buffer=buf,
-                                       dtype=buf.dtype)
-
-    def show(self, target: Frame = None, *args, dcm=None, **kwargs) -> ndarray:
+        a = self.frame.Gram() @ self.array
+        return self.__class__(a, frame=self.frame.dual())
+    
+    def show(self, target: Frame = None, *, dcm:ndarray=None) -> ndarray:
         """
         Returns the components in a target frame. If the target is 
         `None`, the components are returned in the global frame.
@@ -156,21 +97,25 @@ class Vector(Array):
         numpy.ndarray
             The components of the vector in a specified frame, or
             the global frame, depending on the arguments.
-
         """
         if not isinstance(dcm, ndarray):
             if target is None:
-                target = Frame(dim=self._array.shape[-1])
+                target = self._frame_cls_(dim=self._array.shape[-1])
             dcm = self.frame.dcm(target=target)
         if len(self.array.shape) == 1:
             return show_vector(dcm, self.array)  # dcm @ arr  
         else:
             return show_vectors(dcm, self.array)  # dcm @ arr 
         
-    def orient(self, *args, **kwargs) -> 'Vector':
+    def orient(self, *args, dcm:ndarray=None, **kwargs) -> 'Vector':
         """
-        Orients the vector inplace. All arguments are forwarded to
-        `orient_new`.
+        Orients the vector inplace. If the transformation is not specified by 'dcm',
+        all arguments are forwarded to `orient_new`.
+        
+        Parameters
+        ----------
+        dcm : numpy.ndarray, Optional
+            The DCM matrix of the transformation.
         
         Returns
         -------
@@ -180,13 +125,16 @@ class Vector(Array):
         See Also
         --------
         :func:`orient_new`
-        
         """
-        dcm = Frame.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
-        self.array = dcm.T @ self._array
+        if not isinstance(dcm, ndarray):
+            fcls = self.__class__._frame_cls_
+            dcm = fcls.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
+            self.array = dcm.T @ self._array
+        else:
+            self.array = np.linalg.inv(dcm) @ self._array
         return self
 
-    def orient_new(self, *args, keep_frame=True, **kwargs) -> 'Vector':
+    def orient_new(self, *args, **kwargs) -> 'Vector':
         """
         Returns a transformed version of the instance.
         
@@ -198,18 +146,9 @@ class Vector(Array):
         See Also
         --------
         :func:`orient`
-        
         """
-        dcm = Frame.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
-        if keep_frame:
-            array = dcm.T @ self._array
-            return Vector(array, frame=self.frame)
-        else:
-            raise NotImplementedError
+        fcls = self.__class__._frame_cls_
+        dcm = fcls.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
+        array = dcm.T @ self._array
+        return Vector(array, frame=self.frame)
         
-    def __repr__(self):
-        return f"Vector({self._wrapped})"
-
-    def __str__(self):
-        return f"Vector({self._wrapped})"
-

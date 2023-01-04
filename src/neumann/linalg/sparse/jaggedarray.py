@@ -268,7 +268,7 @@ class JaggedArray(NDArrayOperatorsMixin, Wrapper):
         # Note: this allows subclasses that don't override
         # __array_function__ to handle DiagonalArray objects.
         if not all(issubclass(t, self.__class__) for t in types):
-            return NotImplemented
+            return NotImplementedError
         return HANDLED_FUNCTIONS[func](*args, **kwargs)
 
 

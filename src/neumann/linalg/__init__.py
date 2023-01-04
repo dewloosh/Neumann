@@ -1,3 +1,3 @@
-from .linalg import *
+from .utils import *
 from .frame import *
 from .vector import *
