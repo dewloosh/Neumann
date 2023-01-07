@@ -38,7 +38,7 @@ class Tensor(TensorLike):
         """
         return cls(np.eye(dim))
 
-    def _transform(self, dcm: np.ndarray = None):
+    def _transform(self, dcm: ndarray = None):
         Q = dcm.T
         dim = self.dim
         source = latinrange(dim, start='i')

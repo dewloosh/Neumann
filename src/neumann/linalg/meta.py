@@ -16,7 +16,7 @@ from ..utils import ascont, minmax
 __all__ = ['Array', 'TensorLike', 'FrameLike']
 
 
-class Array(ABC_Safe, np.ndarray):
+class Array(ABC_Safe, ndarray):
     """
     Base backend class for array-like classes. Although you don't really need
     to directly create instances of this class, you can use it like if it was
@@ -164,7 +164,7 @@ class ArrayWrapper(NDArrayOperatorsMixin, Wrapper):
             # Use ArrayLike instead of type(self) for isinstance to
             # allow subclasses that don't override __array_ufunc__ to
             # handle ArrayLike objects.
-            if not isinstance(x, self._HANDLED_TYPES_ + (Array,)):
+            if not isinstance(x, self._HANDLED_TYPES_ + (Array, ArrayWrapper)):
                 return NotImplementedError
 
         # Defer to the implementation of the ufunc on unwrapped values.
@@ -243,7 +243,6 @@ class TensorLike(ArrayWrapper):
     a tensor does.
     """
     
-    _array_cls_ = Array
     _frame_cls_ = None
     
     def __init__(self, *args, frame:FrameLike=None, **kwargs):
@@ -310,3 +309,4 @@ class TensorLike(ArrayWrapper):
         
     @abstractmethod
     def orient_new(self) -> 'TensorLike':  ...
+    

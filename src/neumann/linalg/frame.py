@@ -4,6 +4,8 @@ import numpy as np
 from numpy import ndarray
 from sympy.physics.vector import ReferenceFrame as SymPyFrame
 
+from dewloosh.core.typing import issequence
+
 from .utils import (transpose_dcm_multi, is_rectangular_frame, is_orthonormal_frame,
                     is_normal_frame, normalize_frame, Gram, dual_frame)
 from ..utils import repeat
@@ -47,9 +49,14 @@ def inplace_binary(obj: FrameLike, other, bop: Callable, rtype: FrameLike = None
 
 class ReferenceFrame(FrameLike):
     """
-    A class for arbitrary reference frames, that facilitates tramsformation of tensor-like 
+    A class for arbitrary reference frames, that facilitates transformation of tensor-like 
     quantities. Instances of this class support NumPy's functions, universal 
     functions and other standard features of NumPy (see the notes below).
+    
+    An important feature of the class is that it maintains the property of objectivity
+    of the tensorial quantities that use instances of this class in their representation.
+    Upon transformation of a frame, the components of the associated tensorial quantities
+    transform correspondingly.
     
     Parameters
     ----------
@@ -83,10 +90,10 @@ class ReferenceFrame(FrameLike):
     components of the quantity change if the frame changes:
 
     >>> from neumann.linalg import Vector
-    >>> v = Vector([1, 0, 0], frame=A)
-    >>> A *= 2
+    >>> v = Vector([1., 0, 0], frame=A)
+    >>> A *= 2.0
     >>> v
-    Vector([0.5, 0., 0.])
+    Array([0.5, 0. , 0. ])
     
     A ReferenceFrame instance can be an argument to a NumPy universal function, but the
     result is always a simple array object. The following call results in a simple array,
@@ -94,11 +101,17 @@ class ReferenceFrame(FrameLike):
     
     >>> A = ReferenceFrame(dim=3)
     >>> np.sqrt(A)
+    Array([[1., 0., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]])
     
     but this one changes the frame (and hence the associated tensors if there are any):
     
     >>> A = ReferenceFrame(dim=3)
     >>> np.sqrt(A, out=A)
+    Array([[1., 0., 0.],
+           [0., 1., 0.],
+           [0., 0., 1.]])
     
     Of course, if you want your result to be a ReferenceFrame instance, you can always 
     do this:
@@ -116,18 +129,29 @@ class ReferenceFrame(FrameLike):
     If the basis vectors change, so do the tensors associated with the frame:
     
     >>> import numpy as np
-    >>> v = Vector([1, 0, 0], frame=A)
-    >>> A.axes = np.eye(3) * 2
+    >>> v = Vector([1.0, 0, 0], frame=A)
+    >>> A.axes = np.eye(3) * 2.0
     >>> v
-    Vector([0.5, 0., 0.])
+    Array([0.5, 0. , 0. ])
     
     The same happens if we change the frame of a tensorial quantity:
     
     >>> A = ReferenceFrame(dim=3)
-    >>> v = Vector([1, 0, 0], frame=A)
-    >>> v.frame = A * 2
+    >>> v = Vector([1., 0, 0], frame=A)
+    >>> v.frame = A * 2.0
     >>> v
-    Vector([0.5, 0. , 0. ])
+    Array([0.5, 0. , 0. ])
+    
+    To get the matrix that transforms quantities from frame A to frame B,
+    use the `dcm` method:
+    
+    >>> source = ReferenceFrame(dim=3)
+    >>> target = source.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
+    >>> DCM = source.dcm(target=target)
+    
+    or equivalenty
+    
+    >>> DCM = target.dcm(source=source)
     
     See Also
     --------
@@ -187,16 +211,11 @@ class ReferenceFrame(FrameLike):
             dim = args[0]
         return cls(np.eye(dim), *args, **kwargs)
 
-    def Gram(self, other: 'ReferenceFrame' = None) -> ndarray:
+    def Gram(self) -> ndarray:
         """
         Returns the Gram-matrix of the frame.
         """
-        if other is None:
-            return Gram(self.show())
-        else:
-            assert isinstance(other, ReferenceFrame), \
-                "The argument 'other' must be a valid reference frame."
-            return Gram(self.show(), other.show())
+        return Gram(self.show())
 
     def metric_tensor(self) -> TensorLike:
         """
@@ -252,8 +271,13 @@ class ReferenceFrame(FrameLike):
         """
         Sets the array of the frame.
         """
-        if not isinstance(value, ndarray):
-            value = np.array(value, dtype=float)
+        if isinstance(value, np.ndarray):
+            buf = value
+        else:
+            if not issequence(value):
+                raise TypeError("'value' must be some kind of iterable")
+            buf = np.array(value)
+        value = self._array_cls_(shape=buf.shape, buffer=buf, dtype=buf.dtype)
         if value.shape == self._array.shape:
             if self._weakrefs and len(self._weakrefs) > 0:
                 target = ReferenceFrame(value)
@@ -347,6 +371,17 @@ class ReferenceFrame(FrameLike):
         -------
         ReferenceFrame
 
+        Example
+        -------
+        Define a standard Cartesian frame and rotate it around axis 'Z'
+        with 180 degrees:
+
+        >>> A = ReferenceFrame(dim=3)
+        >>> A.orient('Body', [0, 0, np.pi], 'XYZ')
+        Array([[-1.0000000e+00,  1.2246468e-16,  0.0000000e+00],
+               [-1.2246468e-16, -1.0000000e+00,  0.0000000e+00],
+               [ 0.0000000e+00,  0.0000000e+00,  1.0000000e+00]])
+        
         See Also
         --------
         :func:`orient_new`
@@ -410,8 +445,8 @@ class ReferenceFrame(FrameLike):
         --------
         :func:`sympy.physics.vector.ReferenceFrame.orientnew`
 
-        Examples
-        --------
+        Example
+        -------
         Define a standard Cartesian frame and rotate it around axis 'Z'
         with 180 degrees:
 
@@ -438,7 +473,18 @@ class ReferenceFrame(FrameLike):
         -------    
         ReferenceFrame
             An exisitng (if inplace is True) or a new ReferenceFrame object.
+            
+        Example
+        -------
+        Define a standard Cartesian frame and rotate it around axis 'Z'
+        with 180 degrees:
 
+        >>> A = ReferenceFrame(dim=3)
+        >>> A.rotate('Body', [0, 0, np.pi], 'XYZ')
+        Array([[-1.0000000e+00,  1.2246468e-16,  0.0000000e+00],
+               [-1.2246468e-16, -1.0000000e+00,  0.0000000e+00],
+               [ 0.0000000e+00,  0.0000000e+00,  1.0000000e+00]])
+        
         See Also
         --------
         :func:`orient`
@@ -575,14 +621,14 @@ class RectangularFrame(ReferenceFrame):
     >>> A = RectangularFrame(dim=3)
     >>> A *= 2
     >>> type(A)
-    neumann.linalg.frame.RectangularFrame
+    <class 'neumann.linalg.frame.RectangularFrame'>
     
     but for other operations the type of the object is cast to a more general
     frame
     
     >>> A += 2
     >>> type(A)
-    neumann.linalg.frame.ReferenceFrame
+    <class 'neumann.linalg.frame.ReferenceFrame'>
     
     See also
     --------
@@ -645,14 +691,24 @@ class CartesianFrame(RectangularFrame):
     >>> A = CartesianFrame(dim=3)
     >>> A *= 2
     >>> type(A)
-    neumann.linalg.frame.RectangularFrame
+    <class 'neumann.linalg.frame.RectangularFrame'>
     
-    For other operations, the type of the object is cast to a more general
-    frame
+    For other operations, the type of the object is cast to a general one
     
     >>> A += 2
     >>> type(A)
-    neumann.linalg.frame.ReferenceFrame
+    <class 'neumann.linalg.frame.ReferenceFrame'>
+    
+    The only operation that results in a CartesianFrame object is a rotation:
+    
+    >>> A = CartesianFrame(dim=3)
+    >>> A.orient('Body', [0, 0, np.pi], 'XYZ')
+    Array([[-1.0000000e+00,  1.2246468e-16,  0.0000000e+00],
+           [-1.2246468e-16, -1.0000000e+00,  0.0000000e+00],
+           [ 0.0000000e+00,  0.0000000e+00,  1.0000000e+00]])
+           
+    >>> type(A)
+    <class 'neumann.linalg.frame.CartesianFrame'>
 
     See also
     --------

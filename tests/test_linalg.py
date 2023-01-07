@@ -1,16 +1,30 @@
 import unittest
+import doctest
 
 import numpy as np
 from numpy import vstack
 from scipy.sparse import csr_matrix as csr_scipy
 from numba import njit
+import sympy as sy
 
-from neumann.utils import random_pos_semidef_matrix, random_posdef_matrix
+from neumann.linalg.utils import random_pos_semidef_matrix, random_posdef_matrix
 from neumann.logical import ispossemidef, isposdef
 from neumann.linalg import (ReferenceFrame, RectangularFrame, CartesianFrame, 
                             Vector, inv3x3, det3x3, inv2x2u, inv3x3u, inv2x2, det2x2)
 from neumann.linalg.solve import solve, reduce, _measure
 from neumann.linalg.sparse import JaggedArray, csr_matrix
+from neumann import linalg
+from neumann.linalg.exceptions import VectorShapeMismatchError
+from neumann.linalg import utils as lautils
+from neumann import repeat
+
+
+
+def load_tests(loader, tests, ignore):
+    tests.addTests(doctest.DocTestSuite(linalg.frame))
+    tests.addTests(doctest.DocTestSuite(linalg.vector))
+    tests.addTests(doctest.DocTestSuite(linalg.utils))
+    return tests
 
 
 class TestFrame(unittest.TestCase):
@@ -35,11 +49,13 @@ class TestFrame(unittest.TestCase):
         f.metric_tensor()
         f.axes
         f.axes = f.axes
+        f.axes = [[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]
         f.show()
         f.dcm()
         f.eye(dim=3)
         f.eye(3)
         f.name
+        f.name = 'A'
         f.orient_new('Body', [0, 0, 90*np.pi/180], 'XYZ')
         f.orient('Body', [0, 0, 90*np.pi/180], 'XYZ')
         f.rotate_new('Body', [0, 0, 90*np.pi/180], 'XYZ')
@@ -55,7 +71,7 @@ class TestFrame(unittest.TestCase):
             
         try:
             f.axes = "a"
-        except ValueError:
+        except TypeError:
             pass
         except Exception:
             self.assertTrue(False)
@@ -108,16 +124,16 @@ class TestFrame(unittest.TestCase):
         v = Vector([1.0, 0.0, 0.0], frame=A)
         A *= 2
         self.assertTrue(type(A) == RectangularFrame)
-        self.assertTrue(np.allclose(v, [0.5, 0, 0]))
+        self.assertTrue(np.allclose(v.array, [0.5, 0, 0]))
         A /= 2
         self.assertTrue(type(A) == RectangularFrame)
-        self.assertTrue(np.allclose(v, [1.0, 0, 0]))
+        self.assertTrue(np.allclose(v.array, [1.0, 0, 0]))
         A += 1
         self.assertTrue(type(A) == ReferenceFrame)
         self.assertTrue(np.allclose(v.show(CartesianFrame(axes=np.eye(3))), 
                                     [1.0, 0, 0]))
         A -= 1
-        self.assertTrue(np.allclose(v, [1.0, 0, 0]))
+        self.assertTrue(np.allclose(v.array, [1.0, 0, 0]))
         # TEST2
         A = CartesianFrame(name='A', axes=np.eye(3))
         v = Vector([1.0, 0.0, 0.0], frame=A)
@@ -127,19 +143,74 @@ class TestFrame(unittest.TestCase):
         np.sqrt(A, out=A)
         A /= 2
         A -= 1
-        self.assertTrue(np.allclose(v, [1.0, 0, 0]))
+        self.assertTrue(np.allclose(v.array, [1.0, 0, 0]))
         # TEST 3
         A = ReferenceFrame(name='A', axes=np.eye(3))
         v = Vector([1.0, 0.0, 0.0], frame=A)
         A *= 2
-        self.assertTrue(np.allclose(v, [0.5, 0, 0]))
+        self.assertTrue(np.allclose(v.array, [0.5, 0, 0]))
         np.sqrt(A, out=A)
         A **= 2
         A /= 2
-        self.assertTrue(np.allclose(v, [1.0, 0, 0]))
+        self.assertTrue(np.allclose(v.array, [1.0, 0, 0]))
 
 
 class TestVector(unittest.TestCase):
+    
+    def test_behaviour(self):
+        A = ReferenceFrame(dim=3)
+        vA = Vector([1., 0., 0.], frame=A)
+        vA.dual()
+        amounts = [0., 0., 0.]
+        amounts[1] = 120 * np.pi / 180
+        vA.orient('Body', amounts, 'XYZ')
+        B = A.orient_new('Body', amounts, 'XYZ')
+        vA.orient(dcm = A.dcm(target=B))
+        np.dot(vA, vA)
+        np.cross(vA, vA)
+        np.inner(vA, vA)
+        np.outer(vA, vA)
+        np.sum(vA)
+        vA * 2
+        vA = Vector([1., 1., 1.], frame=A)
+        np.sqrt(vA, out=vA)
+                
+        failed_properly = False
+        try:
+            np.dot(vA, [1, 0, 0])
+        except TypeError:
+            failed_properly = True
+        finally:
+            self.assertTrue(failed_properly)
+            
+        failed_properly = False
+        try:
+            vA * [1, 0, 0]
+        except TypeError:
+            failed_properly = True
+        finally:
+            self.assertTrue(failed_properly)
+        
+        failed_properly = False
+        try:
+            np.negative.at(vA, [0, 1])
+        except NotImplementedError:
+            failed_properly = True
+        finally:
+            self.assertTrue(failed_properly)
+            
+        C = ReferenceFrame(dim=4)
+        vC = Vector([1., 0., 0., 0.], frame=C)
+        failed_properly = False
+        try:
+            np.dot(vA, vC)
+        except VectorShapeMismatchError:
+            failed_properly = True
+        finally:
+            self.assertTrue(failed_properly)
+        
+        vA = Vector([[1., 0., 0.], [1., 0., 0.]], frame=A)
+        vA.show()
 
     def test_tr_vector_1(self, i=1, a=120.):
         """
@@ -406,6 +477,63 @@ class TestPosDef(unittest.TestCase):
         Tests the creation of random, positive definite matrices.
         """
         assert isposdef(random_posdef_matrix(N))
+        
+        
+class TestUtils(unittest.TestCase):
+    
+    def test_behaviour(self):
+        """
+        Tests performed to boost coverage and assert basic responeses.
+        """
+        A = np.eye(3)
+        a1, a2 = np.array([1., 0, 0]), np.array([2., 0, 0])
+        
+        # functions related to frames
+        lautils.Gram(A)
+        lautils.normalize_frame(A)
+        lautils.dual_frame(A)
+        lautils.is_independent_frame(A)
+        lautils.is_orthonormal_frame(A)
+        lautils.is_normal_frame(A)
+        lautils.is_rectangular_frame(A)
+        
+        # miscellanous operations
+        lautils.vpath(a1, a2, 3)
+        lautils.solve(A, a1)
+        lautils.inv(A)
+        lautils.matmul(A, A)
+        lautils.matmulw(A, A, 1)
+        lautils.ATB(A, A)
+        lautils.ATBA(A, A)
+        lautils.ATBAw(A, A, 1)
+        lautils.det3x3(A)
+        lautils.adj3x3(A)
+        lautils.inv3x3u(A)
+        lautils.inv3x3(A)
+        lautils.inv3x3_bulk(repeat(A, 2))
+        lautils.inv3x3_bulk2(repeat(A, 2))
+        lautils.normalize(A)
+        lautils.normalize2d(A)
+        lautils.norm(A)
+        lautils.norm2d(A)
+        lautils.det2x2(np.eye(2))
+        lautils.inv2x2(np.eye(2))
+        lautils.to_range_1d([0.3, 0.5], source=[0, 1], target=[-1, 1], squeeze=False)
+        lautils.to_range_1d([0.3, 0.5], source=[0, 1], target=[-1, 1], squeeze=True)
+        
+        # linspace
+        lautils.linspace1d(1, 3, 5)
+        lautils.linspace(1, 3, 5)
+        lautils.linspace(a1, a2, 5)
+        
+        # symbolic
+        P11, P12, P13, P21, P22, P23, P31, P32, P33 = \
+        sy.symbols('P_{11} P_{12} P_{13} P_{21} P_{22} P_{23} P_{31} \
+                    P_{32} P_{33}', real=True)
+        Pij = [[P11, P12, P13], [P21, P22, P23], [P31, P32, P33]]
+        P = sy.Matrix(Pij)
+        lautils.inv_sym_3x3(P)
+        lautils.inv_sym_3x3(P, as_adj_det=True)
 
 
 if __name__ == "__main__":

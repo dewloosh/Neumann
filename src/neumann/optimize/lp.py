@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 from numpy import ndarray
 from numpy.linalg import LinAlgError
@@ -46,14 +45,11 @@ class LinearProgrammingProblem:
     ----------
     constraints : Iterable[Function]
         List of constraint functions.
-
     variables : Iterable
         List of variables of the system.
-
     positive : bool, Optional
         A `True` value indicated that all variables are expected to take
         only positive values. Default is `True`.
-
     'obj', 'cost', 'payoff', 'fittness', 'f' : Function
         The objective function.
 
@@ -82,10 +78,11 @@ class LinearProgrammingProblem:
     >>> eq11 = Equality(x1 + 2*x3 + x4 - 4, variables=syms)
     >>> eq12 = Equality(x2 + x3 - x4 - 2, variables=syms)
     >>> problem = LPP(cost=obj1, constraints=[eq11, eq12], variables=syms)
-    >>> problem.solve()
+    >>> problem.solve()['x']
     array([0., 6., 0., 4.])
 
-    (2) Example for degenerate solution.
+    (2) Example for degenerate solution. The problem is on the edge of being
+    ill posed, it may or may not raise an error, or return a solution.
 
     >>> variables = ['x1', 'x2', 'x3', 'x4']
     >>> x1, x2, x3, x4 = syms = sy.symbols(variables, positive=True)
@@ -93,12 +90,10 @@ class LinearProgrammingProblem:
     >>> eq21 = Equality(x1 + 2*x3 + x4, variables=syms)
     >>> eq22 = Equality(x2 + x3 - x4 - 2, variables=syms)
     >>> P2 = LPP(cost=obj2, constraints=[eq21, eq22], variables=syms)
-    >>> try:
-    >>>     P2.solve()
-    >>> except DegenerateProblemError:
-    >>>     pass
+    >>> # P2.solve()
 
-    (3) Example for no solution.
+    (3) Example for no solution. Solution returns None and the error
+    message can be inspected.
 
     >>> variables = ['x1', 'x2', 'x3', 'x4']
     >>> x1, x2, x3, x4 = syms = sy.symbols(variables, positive=True)
@@ -106,13 +101,21 @@ class LinearProgrammingProblem:
     >>> eq31 = Equality(x1 - 2*x3 - x4 + 2, variables=syms)
     >>> eq32 = Equality(x2 + x3 - x4 - 2, variables=syms)
     >>> P3 = LPP(cost=obj3, constraints=[eq31, eq32], variables=syms)
-    >>> try:
-    >>>     P3.solve()
-    >>> except NoSolutionError:
-    >>>     pass
+    >>> P3.solve()['e']
+    [NoSolutionError('There is not solution to this problem!')]
+    
+    If you want the actual error to be raised, call `solve` with the option
+    `raise_errors=True`.
+    
+    >>> P3.solve(raise_errors=True)
+    Traceback (most recent call last):
+        ...
+    neumann.optimize.errors.NoSolutionError: There is not solution to this problem!
 
     (4) Example for multiple solutions. We can ask for all the results
-        with the option `return_all=True`.
+    with the option `return_all=True`. Note that the order of the solutions in the
+    result are not deterministic. If you rerun the solution multiple times, you
+    will see the solutions in different order.
 
     >>> variables = ['x1', 'x2', 'x3', 'x4']
     >>> x1, x2, x3, x4 = syms = sy.symbols(variables, positive=True)
@@ -120,9 +123,8 @@ class LinearProgrammingProblem:
     >>> eq41 = Equality(x1 - 2*x3 - x4 + 2, variables=syms)
     >>> eq42 = Equality(x2 + x3 - x4 - 2, variables=syms)
     >>> P4 = LPP(cost=obj4, constraints=[eq41, eq42], variables=syms)
-    >>> P4.solve(return_all=True)
-    array([[0., 4., 0., 2.], [0., 1., 1., 0.]])
-
+    >>> len(P4.solve(return_all=True)['x'])
+    2
     """
     __tmpl_shift__ = 'y_{}'
     __tmpl_slack__ = 'z_{}'
@@ -193,7 +195,6 @@ class LinearProgrammingProblem:
         >>> problem = LPP.example_unique()
         >>> problem.solve()['x']
         array([0., 6., 0., 4.])
-
         """
         variables = ['x1', 'x2', 'x3', 'x4']
         x1, x2, x3, x4 = syms = sy.symbols(variables, positive=True)
@@ -279,8 +280,7 @@ class LinearProgrammingProblem:
         Returns
         -------
         bool
-            `True` if the problem admits the standard form.
-
+            `True` if the problem admits the standard form of an LPP.
         """
         all_eq = all([isinstance(c, Equality) for c in self.constraints])
         all_pos = all([v.is_positive for v in self.get_system_variables()])
@@ -326,7 +326,6 @@ class LinearProgrammingProblem:
         ----------
         maximize : bool
             Set this true if the problem is a maximization. Default is False.
-
         inplace : bool
             If `True`, transformation happend in place, changing the internal structure
             ob the instance it is invoked by. In this case, `self` gets returned for
@@ -340,7 +339,6 @@ class LinearProgrammingProblem:
         -------
         LinearProgrammingProblem
             An LPP that admits a standard form.
-
         dict, Optional
             A mapping between variables of the standard and the general form.
             Only if `return_inverse` is `True`.
@@ -349,7 +347,6 @@ class LinearProgrammingProblem:
         ------
         NotImplementedError
             On invalid input.
-
         """
         P = self if inplace else deepcopy(self)
         # handle variables
@@ -463,10 +460,8 @@ class LinearProgrammingProblem:
         ----------
         A : numpy.ndarray
             An :math:`m \times n` matrix with :math:`n>m`
-
         b : numpy.ndarray
             Right-hand sides. :math:`\mathbf{b} \in \mathbf{R}^m`
-
         order : Iterable[int], Optional
             An arbitrary permutation of the indices.
 
@@ -474,19 +469,14 @@ class LinearProgrammingProblem:
         -------
         numpy.ndarray 
             Coefficient matrix :math:`\mathbf{B}`
-
         numpy.ndarray
             Inverse of coefficient matrix :math:`\mathbf{B}^{-1}`
-
         numpy.ndarray
             Coefficient matrix :math:`\mathbf{N}`
-
         numpy.ndarray
             Basic solution :math:`\mathbf{x}_{B}`
-
         numpy.ndarray
             Remaining solution :math:`\mathbf{x}_{N}`
-
         """
         m, n = A.shape
         r = n - m
@@ -547,16 +537,12 @@ class LinearProgrammingProblem:
         ----------
         A : numpy.ndarray
             2d float array.
-
         b : numpy.ndarray
             1d float array.
-
         c : numpy.ndarray
             1d float array.
-
         order : Iterable, Optional
             The order of the variables.
-
         tol : float, Optional
             Floating point tolerance. Default is 1e-10.
 
@@ -581,10 +567,8 @@ class LinearProgrammingProblem:
         ------
         NoSolutionError
             If there is no solution to the problem.
-
         DegenerateProblemError
             If the problem is degenerate.
-
         """
         m, n = A.shape
         r = n - m
@@ -715,7 +699,6 @@ class LinearProgrammingProblem:
         ----------
         maximize : bool
             Set this true if the problem is a maximization. Default is False.
-
         return_coeffs : bool
             If `True`, linear coefficients of the design variables are returned as
             a sequence of `SymPy` symbols.
@@ -724,13 +707,10 @@ class LinearProgrammingProblem:
         -------
         numpy.ndarray
             2d NumPy array 'A'
-
         numpy.ndarray
             1d NumPy array 'b'
-
         list, Optional
             A list of `SymPy` symbols. Only if `return_coeffs` is `True`.
-
         """
         if not self.has_standardform():
             P = self.simplify(maximize=maximize)
@@ -752,10 +732,10 @@ class LinearProgrammingProblem:
             return A, b, c
         return A, b
 
-    def maximize(self, *args, **kwargs):
+    def maximize(self, *args, **kwargs) -> dict:
         """
-        Solves the LPP as a maximization. For the possible arguments, see `solve`.
-
+        Solves the LPP as a maximization. For the possible arguments, and 
+        return types see `solve`.
         """
         kwargs['maximize'] = True
         return self.solve(*args, **kwargs)
@@ -770,15 +750,12 @@ class LinearProgrammingProblem:
         order : Iterable, Optional
             The order of the variables. This might speed up finding the
             basic solution. Default is None.
-
         as_dict: bool
             If `True`, the results are returned as a dictionary, where the
             keys are sympy symbols of the variables of the problem.
-        
         raise_errors : bool
             If `True`, the solution raises the actual errors on exception events,
             otherwise they get returned within the result, under key `e`.
-        
         tol : float, Optional
             Floating point tolerance. Default is 1e-10.
 
@@ -794,17 +771,13 @@ class LinearProgrammingProblem:
         -------
         dict
             A dictionary with the following items:
-            
             x : numpy.ndarray or dict
                 The solution as an array or a dictionary, depending on your input.
-            
             e : Iterable
                 A list of errors that occured during solution.
-            
             time : dict
                 A dictionary with information of execution times of the main stages
                 of the calculation.
-
         """
         summary = {'time' : {}, 'x' : None, 'e': []}
         try:

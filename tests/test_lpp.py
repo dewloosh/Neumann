@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 import unittest
+import doctest
 import numpy as np
 
 from neumann.utils import atleast2d
@@ -7,6 +7,13 @@ from neumann.function import Function, Equality, InEquality
 from neumann.optimize import LinearProgrammingProblem as LPP, \
     DegenerateProblemError, NoSolutionError
 import sympy as sy
+
+from neumann import optimize
+
+
+def load_tests(loader, tests, ignore):
+    tests.addTests(doctest.DocTestSuite(optimize.lp))
+    return tests
 
        
 class TestLPP(unittest.TestCase):

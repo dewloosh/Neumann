@@ -1,11 +1,12 @@
 import numpy as np
+import numbers
 from numpy import ndarray
 from numba import njit, prange
-from typing import Union, Tuple
+from typing import Union, Tuple, Iterable
 try:
-    from collections.abc import Iterable
-except ImportError:
-    from collections import Iterable 
+    from collections.abc import Iterable # pragma: no cover
+except ImportError:  # pragma: no cover
+    from collections import Iterable # pragma: no cover
 
 __cache = True
 
@@ -22,7 +23,7 @@ def itype_of_ftype(dtype):
     elif '64' in name:
         return np.int64
     else:
-        raise TypeError('Unrecognized float type.')
+        raise TypeError('Unrecognized float type.')  # pragma: no cover
     
 
 @njit(nogil=True, cache=__cache)
@@ -46,13 +47,29 @@ def clip1d(a: ndarray, a_min: float, a_max: float) -> ndarray:
     """
     Clips the values outside the interval [a_min, a_max] to 
     either a_min or a_max.
+    
+    Parameters
+    ----------
+    a : numpy.ndarray
+        An 1d array.
+    a_min : float
+        The lower limit.
+    a_max : float
+        The upper limit.
+    
+    Examples
+    --------
+    >>> from neumann import clip1d
+    >>> import numpy as np
+    >>> clip1d(np.array([0.9, 2.5]), 1.0, 1.5)
+    array([1. , 1.5])
     """
     a[a < a_min] = a_min
     a[a > a_max] = a_max
     return a
 
 
-def atleastnd(a: ndarray, n:int=2, front:bool=True, 
+def atleastnd(a: Union[numbers.Number, Iterable], n:int=2, front:bool=True, 
               back:bool=False) -> ndarray:
     """
     Returns an array that is at least 'n' dimensional.
@@ -61,7 +78,21 @@ def atleastnd(a: ndarray, n:int=2, front:bool=True,
     using the parameters 'front' and 'back'. If front is True and back 
     is False, new axes are crated before the first existing data index,
     and the opposite happens in every other case.
+    
+    Examples
+    --------
+    >>> from neumann import atleastnd
+    >>> import numpy as np
+    >>> atleastnd(np.array([1, 1]), 3, front=True).shape
+    (1, 1, 2)
+    
+    >>> atleastnd(np.array([1, 1]), 3, back=True).shape
+    (2, 1, 1)
     """
+    if not isinstance(a, Iterable):
+        a = [a,]
+    if not isinstance(a, ndarray):
+        a = np.array(a)
     shp = a.shape
     nD = len(shp)
     if nD >= n:
@@ -74,35 +105,79 @@ def atleastnd(a: ndarray, n:int=2, front:bool=True,
         return np.reshape(a, newshape)
 
 
-def atleast1d(a: ArrayOrFloat) -> ndarray:
-    """Returns an array that is at least 1 dimensional."""
+def atleast1d(a: Union[numbers.Number, Iterable]) -> ndarray:
+    """
+    Returns an array that is at least 1 dimensional.
+    
+    Examples
+    --------
+    >>> from neumann import atleast1d
+    >>> atleast1d(1)
+    array([1])
+    """
     if not isinstance(a, Iterable):
         a = [a,]
     return np.array(a)
 
 
-def atleast2d(a: ndarray, **kwargs) -> ndarray:
-    """Returns an array that is at least 2 dimensional."""
+def atleast2d(a: Union[numbers.Number, Iterable], **kwargs) -> ndarray:
+    """
+    Returns an array that is at least 2 dimensional.
+    
+    Examples
+    --------
+    >>> from neumann import atleast2d
+    >>> atleast2d(1)
+    array([[1]])
+    """
     return atleastnd(a, 2, **kwargs)
 
 
-def matrixform(f: ndarray) -> ndarray:
-    """Returns an array that is at least 2 dimensional."""
-    size = len(f.shape)
+def matrixform(a: Union[numbers.Number, Iterable]) -> ndarray:
+    """
+    Returns an array that is at least 2 dimensional.
+    
+    Examples
+    --------
+    >>> from neumann import matrixform
+    >>> matrixform(1)
+    array([[1]])
+    """
+    if not isinstance(a, Iterable):
+        a = [a,]
+    if not isinstance(a, ndarray):
+        a = np.array(a)
+    size = len(a.shape)
     assert size <= 2, "Input array must be at most 2 dimensional."
     if size == 1:
-        nV, nC = len(f), 1
-        return f.reshape(nV, nC)
-    return f
+        nV, nC = len(a), 1
+        return a.reshape(nV, nC)
+    return a
 
 
-def atleast3d(a: ndarray, **kwargs) -> ndarray:
-    """Returns an array that is at least 3 dimensional."""
+def atleast3d(a: Union[numbers.Number, Iterable], **kwargs) -> ndarray:
+    """
+    Returns an array that is at least 3 dimensional.
+    
+    Examples
+    --------
+    >>> from neumann import atleast3d
+    >>> atleast3d(1)
+    array([[[1]]])
+    """
     return atleastnd(a, 3, **kwargs)
 
 
 def atleast4d(a: ndarray, **kwargs) -> ndarray:
-    """Returns an array that is at least 4 dimensional."""
+    """
+    Returns an array that is at least 4 dimensional.
+    
+    Examples
+    --------
+    >>> from neumann import atleast4d
+    >>> atleast4d(1)
+    array([[[[1]]]])
+    """
     return atleastnd(a, 4, **kwargs)
 
 
@@ -140,60 +215,51 @@ def flatten2d(a: ndarray, order: str = 'C') -> ndarray:
         return flatten2dF(a)
 
 
-def bool_to_float(a: ndarray, true=1.0, false=0.0) -> ndarray:
+def bool_to_float(a: Iterable, true:float=1.0, false:float=0.0) -> ndarray:
     """
     Transforms a boolean array to a float array using the specified
-    values for `True` and `False`. 
+    values for `True` and `False`.
+    
+    Example
+    -------
+    >>> from neumann import bool_to_float
+    >>> bool_to_float([True, False], 1.0, -2.0)
+    array([ 1., -2.])
     """
+    if not isinstance(a, ndarray):
+        a = np.array(a)
     res = np.full(a.shape, false, dtype=float)
     res[a] = true
     return res
 
 
-def choice(choices, size, probs=None) -> ndarray:
+def choice(choices:Iterable, size:Tuple, probs:Iterable=None) -> ndarray:
     """
-    Returns a numpy array, whose elements are selected from
+    Returns a NumPy array, whose elements are selected from
     'choices' under probabilities provided with 'probs' (optionally).
 
+    Parameters
+    ----------
+    choices : Iterable
+        The choices.
+    size : tuple
+        The size of the output array.
+    probs : Iterable, Optional
+        The probabilities of each item in 'choices'. Default is an array
+        of uniform probabilities.
+    
     Example
     -------
-    >>> N, p = 10, 0.2
-    >>> choice([False, True], (N, N), [p, 1-p])
-    
+    ```python
+    N, p = 2, 0.2
+    choice([False, True], (N, N), [p, 1-p])
+    array([[ True,  True],
+           [ True,  True]])
+    ```
     """
     if probs is None:
         probs = np.full((len(choices),), 1/len(choices))
     return np.random.choice(a=choices, size=size, p=probs)
-
-
-def random_pos_semidef_matrix(N) -> ndarray:
-    """
-    Returns a random positive semidefinite matrix of shape (N, N).
-
-    Example
-    -------
-    >>> from neumann import random_pos_semidef_matrix
-    >>> random_pos_semidef_matrix(3)
-    ...
-    """
-    A = np.random.rand(N, N)
-    return A.T @ A
-
-
-def random_posdef_matrix(N, alpha=1e-12) -> ndarray:
-    """
-    Returns a random positive definite matrix of shape (N, N).
-    
-    All eigenvalues of this matrix are >= alpha.
-
-    Example
-    -------
-    >>> from neumann import random_posdef_matrix
-    >>> random_posdef_matrix(3, 0.1)
-    ...
-    """
-    A = np.random.rand(N, N)
-    return A @ A.T + alpha*np.eye(N)
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
@@ -220,8 +286,18 @@ def repeat(a: ndarray, N:int=1) -> ndarray:
     identity matrices. This can be done the quickest by:
     
     >>> from neumann import repeat
-    >>> axes = repeat(np.eye(3), 10)
-    
+    >>> repeat(np.eye(2), 3)
+    array([[[1., 0.],
+            [0., 1.]],
+    <BLANKLINE>
+           [[1., 0.],
+            [0., 1.]],
+    <BLANKLINE>
+           [[1., 0.],
+            [0., 1.]]])
+            
+    >>> repeat(np.eye(2), 3).shape
+    (3, 2, 2)
     """
     res = np.zeros((N, a.shape[0], a.shape[1]), dtype=a.dtype)
     for i in prange(N):
@@ -233,6 +309,12 @@ def repeat(a: ndarray, N:int=1) -> ndarray:
 def repeat1d(a: ndarray, N=1) -> ndarray:
     """
     Repeats a 1d array N times.
+    
+    Example
+    -------
+    >>> from neumann import repeat1d
+    >>> repeat1d(np.array([1, 2]), 3)
+    array([1, 2, 1, 2, 1, 2])
     """
     M = a.shape[0]
     res = np.zeros(N * M, dtype=a.dtype)
@@ -242,7 +324,21 @@ def repeat1d(a: ndarray, N=1) -> ndarray:
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def tile(a: ndarray, da: ndarray, N=1) -> ndarray:
+def tile(a: ndarray, da: ndarray, N:int=1) -> ndarray:
+    """
+    Tiles a 1d array N times.
+    
+    Example
+    -------
+    >>> from neumann import tile
+    >>> arr = tile(np.array([[0, 0]]), np.array([[1, -1]]), 3)
+    >>> arr
+    array([[[ 0,  0]],
+    <BLANKLINE>
+           [[ 1, -1]],
+    <BLANKLINE>
+           [[ 2, -2]]])
+    """
     res = np.zeros((N, a.shape[0], a.shape[1]), dtype=a.dtype)
     for i in prange(N):
         res[i, :, :] = a + i*da
@@ -291,7 +387,11 @@ def indices_of_equal_rows_njit(x: ndarray, y: ndarray,
 @njit(nogil=True, parallel=True, cache=__cache)
 def indices_of_equal_rows_square_njit(x: ndarray, y: ndarray,
                                       tol=1e-12):
-    n = np.min([x.shape[0], y.shape[0]])
+    nx, ny = x.shape[0], y.shape[0]
+    if nx < ny:
+        n = nx
+    else:
+        n = ny
     R = np.zeros((n, n), dtype=x.dtype)
     for i in prange(n):
         for j in prange(n):
@@ -356,8 +456,7 @@ def repeat_diagonal_2d(a: ndarray, N:int=2) -> ndarray:
     Returns
     -------
     numpy.ndarray
-        A 2d numpy array.
-        
+        A 2d numpy array. 
     """
     nR, nC = a.shape[:2]
     res = np.zeros((nR * N, nC * N), dtype=a.dtype)

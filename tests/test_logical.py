@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 import unittest
 from neumann.logical import (isclose, allclose, 
                              isintarray, is1dintarray,
                              isfloatarray, is1dfloatarray,
                              isboolarray,
                              issymmetric)
-from neumann.utils import random_posdef_matrix
+from neumann.linalg.utils import random_posdef_matrix
 import numpy as np
 
 
@@ -51,7 +50,7 @@ class TestLogical(unittest.TestCase):
         self.assertTrue(not is1dfloatarray(arr))
         self.assertTrue(isboolarray(arr))
         
-    def issymmetric(self):
+    def test_issymmetric(self):
         self.assertTrue(issymmetric(random_posdef_matrix(2)))
         a = np.zeros((2, 2))
         a[0, 0] = 1.0

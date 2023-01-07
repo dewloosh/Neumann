@@ -148,23 +148,17 @@ def normalize_frame(axes: ndarray):
     return np.array([normalize(a) for a in axes], dtype=axes.dtype)
 
 
-def Gram(axes1: ndarray, axes2: ndarray=None):
+def Gram(axes: ndarray):
     """
     Returns the Gram matrix. If a second frame is not provided,
     the Gram matrix of a single frame is returned.
     
     Parameters
     ----------
-    axes1 : numpy.ndarray
+    axes : numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
-    axes2 : numpy.ndarray, Optional
-        A matrix where the i-th row is the i-th basis vector.
-        Default is None.
     """
-    if axes2 is None:
-        return axes1 @ axes1.T
-    else:
-        return axes1 @ axes2.T
+    return axes @ axes.T
     
     
 def dual_frame(axes: ndarray) -> ndarray:
@@ -177,6 +171,52 @@ def dual_frame(axes: ndarray) -> ndarray:
         A matrix where the i-th row is the i-th basis vector.
     """
     return np.linalg.inv(axes).T
+
+
+def is_pos_def(arr):
+    """
+    Returns True if the input is positive definite.
+    """
+    return np.all(np.linalg.eigvals(arr) > 0)
+
+
+def is_pos_semidef(arr):
+    """
+    Returns True if the input is positive semi definite.
+    """
+    return np.all(np.linalg.eigvals(arr) >= 0)
+
+
+def random_pos_semidef_matrix(N) -> ndarray:
+    """
+    Returns a random positive semidefinite matrix of shape (N, N).
+
+    Example
+    -------
+    >>> from neumann.linalg import random_pos_semidef_matrix, is_pos_semidef
+    >>> arr = random_pos_semidef_matrix(2)
+    >>> is_pos_semidef(arr)
+    True
+    """
+    A = np.random.rand(N, N)
+    return A.T @ A
+
+
+def random_posdef_matrix(N, alpha:float=1e-12) -> ndarray:
+    """
+    Returns a random positive definite matrix of shape (N, N).
+    
+    All eigenvalues of this matrix are >= alpha.
+
+    Example
+    -------
+    >>> from neumann.linalg import random_posdef_matrix, is_pos_def
+    >>> arr = random_posdef_matrix(2)
+    >>> is_pos_def(arr)
+    True
+    """
+    A = np.random.rand(N, N)
+    return A @ A.T + alpha*np.eye(N)
     
 
 def inv_sym_3x3(m: Matrix, as_adj_det=False):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from typing import TypeVar, Callable
 import sympy as sy
 from sympy import Expr, degree, latex, lambdify

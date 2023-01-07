@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sympy as sy
 
 from .testfunction import TestMinFunction2D

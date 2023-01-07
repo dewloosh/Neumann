@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 from numba import jit
 from numba.types import int64, Array
@@ -14,7 +13,7 @@ try:
     try:
         adjacency_matrix = ntx.to_scipy_sparse_array
     except Exception:
-        adjacency_matrix = ntx.adjacency_matrix
+        adjacency_matrix = ntx.adjacency_matrix  # pragma: no cover
 
     class Graph(ntx.Graph):
         """
@@ -36,7 +35,6 @@ try:
         >>> import networkx as nx
         >>> grid = nx.grid_2d_graph(5, 5)  # 5x5 grid
         >>> G = Graph(grid)
-
         """
 
         def adjacency_matrix(self, *args, to_csr:bool=False, **kwargs):
@@ -94,7 +92,7 @@ try:
             """
             return pseudo_peripheral_nodes(csr_matrix(adjacency_matrix(self)))
 except:
-    Graph = None
+    Graph = None  # pragma: no cover
 
 int64A = Array(int64, 1, 'C')
 
@@ -117,7 +115,6 @@ def rooted_level_structure(adj: csr_matrix, root: int = 0) -> Dict:
         A `numba` dictionary <int[:] : int[:, :]>, where the keys
         refer to different levels, and the values are the indices
         of nodes on that level.
-
     """
     nN = len(adj.indptr) - 1
     rls = Dict.empty(
@@ -162,7 +159,6 @@ def pseudo_peripheral_nodes(adj: csr_matrix) -> np.ndarray:
     -------
     numpy.ndarray
         Integer array of nodal indices.
-
     """
 
     def length_width(RLS):

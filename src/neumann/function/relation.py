@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from enum import Enum
 import operator as op
 from typing import TypeVar, Callable
