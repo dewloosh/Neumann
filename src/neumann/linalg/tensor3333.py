@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sympy as sy
 import numpy as np
 
@@ -160,7 +159,7 @@ class ComplianceTensor(Tensor3333):
 
 
 if __name__ == '__main__':
-    from dewloosh.math.linalg.frame import ReferenceFrame
+    from neumann.linalg.frame import ReferenceFrame
 
     A = ReferenceFrame()
     B = A.orient_new('Body', [0, 0, 90*np.pi/180], 'XYZ')

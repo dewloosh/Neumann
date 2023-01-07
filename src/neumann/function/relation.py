@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from enum import Enum
 import operator as op
 from typing import TypeVar, Callable
@@ -59,13 +58,18 @@ class Relation(Function):
 
     @property
     def operator(self) -> Callable:
-        """Returns the associated operator"""
+        """
+        Returns the associated operator.
+        """
         return self.op
 
     def to_eq(self):
         raise NotImplementedError
 
     def relate(self, *args, **kwargs):
+        """
+        Relates an input and returns True if it is feasible.
+        """
         return self.opfunc(self.f0(*args, **kwargs), 0)
 
 
@@ -80,7 +84,6 @@ class Equality(Relation):
     >>> x1, x2, x3, x4 = syms = sy.symbols(variables, positive=True)
     >>> eq1 = Equality(x1 + 2*x3 + x4 - 4, variables=syms)
     >>> eq2 = Equality(x2 + x3 - x4 - 2, variables=syms)
-
     """
 
     def __init__(self, *args, **kwargs):
@@ -99,24 +102,26 @@ class InEquality(Relation):
     --------
     >>> gt = InEquality('x + y', op='>')
     >>> gt([0.0, 0.0])
-    False
+    0.0
 
     >>> ge = InEquality('x + y', op='>=')
     >>> ge([0.0, 0.0])
-    True
+    0.0
 
     >>> le = InEquality('x + y', op=lambda x, y: x <= y)
     >>> le([0.0, 0.0])
-    True
+    0.0
 
     >>> lt = InEquality('x + y', op=lambda x, y: x < y)
     >>> lt([0.0, 0.0])
-    False
-
+    0.0
     """
 
     def __init__(self, *args, **kwargs):
+        op = getasany(['op', 'operator'], None, **kwargs)
+        if not op:
+            raise ValueError("An operator must be defined.")
         super().__init__(*args, **kwargs)
 
     def to_eq(self):
-        raise
+        raise NotImplementedError

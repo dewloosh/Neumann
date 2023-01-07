@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from sympy.parsing.sympy_parser import parse_expr
 from sympy import lambdify, derive_by_array, symbols, Expr
 from sympy.core.numbers import One

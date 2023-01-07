@@ -63,7 +63,6 @@ def weighted_least_squares(points, values, *args, deg=1, order=2, w=None, **kwar
     ----
     The resulting approximation can have an approximation or regression behaviour,
     depending on the data set and the degree of the polynomial.
-
     """
 
     assert isinstance(points, np.ndarray)

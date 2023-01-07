@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 import unittest
+import doctest
 import numpy as np
 
 from neumann.utils import atleast2d
@@ -8,9 +8,46 @@ from neumann.optimize import LinearProgrammingProblem as LPP, \
     DegenerateProblemError, NoSolutionError
 import sympy as sy
 
+from neumann import optimize
+
+
+def load_tests(loader, tests, ignore):
+    tests.addTests(doctest.DocTestSuite(optimize.lp))
+    return tests
+
        
 class TestLPP(unittest.TestCase):
-
+    
+    def test_coverage(self):
+        P = LPP.example_unique()
+        x1, x2 = sy.symbols(['x1', 'x2'], positive=True)
+        syms = [x1, x2]
+        P.add_constraint(InEquality(x1 - 1, op='>=', variables=syms))
+        P.add_constraint(x1 - 1, op='>=', variables=syms)
+        P.simplify(inplace=True)
+        
+        x1, x2 = sy.symbols(['x1', 'x2'], positive=True)
+        syms = [x1, x2]
+        f = Function(x1 + x2, variables=syms)
+        ieq1 = InEquality(x1 - 1, op='>=', variables=syms)
+        ieq2 = InEquality(x2 - 1, op='>=', variables=syms)
+        ieq3 = InEquality(x1 + x2 - 4, op='<=', variables=syms)
+        lpp = LPP(cost=f, constraints=[ieq1, ieq2, ieq3], variables=syms)
+        #lpp.feasible()
+        
+    def test_lpp_create(self):
+        x1, x2 = sy.symbols(['x1', 'x2'], positive=True)
+        syms = [x1, x2]
+        f = Function(x1 + x2, variables=syms)
+        ieq1 = InEquality(x1 - 1, op='>=', variables=syms)
+        ieq2 = InEquality(x2 - 1, op='>=', variables=syms)
+        ieq3 = InEquality(x1 + x2 - 4, op='<=', variables=syms)
+        lpp = LPP(f, variables=syms)
+        lpp.add_constraint(ieq1)
+        lpp.add_constraint(ieq2)
+        lpp.add_constraint(ieq3)
+        lpp.simplify(inplace=True)
+       
     def test_unique_solution(self):
         x1, x2 = sy.symbols(['x1', 'x2'], positive=True)
         syms = [x1, x2]
@@ -22,7 +59,7 @@ class TestLPP(unittest.TestCase):
         x = atleast2d(lpp.solve()['x'])
         _x = np.array([1.0, 1.0])
         assert np.all(np.isclose(_x, x))
-    
+            
     def test_degenerate_solution(self):
         variables = ['x1', 'x2', 'x3', 'x4']
         x1, x2, x3, x4 = syms = sy.symbols(variables, positive=True)
@@ -69,7 +106,42 @@ class TestLPP(unittest.TestCase):
         x = P4.solve(return_all=True, raise_errors=True)['x']
         assert len(x.shape) == 2
         assert x.shape[0] == 2
+        x = P4.solve(return_all=False, raise_errors=True)['x']
+        assert len(x.shape) == 1
         
+    def test_maximize_solution(self):
+        x1, x2 = sy.symbols(['x1', 'x2'], positive=True)
+        syms = [x1, x2]
+        f = Function(-x1 - x2, variables=syms)
+        ieq1 = InEquality(x1 - 1, op='>=', variables=syms)
+        ieq2 = InEquality(x2 - 1, op='>=', variables=syms)
+        ieq3 = InEquality(x1 + x2 - 4, op='<=', variables=syms)
+        lpp = LPP(cost=f, constraints=[ieq1, ieq2, ieq3], variables=syms)
+        x = atleast2d(lpp.maximize()['x'])
+        _x = np.array([1.0, 1.0])
+        assert np.all(np.isclose(_x, x))
+    
+    def test_standardform(self):
+        x1, x2 = sy.symbols(['x1', 'x2'], positive=True)
+        syms = [x1, x2]
+        f = Function(-x1 - x2, variables=syms)
+        ieq1 = InEquality(x1 - 1, op='>=', variables=syms)
+        ieq2 = InEquality(x2 - 1, op='>=', variables=syms)
+        ieq3 = InEquality(x1 + x2 - 4, op='<=', variables=syms)
+        lpp = LPP(cost=f, constraints=[ieq1, ieq2, ieq3], variables=syms)
+        lpp.to_numpy()
+        
+    def test_feasible(self):
+        return
+        x1, x2 = sy.symbols(['x1', 'x2'], positive=True)
+        syms = [x1, x2]
+        f = Function(-x1 - x2, variables=syms)
+        ieq1 = InEquality(x1 - 1, op='>=', variables=syms)
+        ieq2 = InEquality(x2 - 1, op='>=', variables=syms)
+        ieq3 = InEquality(x1 + x2 - 4, op='<=', variables=syms)
+        lpp = LPP(cost=f, constraints=[ieq1, ieq2, ieq3], variables=syms)
+        lpp.feasible()
+    
     def test_1(self):
         variables = ['x1', 'x2']
         x1, x2 = syms = sy.symbols(variables, positive=True)

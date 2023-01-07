@@ -66,9 +66,9 @@ def isposdef(A: ndarray, tol=0) -> bool:
     """
     Returns `True` if `A` is positive definite.
 
-    Example
-    -------
-    >>> from neumann import random_posdef_matrix
+    Examples
+    --------
+    >>> from neumann.linalg import random_posdef_matrix
     >>> from neumann.logical import isposdef
     >>> A = random_posdef_matrix(3, 0.1)
     >>> isposdef(A)
@@ -77,7 +77,6 @@ def isposdef(A: ndarray, tol=0) -> bool:
     >>> A[0, 0] = 0
     >>> isposdef(A)
     False
-    
     """
     return np.all(np.linalg.eigvals(A) > tol)
 
@@ -88,7 +87,7 @@ def ispossemidef(A: ndarray) -> bool:
 
     Example
     -------
-    >>> from neumann import random_pos_semidef_matrix
+    >>> from neumann.linalg import random_pos_semidef_matrix
     >>> from neumann.logical import ispossemidef
     >>> A = random_pos_semidef_matrix(3)
     >>> ispossemidef(A)

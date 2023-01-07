@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 from numpy import ndarray
 from awkward import Array as akarray
@@ -14,14 +13,64 @@ from .utils import count_cols
 __cache = True
 
 
+__all__ = ['unique2d']
+
+
 ArrayLike = Union[ndarray, akarray]
 i64 = types.int64
 i64A = types.int64[:]
 i64A2 = types.int64[:, :]
 
 
-def unique2d(arr: ArrayLike, return_index=False,
-             return_inverse=False, return_counts=False):
+def unique2d(arr: ArrayLike, return_index:bool=False,
+             return_inverse:bool=False, return_counts:bool=False):
+    """
+    Find the unique elements of a 2d array.
+
+    Returns the sorted unique elements of an array. There are three optional
+    outputs in addition to the unique elements:
+
+    * the indices of the input array that give the unique values
+    * the indices of the unique array that reconstruct the input array
+    * the number of times each unique value comes up in the input array
+
+    Parameters
+    ----------
+    arr : numpy.ndarray
+        Input array.
+    return_index : bool, optional
+        If True, also return the indices of `ara` that result in the unique array.
+    return_inverse : bool, optional
+        If True, also return the indices of the unique array that can be used to 
+        reconstruct `arr`.
+    return_counts : bool, optional
+        If True, also return the number of times each unique item appears
+        in `arr`.
+        
+    Example
+    -------
+    >>> from neumann.arraysetops import unique2d
+    >>> arr = np.array([[1, 2, 3], [1, 2, 4]], dtype=int)
+    >>> unique2d(arr)
+    array([1, 2, 3, 4])
+    
+    >>> unique2d(arr, return_index=True)
+    [array([1, 2, 3, 4]), DictType[int64,array(int64, 2d, A)]<iv=None>({1: [[0 0]
+     [1 0]], 2: [[0 1]
+     [1 1]], 3: [[0 2]], 4: [[1 2]]})]
+     
+    >>> unique2d(arr, return_inverse=True)
+    [array([1, 2, 3, 4]), array([[0, 1, 2],
+           [0, 1, 3]], dtype=int64)]
+           
+    >>> unique2d(arr, return_counts=True)
+    [array([1, 2, 3, 4]), array([2, 2, 1, 1], dtype=int64)]
+    
+    >>> from neumann.linalg.sparse import JaggedArray
+    >>> arr = JaggedArray(np.array([1, 2, 1, 2, 3]), cuts=[2, 3])
+    >>> unique2d(arr)
+        
+    """
     if isinstance(arr, ndarray):
         unique, counts, inverse, indices = _unique2d_njit(arr)
         res = [unique, ]
