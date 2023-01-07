@@ -1,12 +1,18 @@
-# -*- coding: utf-8 -*-
 import unittest
+import doctest
+
 import sympy as sy
-from sympy import symbols
 import numpy as np
 
+import neumann.function as fnc
 from neumann.function import Function
-from neumann.function import Equality, InEquality
+from neumann.function import Equality, InEquality, Relation
 from neumann.approx.lagrange import gen_Lagrange_1d
+
+
+def load_tests(loader, tests, ignore):
+    tests.addTests(doctest.DocTestSuite(fnc.relation))
+    return tests
 
 
 class TestFunction(unittest.TestCase):
@@ -39,6 +45,20 @@ class TestFunction(unittest.TestCase):
 
 class TestRelations(unittest.TestCase):
 
+    def test_Relation(self):
+        variables = ['x1', 'x2', 'x3', 'x4'] 
+        x1, _, x3, x4 = syms = sy.symbols(variables, positive=True) 
+        r = Relation(x1 + 2*x3 + x4 - 4, variables=syms)
+        r.operator
+        r = Relation(x1 + 2*x3 + x4 - 4, variables=syms, op=lambda x, y: x <= y)
+    
+    def test_Equality(self):
+        variables = ['x1', 'x2', 'x3', 'x4'] 
+        x1, _, x3, x4 = syms = sy.symbols(variables, positive=True) 
+        eq1 = Equality(x1 + 2*x3 + x4 - 4, variables=syms)
+        eq1.to_eq() 
+        eq1.operator
+    
     def test_InEquality(self):
         gt = InEquality('x + y', op='>')
         assert not gt.relate([0.0, 0.0])
@@ -51,6 +71,14 @@ class TestRelations(unittest.TestCase):
 
         lt = InEquality('x + y', op=lambda x, y: x < y)
         assert not lt.relate([0.0, 0.0])
+        
+        failed_properly = False
+        try:
+            InEquality('x + y')
+        except ValueError:
+            failed_properly = True
+        finally:
+            self.assertTrue(failed_properly)
 
 
 if __name__ == "__main__":

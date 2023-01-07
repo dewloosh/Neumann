@@ -68,7 +68,7 @@ def isposdef(A: ndarray, tol=0) -> bool:
 
     Examples
     --------
-    >>> from neumann import random_posdef_matrix
+    >>> from neumann.linalg import random_posdef_matrix
     >>> from neumann.logical import isposdef
     >>> A = random_posdef_matrix(3, 0.1)
     >>> isposdef(A)
@@ -87,7 +87,7 @@ def ispossemidef(A: ndarray) -> bool:
 
     Example
     -------
-    >>> from neumann import random_pos_semidef_matrix
+    >>> from neumann.linalg import random_pos_semidef_matrix
     >>> from neumann.logical import ispossemidef
     >>> A = random_pos_semidef_matrix(3)
     >>> ispossemidef(A)

@@ -6,7 +6,7 @@ from sympy.utilities.iterables import multiset_permutations
 from copy import copy, deepcopy
 try:
     from collections.abc import Iterable
-except ImportError:
+except ImportError:  # pragma: no cover
     from collections import Iterable
 from collections import defaultdict
 from typing import Tuple
@@ -580,7 +580,7 @@ class LinearProgrammingProblem:
             cB = c_[:m]
             cN = c_[m:]
             t = None
-        else:
+        else: 
             raise NoSolutionError("Failed to find basic solution!")
 
         def unit_basis_vector(length, index=0, value=1.0):

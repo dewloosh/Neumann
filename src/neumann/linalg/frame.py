@@ -18,17 +18,6 @@ __all__ = ['ReferenceFrame', 'RectangularFrame', 'CartesianFrame']
 HANDLED_FUNCTIONS = {}
 
 
-def implements(numpy_function):
-    """
-    Register an __array_function__ implementation for FrameLike 
-    objects.
-    """
-    def decorator(func):
-        HANDLED_FUNCTIONS[numpy_function] = func
-        return func
-    return decorator
-
-
 def inplace_binary(obj: FrameLike, other, bop: Callable, rtype: FrameLike = None):
     """
     Performs a binary operation inplace. Components of registered tensorial entities 
@@ -173,7 +162,7 @@ class ReferenceFrame(FrameLike):
                         raise NotImplementedError
                 elif isinstance(dim, int):
                     axes = np.eye(dim)
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             raise e
         super().__init__(axes, *args)
         self._name = name
@@ -345,7 +334,7 @@ class ReferenceFrame(FrameLike):
                 return T @ transpose_dcm_multi(S)
             elif len(S.shape) == 2:
                 return T @ S.T
-            else:
+            else: # pragma: no cover
                 msg = "There is no transformation rule implemented for" \
                     " source shape {} and target shape {}"
                 raise NotImplementedError(msg.format(S.shape, T.shape))

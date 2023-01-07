@@ -12,8 +12,8 @@ try:
     
     try:
         adjacency_matrix = ntx.to_scipy_sparse_array
-    except Exception:
-        adjacency_matrix = ntx.adjacency_matrix  # pragma: no cover
+    except Exception: # pragma: no cover
+        adjacency_matrix = ntx.adjacency_matrix
 
     class Graph(ntx.Graph):
         """
@@ -91,8 +91,8 @@ try:
             
             """
             return pseudo_peripheral_nodes(csr_matrix(adjacency_matrix(self)))
-except:
-    Graph = None  # pragma: no cover
+except:  # pragma: no cover
+    Graph = None  
 
 int64A = Array(int64, 1, 'C')
 

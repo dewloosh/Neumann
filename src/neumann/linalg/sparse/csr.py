@@ -208,7 +208,7 @@ class csr_matrix:
         return f"{n}x{m} CSR matrix of {N} values."
             
 
-class csr_matrix_nb(nbtypes.Type):
+class csr_matrix_nb(nbtypes.Type):  # pragma: no cover
     """Numba type for a sparse matrix."""
 
     def __init__(self, dtype):
@@ -221,7 +221,7 @@ class csr_matrix_nb(nbtypes.Type):
 
 
 @overload_method(csr_matrix_nb, 'row')
-def row(csr, i: int):
+def row(csr, i: int):  # pragma: no cover
     if isinstance(csr, csr_matrix_nb):
         def row_impl(csr, i: int):
             return csr.data[csr.indptr[i]:csr.indptr[i+1]]
@@ -229,7 +229,7 @@ def row(csr, i: int):
     
     
 @overload_method(csr_matrix_nb, 'irow')
-def irow(csr, i: int):
+def irow(csr, i: int):  # pragma: no cover
     if isinstance(csr, csr_matrix_nb):
         def irow_impl(csr, i: int):
             return csr.indices[csr.indptr[i]:csr.indptr[i+1]]
@@ -237,7 +237,7 @@ def irow(csr, i: int):
 
 
 @typeof_impl.register(csr_matrix)
-def typeof_csr(val, c):
+def typeof_csr(val, c):  # pragma: no cover
     data = typeof_impl(val.data, c)
     return csr_matrix_nb(data.dtype)
 
@@ -249,7 +249,7 @@ make_attribute_wrapper(csr_matrix_nb, 'shape', 'shape')
 
 
 @register_model(csr_matrix_nb)
-class csr_model(models.StructModel):
+class csr_model(models.StructModel):  # pragma: no cover
     """Data model for nopython mode."""
 
     def __init__(self, dmm, fe_type):
@@ -263,7 +263,7 @@ class csr_model(models.StructModel):
 
 
 @unbox(csr_matrix_nb)
-def unbox_csr(typ, obj, c):
+def unbox_csr(typ, obj, c):  # pragma: no cover
     """Convert a python object to a numba-native structure."""
     data = c.pyapi.object_getattr_string(obj, "data")
     indices = c.pyapi.object_getattr_string(obj, "indices")
@@ -281,7 +281,7 @@ def unbox_csr(typ, obj, c):
 
 
 @box(csr_matrix_nb)
-def box_csr(typ, val, c):
+def box_csr(typ, val, c):  # pragma: no cover
     """Convert a numba-native structure to a python object."""
     matrix = cgutils.create_struct_proxy(typ)(c.context, c.builder,
                                               value=val)

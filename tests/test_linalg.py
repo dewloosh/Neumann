@@ -24,23 +24,25 @@ def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite(linalg.frame))
     tests.addTests(doctest.DocTestSuite(linalg.vector))
     tests.addTests(doctest.DocTestSuite(linalg.utils))
+    tests.addTests(doctest.DocTestSuite(linalg.sparse.jaggedarray))
     return tests
 
 
 class TestFrame(unittest.TestCase):
     
-    def test_frame_main(self):
-        # different calls to the creator
-        ReferenceFrame(np.eye(3))
-        ReferenceFrame(dim=3)
-        ReferenceFrame(dim=(3,))
-        ReferenceFrame(dim=(10, 3))
-        RectangularFrame(dim=3)
-        CartesianFrame(dim=3)
+    def _call_frame_ufuncs(self, A : ReferenceFrame):
+        A += 1
+        A -= 1
+        A *= 2
+        A /= 2
+        A **= 2
+        A @= A
+        np.sqrt(A, out=A)
         
-        # create a random frame and call everything
-        angles = np.random.rand(3) * np.pi
-        f = ReferenceFrame(dim=3).orient_new('Body', angles, 'XYZ')
+    def _call_frame_methods(self, f : ReferenceFrame):
+        f.is_independent()
+        f.is_cartesian()
+        f.is_rectangular()
         f.dual()
         f.Gram()
         f.is_cartesian()
@@ -60,7 +62,23 @@ class TestFrame(unittest.TestCase):
         f.orient('Body', [0, 0, 90*np.pi/180], 'XYZ')
         f.rotate_new('Body', [0, 0, 90*np.pi/180], 'XYZ')
         f.rotate('Body', [0, 0, 90*np.pi/180], 'XYZ', inplace=False)
-        f.rotate('Body', [0, 0, 90*np.pi/180], 'XYZ', inplace=True)
+        f.rotate('Body', [0, 0, 90*np.pi/180], 'XYZ', inplace=True)       
+            
+    def test_frame_main(self):
+        # different calls to the creator
+        ReferenceFrame(dim=3)
+        ReferenceFrame(dim=(3,))
+        ReferenceFrame(dim=(10, 3))
+        ReferenceFrame(np.eye(3))
+        CartesianFrame(dim=3, normalize=True)
+        RectangularFrame(dim=3)
+        
+        self._call_frame_methods(ReferenceFrame(dim=3))
+        self._call_frame_methods(RectangularFrame(dim=3))
+        self._call_frame_methods(CartesianFrame(dim=3))
+        
+        # create a random frame and call everything
+        f = ReferenceFrame(dim=3)
         
         try:
             f.name = 5
@@ -82,7 +100,7 @@ class TestFrame(unittest.TestCase):
             pass
         except Exception:
             self.assertTrue(False)
-
+            
     def test_frame(self):
         #  GENERAL FRAMES  
         f = ReferenceFrame(dim=3)
@@ -119,6 +137,13 @@ class TestFrame(unittest.TestCase):
         """
         Testing against NumPy universal functions.
         """
+        # bulk tests for coverage
+        A = ReferenceFrame(name='A', axes=np.eye(3))
+        self._call_frame_ufuncs(A)
+        A = RectangularFrame(name='A', axes=np.eye(3))
+        self._call_frame_ufuncs(A)
+        A = CartesianFrame(name='A', axes=np.eye(3))
+        self._call_frame_ufuncs(A)
         # TEST1
         A = CartesianFrame(name='A', axes=np.eye(3))
         v = Vector([1.0, 0.0, 0.0], frame=A)
@@ -437,10 +462,23 @@ class TestSparse(unittest.TestCase):
         csr.to_scipy()
         csr.row(0)
         csr.irow(0)
+        csr.first_nonzero_col()
+        csr.new_rows_per_col()
         data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
         jagged = JaggedArray(data, cuts=[3, 3, 3])
-        csr_matrix(jagged.to_array()).to_numpy() 
+        csr_matrix(jagged.to_array()).to_numpy()
         
+        row = np.array([0, 0, 1, 2, 2, 2]) 
+        col = np.array([0, 2, 2, 0, 1, 2]) 
+        data = np.array([1, 2, 3, 4, 5, 6]) 
+        csr = csr_scipy((data, (row, col)), shape=(3, 3))
+        csr_matrix(csr.data, csr.indices, csr.indptr) 
+        
+    def test_jagged_create(self):
+        JaggedArray(np.array([1, 2, 3, 4, 5]), cuts=[2, 3])
+        JaggedArray([[1, 2], [3, 4, 5]])
+        JaggedArray([np.eye(2), np.eye(3)])
+    
     def test_jagged(self):
         data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         cuts=[3, 3, 4]
@@ -462,6 +500,24 @@ class TestSparse(unittest.TestCase):
         self.assertFalse(jagged.is_jagged())
         self.assertTrue(np.all(np.isclose(jagged.widths(), cuts)))
         self.assertTrue(np.all(np.isclose(jagged.shape, [3, 3])))
+        jagged[0, 0]
+        jagged[0, 0] = jagged[1, 1]
+        jagged.to_ak()
+        jagged.to_numpy()
+        jagged.to_list()
+        jagged.unique()
+        jagged.flatten()
+        jagged.flatten(return_cuts=True)
+        
+        data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+        jagged = JaggedArray(data, cuts=[3, 3, 3], force_numpy=True)
+        jagged.to_ak()
+        jagged.to_numpy()
+        jagged.to_list()
+        jagged.flatten()
+        jagged.flatten(return_cuts=True)
+        np.vstack([jagged, jagged])
+        np.min(jagged)
         
         
 class TestPosDef(unittest.TestCase):
