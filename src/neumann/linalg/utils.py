@@ -249,7 +249,7 @@ def vpath(p1: ndarray, p2: ndarray, n: int):
 
 
 @njit(nogil=True, cache=__cache)
-def solve(A, b):
+def linsolve(A, b):
     return np.linalg.solve(A, b)
 
 

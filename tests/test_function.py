@@ -11,21 +11,37 @@ from neumann.approx.lagrange import gen_Lagrange_1d
 
 
 def load_tests(loader, tests, ignore):  # pragma: no cover
+    tests.addTests(doctest.DocTestSuite(fnc.function))
     tests.addTests(doctest.DocTestSuite(fnc.relation))
     return tests
 
 
 class TestFunction(unittest.TestCase):
-
-    def test_linearity(self):
-        def f0(x=None, y=None):
-            return x**2 + y
-
-        def f1(x=None, y=None):
-            return np.array([2*x, 1])
+    
+    def test_bulk(self):
+        def f0(x, y): return x**2 + y
+        def f1(x, y): return np.array([2*x, 1])
         
         f = Function(f0, f1, d=2)
-        assert f.linear
+        self.assertFalse(f.symbolic)
+        #f.to_latex()
+        f.coefficients()
+        f.linear_coefficients()
+        
+        Function(value=f0, gradient=f1, Hessian=None, d=2)
+        
+        class MyFunction(Function):
+            def value(x, y): return f0(x, y)
+            def gradient(x, y): return f1(x, y)
+            def Hessian(x, y): ...
+
+    def test_linearity(self):
+        def f0(x=None, y=None): return x**2 + y
+        def f1(x=None, y=None): return np.array([2*x, 1])
+        
+        f = Function(f0, f1, d=2)
+        self.assertFalse(f.symbolic)
+        self.assertTrue(f.linear)
         
     def test_sym(self):
         f = gen_Lagrange_1d(N=2)
@@ -39,8 +55,10 @@ class TestFunction(unittest.TestCase):
         assert np.isclose(f2([-1]), 0.0)
         assert np.isclose(f2([1]), 1.0)
         f1.coefficients()
+        f1.linear_coefficients()
         f1.to_latex()
         f1.f([-1]), f1.g([-1]), f1.G([-1])
+        f1.subs([1], variables=f1.variables)
 
 
 class TestRelations(unittest.TestCase):

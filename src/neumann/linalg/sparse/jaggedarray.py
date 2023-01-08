@@ -20,7 +20,7 @@ def cut(shp): return np.full(shp[0], shp[1], dtype=int)
 def flatten(arr): return arr.flatten()
 
 
-def get_data(data: Iterable, cuts: Iterable = None) -> Union[ndarray, akarray]:
+def get_data(data: Iterable, cuts: Iterable = None, fallback:bool=False) -> Union[ndarray, akarray]:
     if isinstance(data, np.ndarray):
         nD = len(data.shape)
         assert nD <= 2, "Only 2 dimensional arrays are supported!"
@@ -31,9 +31,11 @@ def get_data(data: Iterable, cuts: Iterable = None) -> Union[ndarray, akarray]:
         return data
     elif isinstance(data, list):
         try:
+            if fallback:
+                raise NotImplementedError
             # list of lists
             return ak.Array(data)
-        except:
+        except Exception:
             # list of 2d NumPy arrays
             assert all(map(lambda arr: len(arr.shape) == 2, data)), \
                 "Only 2 dimensional arrays are supported!"
@@ -282,12 +284,14 @@ class JaggedArray(NDArrayOperatorsMixin, Wrapper):
 
     def __array_function__(self, func, types, args, kwargs):
         if func not in HANDLED_FUNCTIONS:
-            arrs = [arg._wrapped for arg in args]
+            arrs = [arg.to_ak() for arg in args]
             return func(*arrs, **kwargs)
-        # Note: this allows subclasses that don't override
-        # __array_function__ to handle DiagonalArray objects.
-        if not all(issubclass(t, self.__class__) for t in types):
-            return NotImplementedError
+        if len(args) == 1 and isinstance(args[0], (list, tuple)):
+            if not all(isinstance(x, self.__class__) for x in args[0]):
+                raise TypeError("All object must be instances of JaggedArray.")
+        else:
+            if not all(isinstance(x, self.__class__) for x in args):
+                raise TypeError("All object must be instances of JaggedArray.")
         return HANDLED_FUNCTIONS[func](*args, **kwargs)
 
 

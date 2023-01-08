@@ -27,6 +27,7 @@ class ABCMeta_MetaFunction(ABCMeta_Weak):
 
 
 class MetaFunction(metaclass=ABCMeta_MetaFunction):
+    
     __slots__ = ('f0', 'f1', 'f2', 'dimension', 'domain', 'expr',
                  'variables', 'vmap')
 

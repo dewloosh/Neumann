@@ -31,8 +31,8 @@ class Function(MetaFunction):
         A callable object that returns evaluations of the 
         Hessian of the function.
     variables : List, Optional
-        Symbolic variables. Only if the function is defined by 
-        a string or `sympy` expression.
+        Symbolic variables. Only required if the function is defined by 
+        a string or `SymPy` expression.
     value : Callable, Optional
         Same as `f0`.
     gradient : Callable, Optional
@@ -41,46 +41,81 @@ class Function(MetaFunction):
         Same as `f2`.
     dimension or dim or d : int, Optional
         The number of dimensions of the domain of the function. Required only when
-        going full blind, in most of the cases it can be derived from other properties.
+        going full blind, in most of the cases it can be inferred from other properties.
 
     Examples
     --------
     >>> from neumann.function import Function
     >>> import sympy as sy
+    
+    Define a symbolic function with positive variables. Note here that if it was not relevant
+    from the aspect of the application to indicate that the variables are positive, it 
+    wouldn't be necessary to explicity specify them using the parameter `variables`.
+    
     >>> variables = ['x1', 'x2', 'x3', 'x4']
     >>> x1, x2, x3, x4 = syms = sy.symbols(variables, positive=True)
     >>> f = Function(3*x1 + 9*x3 + x2 + x4, variables=syms)
     >>> f([0, 6, 0, 4])
     10
 
-    >>> def f0(x=None, y=None):
-    >>>     return x**2 + y
-
-    >>> def f1(x=None, y=None):
-    >>>     return np.array([2*x, 1])
-
-    >>> def f2(x=None, y=None):
-    >>>     return np.array([[0, 0], [0, 0]])
-
+    Define a numerical function. In this case the dimension of the input must be specified
+    explicitly.
+    
+    >>> def f0(x, y): return x**2 + y
+    >>> def f1(x, y): return np.array([2*x, 1])
+    >>> def f2(x, y): return np.array([[0, 0], [0, 0]])
     >>> f = Function(f0, f1, f2, d=2)
     >>> f.linear
-    ...
+    False
+    
+    To call the function, call it like you would call the function `f0`:
+    
+    >>> f(1, 1)
+    2
+    >>> f.g(1, 1)
+    array([2, 1])
+    
+    You can mix different kinds of input signatures:
+    
+    >>> def f0(x): return x[0]**2 + x[1]
+    >>> def f1(x, y): return np.array([2*x, 1])
+    >>> def f2(x, y): return np.array([[0, 0], [0, 0]])
+    >>> f = Function(f0, f1, f2, d=2)
+    
+    The point is that you always call the resulting `Function` object
+    according to your definition. Now your `f0` expects an iterable,
+    therefore you can call it like
+    
+    >>> f([1, 1])
+    2
+    
+    but the gradient function expects the same values as two scalars, so
+    you call it like this
+    
+    >>> f.g(1, 1)
+    array([2, 1])
+    
+    Explicity defining the variables for a symbolic function is important
+    if not all variables appear in the string expression you feed the object with:
 
     >>> g = Function('3*x + 4*y - 2', variables=['x', 'y', 'z'])
     >>> g.linear
-    ...
+    True
+
+    If you do not specify 'z' as a variable here, the resulting object expects
+    two values
 
     >>> h = Function('3*x + 4*y - 2')
-    >>> h.linear
-    ...
+    >>> h([1, 1])
+    5
 
-    >>> m = Function('3*x + 4*y - 2', variables=symbols('x y z'))
+    The variables can be `SymPy` variables as well:
+    
+    >>> m = Function('3*x + 4*y - 2', variables=sy.symbols('x y z'))
     >>> m.linear
-    ...
-
+    True
     >>> m([1, 2, -30])
-    ...
-
+    9
     """
     # FIXME domain is missing from the possible parameters
     # NOTE investigate if dimensions should be derived
@@ -117,10 +152,7 @@ class Function(MetaFunction):
         This is probably only true if the object was created from a string or
         `sympy` expression.
         """
-        try:
-            return self.expr is not None
-        except AttributeError:
-            return False
+        return self.expr is not None
 
     @property
     def linear(self):

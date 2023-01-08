@@ -1,3 +1,5 @@
+from typing import Union, Tuple
+
 import numpy as np
 from numpy.linalg import LinAlgError
 from numba import njit
@@ -5,11 +7,92 @@ from numba import njit
 __cache = True
 
 
-__all__ = ['solve', 'reduce', 'backsub', 'npsolve']
+__all__ = ['linsolve', 'reduce', 'backsub', 'npsolve']
 
 
-def solve(A: np.ndarray, B: np.ndarray, presc_bool: np.ndarray = None,
-          presc_val: np.ndarray = None, method='numpy', inplace=False):
+def linsolve(A: np.ndarray, B: np.ndarray, *, presc_bool: np.ndarray = None,
+             presc_val: np.ndarray = None, method:str='numpy', 
+             inplace: bool = False) -> Union[np.ndarray, Tuple[np.ndarray]]:
+    """
+    Solves a linear system of equations using various methods. It supports prescription of values.
+    
+    Parameters
+    ----------
+    A : numpy.ndarray
+        The coefficient matrix.
+    B : numpy.ndarray
+        One more right hand sides.
+    presc_bool : numpy.ndarray, Optional
+        An 1d NumPy array of booleans to indicate which unknowns are prescribed.
+        Default is None.
+    presc_val : numpy.ndarray, Optional
+        An 1d NumPy array of floats of prescribed values. It should be used together
+        with 'presc_bool'. Default is None.
+    method : str, Optional
+        The method to use. Valid options are:
+        * 'numpy' :  uses NumPy's solver for dense scenarios. In this case prescribed
+           values are not available. This is the same as to call `numpy.linalg.solve` directly.
+        * 'Jordan' : Jordan elimination
+        * 'Gauss-Jordan' : Gauss-Jordan elimination
+    inplace : bool, Optional
+        To allow for in-place modifications of the inputs 'A' and 'B' not. If False, a 
+        copy is created. Default is False.
+        
+    Note
+    ----
+    Methods 'Jordan' and 'Gauss-Jordan' use elimination to account for constraints on the unknown
+    variables, hence yield exact results. These algorithms doesn't scale too well and are not suggested
+    in a production enviroment, but they are handy to measure the error of a penalty function approach
+    or something else. However, their implementation relies on JIT-compiled code using Numba, and 
+    for small and medium sized problems, they should do the job in a reasonable amount of time.
+        
+    Returns
+    -------
+    numpy.ndarray
+        The solution with a shape matching input 'B'.
+    numpy.ndarray, Optional
+        The residual vector, if the solution is constrained.
+        
+    Example
+    -------
+    To solve a simple system of equation:
+    
+    >>> from neumann.linalg.solve import linsolve
+    >>> A = np.array([[3, 1, 2], [1, 1, 1], [2, 1, 2]], dtype=float)
+    >>> B = np.array([11, 6, 10], dtype=float)
+    >>> X = linsolve(A, B, method='Gauss-Jordan')
+    >>> X.flatten()
+    array([1., 2., 3.])
+    
+    Of course, in this case you could have used NumPy's solver, but if you want to
+    have a few unknowns prescribed, you can make use of the direct solvers presented
+    here. 
+    
+    >>> pb = np.array([False, True, False], dtype=bool)
+    >>> pv = np.array([0, 3, 0], dtype=float)
+    >>> X, R = linsolve(A, B, method='Gauss-Jordan', presc_bool=pb, presc_val=pv)
+    
+    In this case, the first argument is the constrained solution vector
+    
+    >>> X.flatten()
+    array([1. , 3. , 2.5])
+    
+    and the second one is the vector of resudials due to the constraints
+    
+    >>> R.flatten()
+    array([0. , 0.5, 0. ])
+    
+    the meaning of which becomes clear if you compare the image of the constrained 
+    solution you've just calculated against the input B
+    
+    >>> np.ravel(A @ X)  # ravel is used to flatten the column array
+    array([11. ,  6.5, 10. ])
+    
+    >>> B
+    array([11.,  6., 10.])
+    """
+    # FIXME : check if presc_bool and presc_val have matching shape to A and B
+    # FIXME : check if presc_bool is a boolean array
     if method == 'numpy':
         assert presc_bool is None, \
             "Method '{}' does not support prescribed values.".format(method)
@@ -22,7 +105,7 @@ def solve(A: np.ndarray, B: np.ndarray, presc_bool: np.ndarray = None,
                 B = B.reshape((nEQ, 1))
             pre = presc_val is not None
             if not pre:
-                presc_bool = np.zeros((nEQ,), dtype=np.int64)
+                presc_bool = np.zeros((nEQ,), dtype=bool)
                 presc_val = np.zeros((nEQ,), dtype=np.float64)
             if inplace:
                 res = backsub(*fnc(A, B, presc_bool, presc_val),

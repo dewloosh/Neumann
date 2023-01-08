@@ -69,7 +69,7 @@ def unique2d(arr: ArrayLike, return_index:bool=False,
     >>> from neumann.linalg.sparse import JaggedArray
     >>> arr = JaggedArray(np.array([1, 2, 1, 2, 3]), cuts=[2, 3])
     >>> unique2d(arr)
-        
+    array([1, 2, 3])
     """
     if isinstance(arr, ndarray):
         unique, counts, inverse, indices = _unique2d_njit(arr)
@@ -83,11 +83,6 @@ def unique2d(arr: ArrayLike, return_index:bool=False,
         return res if len(res) > 1 else res[0]
     elif isinstance(arr, akarray):
         assert arr.ndim == 2, "Only 2 dimensional awkward arrays are supported!"
-        if hasattr(arr, 'is_jagged'):
-            if not arr.is_jagged():
-                return unique2d(arr.to_numpy(), return_index=return_index,
-                                return_inverse=return_inverse,
-                                return_counts=return_counts)
         flatarr = ak.flatten(arr).to_numpy()
         unique, counts, inverse, indices = _unique1d_njit(flatarr)
         res = [unique, ]
@@ -98,8 +93,19 @@ def unique2d(arr: ArrayLike, return_index:bool=False,
         if return_counts:
             res.append(counts)
         return res if len(res) > 1 else res[0]
-
-
+    else:
+        if hasattr(arr, 'is_jagged'):
+            if not arr.is_jagged():
+                return unique2d(arr.to_numpy(), return_index=return_index,
+                                return_inverse=return_inverse,
+                                return_counts=return_counts)
+            else:
+                return unique2d(arr.to_ak(), return_index=return_index,
+                                return_inverse=return_inverse,
+                                return_counts=return_counts)
+    raise TypeError(f"Invalid input type {type(arr)}")
+            
+        
 @njit(nogil=True, parallel=False, fastmath=False, cache=__cache)
 def _unique1d_njit(flatdata: ndarray):
     unique = np.unique(flatdata)
