@@ -11,7 +11,7 @@ from neumann.linalg.utils import random_posdef_matrix
 import numpy as np
 
 
-def load_tests(loader, tests, ignore):
+def load_tests(loader, tests, ignore):  # pragma: no cover
     tests.addTests(doctest.DocTestSuite(logical))
     return tests
 

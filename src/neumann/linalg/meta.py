@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import abstractmethod, abstractproperty
 import weakref
 from typing import Tuple
 import numbers
@@ -13,7 +13,7 @@ from dewloosh.core.abc import ABC_Safe
 from ..utils import ascont, minmax
 
 
-__all__ = ['Array', 'TensorLike', 'FrameLike']
+__all__ = ['ArrayWrapper', 'TensorLike', 'FrameLike']
 
 
 class Array(ABC_Safe, ndarray):
@@ -145,8 +145,8 @@ class ArrayWrapper(NDArrayOperatorsMixin, Wrapper):
     def __getitem__(self, key):
         return self._array.__getitem__(key)
 
-    def __setitem__(self, key):
-        return self._array.__setitem__(key)
+    def __setitem__(self, key, value):
+        return self._array.__setitem__(key, value)
 
     def __len__(self):
         return self._array.shape[0]
@@ -165,14 +165,14 @@ class ArrayWrapper(NDArrayOperatorsMixin, Wrapper):
             # allow subclasses that don't override __array_ufunc__ to
             # handle ArrayLike objects.
             if not isinstance(x, self._HANDLED_TYPES_ + (Array, ArrayWrapper)):
-                return NotImplementedError
+                raise TypeError(f"Invalid type encountered at {ufunc}")
 
         # Defer to the implementation of the ufunc on unwrapped values.
-        inputs = tuple(x._array if isinstance(x, Array) else x
+        inputs = tuple(x._array if isinstance(x, ArrayWrapper) else x
                         for x in inputs)
         if out:
             kwargs['out'] = tuple(
-                x._array if isinstance(x, Array) else x
+                x._array if isinstance(x, ArrayWrapper) else x
                 for x in out)
         result = getattr(ufunc, method)(*inputs, **kwargs)
 
@@ -216,6 +216,10 @@ class FrameLike(ArrayWrapper):
     
     @abstractmethod
     def Gram(self) -> ndarray:  ...
+    
+    @abstractmethod
+    def dual(self) -> 'FrameLike':
+        ...
                     
     def _register_tensorial_(self, v : 'TensorLike'):
         """
@@ -253,10 +257,17 @@ class TensorLike(ArrayWrapper):
             cls_params['frame'] = frame
         kwargs['cls_params'] = cls_params
         super().__init__(*args, **kwargs)
-        frame._register_tensorial_(self)
         if self._array._frame is None:
             self._array._frame = self._frame_cls_(dim=self._array.shape)
-            
+        self.frame._register_tensorial_(self)
+        
+    @abstractproperty
+    def rank(self) -> int: 
+        """
+        Ought to return the rank (or order) of the tensor.
+        """ 
+        ...
+        
     @property
     def array(self) -> Array:
         """

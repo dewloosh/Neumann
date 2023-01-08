@@ -5,7 +5,7 @@ from neumann.optimize import BinaryGeneticAlgorithm
 from neumann import optimize
 
 
-def load_tests(loader, tests, ignore):
+def load_tests(loader, tests, ignore):  # pragma: no cover
     tests.addTests(doctest.DocTestSuite(optimize.ga))
     return tests
 

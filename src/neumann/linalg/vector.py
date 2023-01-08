@@ -5,8 +5,9 @@ import numbers
 from .utils import show_vector, show_vectors
 from .frame import ReferenceFrame as Frame, CartesianFrame
 from .meta import TensorLike
-from .tensor import SecondOrderTensor
-from .exceptions import VectorShapeMismatchError
+from .tensor import Tensor2
+from .exceptions import (VectorShapeMismatchError, ArgumentError, 
+                         UfuncNotAllowedError)
 
 
 __all__ = ['Vector']
@@ -76,7 +77,7 @@ class Vector(TensorLike):
 
     >>> vB.show(C)
     array([ 1., -1.,  0.])
-    
+
     The reason why the result is represented now as 'array' insted of 'Array'
     as in the previous case is that the Vector class is an array container. When
     you type `vB.array`, what is returned is a wrapped object, an instance of `Array`,
@@ -97,11 +98,20 @@ class Vector(TensorLike):
 
     _frame_cls_ = Frame
     _HANDLED_TYPES_ = (numbers.Number,)
-
+    
+    @property
+    def rank(self) -> int:
+        """
+        Returns the tensor rank (or order).
+        """ 
+        return 1
+        
     def dual(self) -> 'Vector':
         """
         Returns the vector described in the dual (or reciprocal) frame.
         """
+        # NOTE Strictly this should be self.frame.Gram().T @ self.array,
+        # but since the Gram matrix is symmetric, it is cheaper like this
         a = self.frame.Gram() @ self.array
         return self.__class__(a, frame=self.frame.dual())
 
@@ -123,7 +133,7 @@ class Vector(TensorLike):
         -------      
         numpy.ndarray
             The components of the vector in a specified frame, or
-            the global frame, depending on the arguments.
+            the ambient frame, depending on the arguments.
         """
         if not isinstance(dcm, ndarray):
             if target is None:
@@ -182,47 +192,39 @@ class Vector(TensorLike):
     def __array_function__(self, func, types, args, kwargs):
         handled_types = self._HANDLED_TYPES_ + (Vector,)
         if not all(isinstance(x, handled_types) for x in args):
-            raise TypeError("If one input is a vector, all other inputs must be vectors!")
-            
+            raise TypeError(
+                "If one input is a vector, all other inputs must be vectors!")
+
         if func not in HANDLED_FUNCTIONS:
             arrs = [arg._array for arg in args]
             return func(*arrs, **kwargs)
-       
+
         N = len(args[0])
         for i in range(1, len(args)):
             if not len(args[i]) == N:
                 msg = "Input vectors must have the same shape!"
                 raise VectorShapeMismatchError(msg)
+            
         return HANDLED_FUNCTIONS[func](*args, **kwargs)
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         if method == 'at':
-            raise NotImplementedError("This is currently not implemented")
+            raise UfuncNotAllowedError("This is currently not implemented.")
+        
         out = kwargs.get('out', ())
-        for x in inputs + out:
-            # Only support operations with instances of _HANDLED_TYPES.
-            # Use ArrayLike instead of type(self) for isinstance to
-            # allow subclasses that don't override __array_ufunc__ to
-            # handle ArrayLike objects.
-            if not isinstance(x, self._HANDLED_TYPES_ + (Vector,)):
-                raise TypeError("If one input is a vector, all other inputs must be vectors!")
-
-        # Defer to the implementation of the ufunc on unwrapped values.
-        frame = CartesianFrame(dim=len(self))
-        inputs = tuple(x.show(frame) if isinstance(x, Vector) else x
-                       for x in inputs)
         if out:
-            kwargs['out'] = tuple(
-                x._array if isinstance(x, Vector) else x
-                for x in out)
-        result = getattr(ufunc, method)(*inputs, **kwargs)
-
-        if type(result) is tuple:
-            # multiple return values
-            return tuple(type(self)(x, frame=frame) for x in result)
-        else:
-            # one return value
-            return type(self)(result, frame=frame)
+            raise ArgumentError(
+                "The 'out' parameter is not allowed with Vectors.")
+            
+        for x in inputs:
+            if not isinstance(x, self._HANDLED_TYPES_ + (Vector,)):
+                raise TypeError(
+                    "If one input is a vector, all other inputs must be vectors!")
+                
+        frame = CartesianFrame(dim=len(self))
+        inputs = tuple(x.show(frame) if isinstance(
+            x, Vector) else x for x in inputs)
+        return getattr(ufunc, method)(*inputs, **kwargs)
 
 
 @implements(np.dot)
@@ -248,4 +250,4 @@ def inner(*args, **kwargs):
 def outer(*args, **kwargs):
     v1, v2 = args[:2]
     arr = np.outer(v1.show(), v2.show(), **kwargs)
-    return SecondOrderTensor(arr, frame=CartesianFrame(dim=len(v1)))
+    return Tensor2(arr, frame=CartesianFrame(dim=len(v1)))
