@@ -10,7 +10,7 @@ from neumann.function import Equality, InEquality, Relation
 from neumann.approx.lagrange import gen_Lagrange_1d
 
 
-def load_tests(loader, tests, ignore):
+def load_tests(loader, tests, ignore):  # pragma: no cover
     tests.addTests(doctest.DocTestSuite(fnc.relation))
     return tests
 

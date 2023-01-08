@@ -12,7 +12,7 @@ from neumann import utils as nu
 from neumann.hist import histogram
 
 
-def load_tests(loader, tests, ignore):
+def load_tests(loader, tests, ignore):  # pragma: no cover
     tests.addTests(doctest.DocTestSuite(neumann.decorate))
     tests.addTests(doctest.DocTestSuite(arraysetops))
     tests.addTests(doctest.DocTestSuite(neumann.utils))

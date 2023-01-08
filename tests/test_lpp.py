@@ -11,7 +11,7 @@ import sympy as sy
 from neumann import optimize
 
 
-def load_tests(loader, tests, ignore):
+def load_tests(loader, tests, ignore):  # pragma: no cover
     tests.addTests(doctest.DocTestSuite(optimize.lp))
     return tests
 

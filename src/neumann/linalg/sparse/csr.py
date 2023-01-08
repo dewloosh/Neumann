@@ -164,16 +164,6 @@ class csr_matrix:
         return csr_matrix(data=data, indices=indices,
                           indptr=indptr, shape=(N, N))
 
-    def first_nonzero_col(self) -> int:
-        """
-        Returns the index of the first column with a nonzero entry.
-        """
-        return self.indices[self.indptr[:-1]]
-
-    def new_rows_per_col(self) -> np.ndarray:
-        return np.bincount(self.first_nonzero_col(), 
-                           minlength=self.shape[1])
-
     def row(self, i: int = 0) -> np.ndarray:
         """
         Returns the values of the i-th row.

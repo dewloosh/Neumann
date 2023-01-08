@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 import numpy as np
 from numpy.linalg import LinAlgError
-from numba import njit, guvectorize
-from time import time
+from numba import njit
 
 __cache = True
 
 
-__all__ = ['solve', 'reduce', 'backsub', 'npsolve', 'inv3x3']
+__all__ = ['solve', 'reduce', 'backsub', 'npsolve']
 
 
 def solve(A: np.ndarray, B: np.ndarray, presc_bool: np.ndarray = None,
@@ -69,7 +67,7 @@ def reduce(A: np.ndarray, B: np.ndarray, presc_bool: np.ndarray = None,
 @njit(nogil=True, cache=__cache)
 def npsolve(A, b):
     return np.linalg.solve(A, b)
- 
+
 
 @njit(nogil=True, cache=__cache)
 def _Jordan(A: np.ndarray, B: np.ndarray, presc_bool: np.ndarray,
@@ -137,37 +135,3 @@ def backsub(A: np.ndarray, B: np.ndarray, presc_bool: np.ndarray,
         else:
             X[iEQ] = resid / pivot
     return X, R
-
-
-def _measure(A, b, n=100):
-    times = []
-    
-    # measuring solution 1
-    ts = time()
-    for i in range(n):
-        solve(A, b, method='Jordan')
-    te = time()
-    times.append((te-ts)*1000)
-    
-    # measuring solution 2
-    ts = time()
-    for i in range(n):
-        np.linalg.solve(A, b)
-    te = time()
-    times.append((te-ts)*1000)
-    
-    # measuring solution 3
-    ts = time()
-    for i in range(n):
-        solve(A, b, method='numpy')
-    te = time()
-    times.append((te-ts)*1000)
-    
-    # measuring solution 4
-    ts = time()
-    for i in range(n):
-        solve(A, b, method='Gauss-Jordan')
-    te = time()
-    times.append((te-ts)*1000)
-    
-    return times
