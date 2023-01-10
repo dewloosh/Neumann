@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple
+from typing import Iterable
 
 import numpy as np
 from numpy import ndarray
@@ -6,7 +6,7 @@ import sympy as sy
 
 from dewloosh.core.tools.alphabet import latinrange
 from .frame import ReferenceFrame as Frame
-from .meta import TensorLike
+from .abstract import AbstractTensor
 from .top import tr_3333, tr_3333_jit
 from .utils import is_hermitian
 
@@ -18,7 +18,7 @@ def even(n): return n % 2 == 0
 def swap(x): return x[::-1]
 
 
-class Tensor(TensorLike):
+class Tensor(AbstractTensor):
     """
     A class to handle tensors.
 
@@ -30,6 +30,37 @@ class Tensor(TensorLike):
         The reference frame the vector is represented by its coordinates.
     kwargs : dict, Optional
         Keyword arguments forwarded to `numpy.ndarray`.
+        
+    Examples
+    --------
+    Import the necessary classes:
+
+    >>> from neumann.linalg import Tensor, ReferenceFrame    
+    >>> from numpy.random import rand
+    
+    Create a Tensor of order 6 in a frame with random components
+    
+    >>> frame = ReferenceFrame(dim=3)
+    >>> array = rand(3, 3, 3, 3, 3, 3)
+    >>> A = Tensor(array, frame=frame)
+    
+    Get the tensor in the dual frame:
+    
+    >>> A_dual = A.dual()
+    
+    Create an other tensor, in this case a 5th-order one, and calculate their 
+    generalized dot product, which is a 9th-order tensor:
+    
+    >>> from neumann.linalg import dot
+    >>> array = rand(3, 3, 3, 3, 3)
+    >>> B = Tensor(array, frame=frame)
+    >>> C = dot(A, B, axes=[0, 0])
+    >>> assert C.rank == (A.rank + B.rank - 2)
+    
+    See Also
+    --------
+    :class:`~neumann.linalg.vector.Vector`
+    :class:`~neumann.linalg.frame.frame.ReferenceFrame`
     """
 
     _frame_cls_ = Frame
@@ -44,7 +75,7 @@ class Tensor(TensorLike):
         return is_hermitian(arr)
     
     @classmethod
-    def _from_any_input(cls, *args, **kwargs) -> TensorLike:
+    def _from_any_input(cls, *args, **kwargs) -> AbstractTensor:
         if cls._verify_input(*args, **kwargs):
             return cls(*args, **kwargs)
         else:

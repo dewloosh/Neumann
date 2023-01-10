@@ -10,7 +10,7 @@
 > **Warning**
 > The library is in a beta stage overall. Wait until version 1.0.
 
-`Neumann` is a Python library that provides tools to formulate and solve problems related to all kinds of scientific disciplines. It is a part of the DewLoosh ecosystem which is designed mainly to solve problems related to computational solid mechanics, but if something is general enough, it ends up here. A good example is the included vector and tensor algebra modules or optimizers, which are applicable in a much broader context than they were designed for.
+`Neumann` is a Python library that provides tools to formulate and solve problems related to all kinds of scientific disciplines. It is a part of the DewLoosh ecosystem which is designed mainly to solve problems related to computational solid mechanics, but if something is general enough, it ends up here. A good example is the included vector and tensor algebra modules, or the various optimizers, which are applicable in a much broader context than they were originally designed for.
 
 The most important features:
 
@@ -26,7 +26,7 @@ The most important features:
     * A `BinaryGeneticAlgorithm` class to tackle more complicated optimization problems.
 
 * Graph Theory
-  * Algorithms to calculate rooted level structures and pseudo peripheral nodes of a `networkx` graph.
+  * Algorithms to calculate rooted level structures and pseudo peripheral nodes of a `networkx` graph, which are useful if you want to minimize the bandwidth of sparse symmetrix matrices.
 
 ## **Documentation**
 
@@ -38,6 +38,18 @@ The documentation is hosted on [ReadTheDocs](https://Neumann.readthedocs.io/en/l
 
 ```console
 >>> pip install neumann
+```
+
+or chechkout with the following command using GitHub CLI
+
+```console
+gh repo clone dewloosh/Neumann
+```
+
+and install from source by typing
+
+```console
+>>> python install setup.py
 ```
 
 ## **Motivating Examples**

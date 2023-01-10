@@ -17,7 +17,7 @@ def load_tests(loader, tests, ignore):  # pragma: no cover
 
 
 class TestFunction(unittest.TestCase):
-    
+        
     def test_bulk(self):
         def f0(x, y): return x**2 + y
         def f1(x, y): return np.array([2*x, 1])
@@ -34,7 +34,7 @@ class TestFunction(unittest.TestCase):
             def value(x, y): return f0(x, y)
             def gradient(x, y): return f1(x, y)
             def Hessian(x, y): ...
-
+            
     def test_linearity(self):
         def f0(x=None, y=None): return x**2 + y
         def f1(x=None, y=None): return np.array([2*x, 1])

@@ -1,4 +1,6 @@
-from typing import Union, Tuple, Iterable
+from typing import Union
+import numbers
+import itertools
 
 import numpy as np
 from numpy import ndarray
@@ -8,22 +10,50 @@ from sympy import symbols, Matrix
 
 from dewloosh.core.tools.alphabet import latinrange
 
-from .meta import TensorLike, ArrayWrapper, FrameLike, ArrayLike
+from .meta import TensorLike, ArrayWrapper, FrameLike
 from .exceptions import LinalgOperationInputError, LinalgMissingInputError
 
 __cache = True
 
 
+__all__ = ['permutation_tensor', 'dot', 'cross', 'is_rectangular_frame',
+           'is_normal_frame', 'is_orthonormal_frame', 'is_independent_frame',
+           'is_hermitian', 'normalize_frame', 'Gram', 'dual_frame', 'is_pos_def',
+           'is_pos_semidef', 'random_pos_semidef_matrix', 'random_posdef_matrix',
+           'inv_sym_3x3', 'vpath', 'det3x3', 'det2x2', 'inv2x2', 'inv2x2u', 'adj3x3',
+           'inv3x3u', 'inv3x3', 'inv3x3_bulk', 'inv3x3_bulk2', 'normalize', 'normalize2d',
+           'norm', 'norm2d', 'to_range_1d', 'linspace', 'linspace1d']
+
+
+def permutation_tensor(dim:int=3) -> ndarray:
+    """
+    Returns the Levi-Civita pseudotensor for N dimensions.
+    
+    Parameters
+    ----------
+    N : int, Optional
+        The number of dimensions. Default is 3.
+    """
+    arr=np.zeros(tuple([dim for _ in range(dim)]))
+    mat = np.zeros((dim, dim), dtype=np.int32)
+    for x in itertools.permutations(tuple(range(dim))):
+        mat[:, :] = 0
+        for i, j in zip(range(dim), x):
+            mat[i, j] = 1
+        arr[x]=int(np.linalg.det(mat))
+    return arr
+
+
 def dot(a: Union[TensorLike, ArrayWrapper], b: Union[TensorLike, ArrayWrapper],
         out: Union[TensorLike, ArrayWrapper] = None, frame: FrameLike = None,
-        axes: Union[list, tuple] = None) -> Union[TensorLike, ndarray]:
+        axes: Union[list, tuple] = None) -> Union[TensorLike, ndarray, numbers.Number]:
     """
-    Returns the doc product of two quantities. The behaviour coincides with NumPy
-    when all inputs are arrays and generalizes when they are not, but all inputs 
-    must be either all arrays or tensors of some kind. The operation for tensors
-    of order 1 and 2 have dedicated implementations, for higher order tensors
+    Returns the dot product (without complex conjugation) of two quantities. The behaviour 
+    coincides with NumPy when all inputs are arrays and generalizes when they are not, 
+    but all inputs must be either all arrays or all tensors of some kind. The operation for 
+    tensors of order 1 and 2 have dedicated implementations, for higher order tensors
     it generalizes to tensor contraction along specified axes.
-    
+
     Parameters
     ----------
     a : TensorLike or ArrayLike
@@ -41,17 +71,27 @@ def dot(a: Union[TensorLike, ArrayWrapper], b: Union[TensorLike, ArrayWrapper],
     axes : tuple or list, Optional
         The indices along which contraction happens if any of the input tensors have a rank
         higher than 2. Default is None.
-        
+
     Returns
     -------
-    TensorLike or ndarray
+    TensorLike or numpy.ndarray or scalar
         An array or a tensor, depending on the inputs.
         
+    Notes
+    -----
+    For general tensors, the current implementation has an upper limit considering the rank
+    of the input tensors. The sum of the ranks of the input tensors plus the sum of contraction
+    indices must be at most 26.
+    
+    References
+    ----------
+    https://mathworld.wolfram.com/DotProduct.html
+
     Examples
     --------
     When working with NumPy arrays, the behaviour coincides with `numpy.dot`. To take the dot
     product of a 2nd order tensor and a vector, use it like this:
-    
+
     >>> from neumann.linalg import ReferenceFrame, Vector, Tensor2
     >>> from neumann.linalg import dot
     >>> frame = ReferenceFrame(np.eye(3))
@@ -59,12 +99,12 @@ def dot(a: Union[TensorLike, ArrayWrapper], b: Union[TensorLike, ArrayWrapper],
     >>> v = Vector(np.array([1., 0, 0]), frame=frame)
     >>> dot(A, v)
     Array([1., 0., 0.])
-    
+
     For general tensors, you have to specify the axes along which contraction happens:
-    
+
     >>> from neumann.linalg import Tensor
-    >>> A = Tensor(np.ones((3, 3, 3, 3)), frame=frame)
-    >>> B = Tensor(np.ones((3, 3, 3)), frame=frame)
+    >>> A = Tensor(np.ones((3, 3, 3, 3)), frame=frame)  # a tensor of order 4
+    >>> B = Tensor(np.ones((3, 3, 3)), frame=frame)  # a tensor of order 3
     >>> dot(A, B, axes=(0, 0)).rank
     5
     """
@@ -73,7 +113,8 @@ def dot(a: Union[TensorLike, ArrayWrapper], b: Union[TensorLike, ArrayWrapper],
         result = None
         if ra == 1 and rb == 1:
             if out is not None:
-                raise LinalgOperationInputError("Parameter 'out' is not allowed with tensors.")
+                raise LinalgOperationInputError(
+                    "Parameter 'out' is not allowed with tensors.")
             return np.dot(a.show(), b.show())
         elif ra == 2 and rb == 1:
             arr = (a.array @ b.show(a.frame.dual()).T).T
@@ -83,10 +124,8 @@ def dot(a: Union[TensorLike, ArrayWrapper], b: Union[TensorLike, ArrayWrapper],
             result = a.__class__(arr, frame=a.frame)
         elif ra == 2 and rb == 2:
             g = a.frame.Gram()
-            result = a.__class__(a @ g @ b.show(a.frame), frame=a.frame)
+            result = a.__class__(a.array @ g @ b.show(a.frame), frame=a.frame)
         else:
-            # If ever implemented, the inner product between a tensor of order n and a
-            # tensor of order m is a tensor of order n + m − 2.
             if not axes:
                 msg = "The parameter 'axes' is required for tensor contraction of general tensors."
                 raise LinalgMissingInputError(msg)
@@ -103,15 +142,100 @@ def dot(a: Union[TensorLike, ArrayWrapper], b: Union[TensorLike, ArrayWrapper],
             result.frame = frame
         return result
     if frame:
-        raise LinalgOperationInputError("Parameter 'frame' is exclusive for tensorial inputs.")
+        raise LinalgOperationInputError(
+            "Parameter 'frame' is exclusive for tensorial inputs.")
     if not all([isinstance(x, (ndarray, ArrayWrapper, list)) for x in [a, b]]):
         raise TypeError("Invalid types encountered for dot product.")
     inputs = [x._array if isinstance(x, ArrayWrapper) else x for x in [a, b]]
     return np.dot(*inputs, out=out)
 
 
+
+def cross(a: Union[TensorLike, ArrayWrapper], b: Union[TensorLike, ArrayWrapper],
+          *args, frame: FrameLike = None, **kwargs) -> Union[TensorLike, ndarray]:
+    """
+    Calculates the cross product of two vectors or one vector and a second order
+    tensor. The behaviour coincides with NumPy when all inputs are arrays and generalizes 
+    when they are not, but all inputs must be either all arrays or all tensors of some kind.
+    
+    Parameters
+    ----------
+    *args : Tuple, Optinal
+        Positional arguments forwarded to NumPy, if all input objects are arrays.
+    a : TensorLike or ArrayLike
+        A tensor or an array.
+    b : TensorLike or ArrayLike
+        A tensor or an array.
+    frame : FrameLike, Optinal
+        The target frame of the output. Only if all inputs are TensorLike. If not specified,
+        the returned tensor migh be returned in an arbitrary frame, depending on the inputs.
+        Default is None.
+    **kwargs : dict, Optional
+        Keyword arguments forwarded to `numpy.cross`. As of NumPy version '1.22.4', there
+        are no keyword arguments for `numpy.cross`, this is to assure compliance with
+        all future versions of numpy.
+    
+    Returns
+    -------
+    numpy.ndarray or TensorLike
+        An 1d or 2d array, or an 1d or 2d tensor, depending on the inputs.
+        
+    References
+    ----------
+    https://mathworld.wolfram.com/CrossProduct.html
+    
+    Examples
+    --------
+    The cross product of two vectors results in a vector:
+
+    >>> from neumann.linalg import ReferenceFrame, Vector, Tensor2
+    >>> from neumann.linalg import cross
+    >>> frame = ReferenceFrame(np.eye(3))
+    >>> a = Vector(np.array([1., 0, 0]), frame=frame)
+    >>> b = Vector(np.array([0, 1., 0]), frame=frame)
+    >>> cross(a, b)
+    Array([0., 0., 1.])
+    
+    The cross product of a second order tensor and a vector result a second order tensor:
+    
+    >>> A = Tensor2(np.eye(3), frame=frame)
+    >>> cross(A, b)
+    Array([[ 0.,  0., -1.],
+           [ 0.,  0.,  0.],
+           [ 1.,  0.,  0.]])
+    """
+    if isinstance(a, TensorLike) and isinstance(b, TensorLike):
+        ra, rb = a.rank, b.rank
+        result = None
+        if ra == 1 and rb == 1:
+            arr = np.cross(a.array, b.show(a.frame), axis=0)
+            result = a.__class__(arr, frame=a.frame)
+        elif ra == 2 and rb == 1:
+            arr = np.cross(a.show(), b.show(), axis=0)
+            result = a.__class__(arr)
+        elif ra == 1 and rb == 2:
+            arr = np.cross(a.show(), b.show(), axis=0)
+            result = b.__class__(arr)
+        else:
+            msg = ("The cross product is not implemented",
+                   f"for tensors of rank {ra} and {rb}")
+            raise NotImplementedError(msg)
+        if frame:
+            result.frame = frame
+        return result
+    if frame:
+        raise LinalgOperationInputError(
+            "Parameter 'frame' is exclusive for tensorial inputs.")
+    if any([isinstance(x, TensorLike) for x in [a, b]]):
+        raise TypeError("Invalid types encountered for dot product.")
+    if not all([isinstance(x, (ndarray, ArrayWrapper, list)) for x in [a, b]]):
+        raise TypeError("Invalid types encountered for dot product.")
+    inputs = [x._array if isinstance(x, ArrayWrapper) else x for x in [a, b]]
+    return np.cross(*inputs, *args, **kwargs)
+
+
 @njit(nogil=True, cache=__cache)
-def show_vector(dcm: np.ndarray, arr: np.ndarray):
+def _show_vector(dcm: np.ndarray, arr: np.ndarray):
     """
     Returns the coordinates of a single vector in a frame specified
     by a DCM matrix.
@@ -132,7 +256,7 @@ def show_vector(dcm: np.ndarray, arr: np.ndarray):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def show_vectors(dcm: np.ndarray, arr: np.ndarray):
+def _show_vectors(dcm: np.ndarray, arr: np.ndarray):
     """
     Returns the coordinates of multiple vectors in a frame specified
     by a DCM matrix.
@@ -156,7 +280,7 @@ def show_vectors(dcm: np.ndarray, arr: np.ndarray):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def show_vectors_multi(dcm: np.ndarray, arr: np.ndarray):
+def _show_vectors_multi(dcm: np.ndarray, arr: np.ndarray):
     """
     Returns the coordinates of multiple vectors and multiple DCM matrices.
 
@@ -179,7 +303,7 @@ def show_vectors_multi(dcm: np.ndarray, arr: np.ndarray):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def transpose_dcm_multi(dcm: np.ndarray):
+def _transpose_multi(dcm: np.ndarray):
     N = dcm.shape[0]
     res = np.zeros_like(dcm)
     for i in prange(N):
@@ -239,7 +363,7 @@ def is_independent_frame(axes: ndarray, tol: float = 0):
     return np.linalg.det(Gram(axes)) > tol
 
 
-def is_hermitian(arr:ndarray) -> bool:
+def is_hermitian(arr: ndarray) -> bool:
     """
     Returns True if the input is a hermitian array.
     """
@@ -331,7 +455,7 @@ def random_posdef_matrix(N, alpha: float = 1e-12) -> ndarray:
     return A @ A.T + alpha*np.eye(N)
 
 
-def inv_sym_3x3(m: Matrix, as_adj_det=False):
+def inv_sym_3x3(m: Matrix, as_adj_det=False) -> Matrix:
     P11, P12, P13, P21, P22, P23, P31, P32, P33 = \
         symbols('P_{11} P_{12} P_{13} P_{21} P_{22} P_{23} P_{31} \
                 P_{32} P_{33}', real=True)

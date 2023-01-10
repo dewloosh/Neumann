@@ -1,14 +1,6 @@
-class VectorShapeMismatchError(Exception):
+class TensorShapeMismatchError(Exception):
     """Mismatch in the shape of the inputs."""
-
-
-class ArgumentError(Exception):
-    """Invalid argument."""
-
-
-class UfuncNotAllowedError(Exception):
-    """Universal function not supported by this class."""
-    
+   
 
 class LinalgOperationInputError(Exception):
     """Invalid input for this operation."""
@@ -16,3 +8,10 @@ class LinalgOperationInputError(Exception):
 
 class LinalgMissingInputError(Exception):
     """Invalid input for this operation."""
+    
+    
+class LinalgInvalidTensorOperationError(Exception):
+    """
+    Tensors don't support this operation. Try to call this using 
+    the arrays of the tensorial inputs.
+    """

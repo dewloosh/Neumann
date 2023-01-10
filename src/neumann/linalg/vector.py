@@ -2,32 +2,15 @@ import numpy as np
 from numpy import ndarray
 import numbers
 
-from .utils import show_vector, show_vectors
-from .frame import ReferenceFrame as Frame, CartesianFrame
-from .meta import TensorLike
-from .tensor import Tensor2
-from .exceptions import (VectorShapeMismatchError, ArgumentError, 
-                         UfuncNotAllowedError)
+from .utils import _show_vector, _show_vectors
+from .frame import ReferenceFrame as Frame
+from .abstract import AbstractTensor
 
 
 __all__ = ['Vector']
 
 
-HANDLED_FUNCTIONS = {}
-
-
-def implements(numpy_function):
-    """
-    Register an __array_function__ implementation for Vector 
-    objects.
-    """
-    def decorator(func):
-        HANDLED_FUNCTIONS[numpy_function] = func
-        return func
-    return decorator
-
-
-class Vector(TensorLike):
+class Vector(AbstractTensor):
     """
     Extends `NumPy`'s ``ndarray`` class to handle arrays with associated
     reference frames. The class also provides a mechanism to transform
@@ -92,7 +75,7 @@ class Vector(TensorLike):
 
     See Also
     --------
-    :class:`~neumann.linalg.array.Array`
+    :class:`~neumann.linalg.tensor.Tensor`
     :class:`~neumann.linalg.frame.frame.ReferenceFrame`
     """
 
@@ -119,7 +102,7 @@ class Vector(TensorLike):
         Returns the vector described in the dual (or reciprocal) frame.
         """
         # NOTE Strictly this should be self.frame.Gram().T @ self.array,
-        # but since the Gram matrix is symmetric, it is cheaper like this
+        # but since the Gram matrix is symmetric, it's cheaper like this
         a = self.frame.Gram() @ self.array
         return self.__class__(a, frame=self.frame.dual())
 
@@ -148,9 +131,9 @@ class Vector(TensorLike):
                 target = self._frame_cls_(dim=self._array.shape[-1])
             dcm = self.frame.dcm(target=target)
         if len(self.array.shape) == 1:
-            return show_vector(dcm, self.array)  # dcm @ arr
+            return _show_vector(dcm, self.array)  # dcm @ arr
         else:
-            return show_vectors(dcm, self.array)  # dcm @ arr
+            return _show_vectors(dcm, self.array)  # dcm @ arr
 
     def orient(self, *args, dcm: ndarray = None, **kwargs) -> 'Vector':
         """
@@ -196,66 +179,3 @@ class Vector(TensorLike):
         dcm = fcls.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
         array = dcm.T @ self._array
         return Vector(array, frame=self.frame)
-
-    def __array_function__(self, func, types, args, kwargs):
-        handled_types = self._HANDLED_TYPES_ + (Vector,)
-        if not all(isinstance(x, handled_types) for x in args):
-            raise TypeError(
-                "If one input is a vector, all other inputs must be vectors!")
-
-        if func not in HANDLED_FUNCTIONS:
-            arrs = [arg._array for arg in args]
-            return func(*arrs, **kwargs)
-
-        N = len(args[0])
-        for i in range(1, len(args)):
-            if not len(args[i]) == N:
-                msg = "Input vectors must have the same shape!"
-                raise VectorShapeMismatchError(msg)
-            
-        return HANDLED_FUNCTIONS[func](*args, **kwargs)
-
-    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-        if method == 'at':
-            raise UfuncNotAllowedError("This is currently not implemented.")
-        
-        out = kwargs.get('out', ())
-        if out:
-            raise ArgumentError(
-                "The 'out' parameter is not allowed with Vectors.")
-            
-        for x in inputs:
-            if not isinstance(x, self._HANDLED_TYPES_ + (Vector,)):
-                raise TypeError(
-                    "If one input is a vector, all other inputs must be vectors!")
-                
-        frame = CartesianFrame(dim=len(self))
-        inputs = tuple(x.show(frame) if isinstance(
-            x, Vector) else x for x in inputs)
-        return getattr(ufunc, method)(*inputs, **kwargs)
-
-
-@implements(np.dot)
-def dot(*args, **kwargs):
-    v1, v2 = args[:2]
-    return np.dot(v1.show(), v2.show(), **kwargs)
-
-
-@implements(np.cross)
-def cross(*args, **kwargs):
-    v1, v2 = args[:2]
-    arr = np.cross(v1.show(), v2.show(), **kwargs)
-    return Vector(arr, frame=CartesianFrame(dim=len(v1)))
-
-
-@implements(np.inner)
-def inner(*args, **kwargs):
-    v1, v2 = args[:2]
-    return np.inner(v1.show(), v2.show(), **kwargs)
-
-
-@implements(np.outer)
-def outer(*args, **kwargs):
-    v1, v2 = args[:2]
-    arr = np.outer(v1.show(), v2.show(), **kwargs)
-    return Tensor2(arr, frame=CartesianFrame(dim=len(v1)))

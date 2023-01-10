@@ -6,7 +6,7 @@ from sympy.physics.vector import ReferenceFrame as SymPyFrame
 
 from dewloosh.core.typing import issequence
 
-from .utils import (transpose_dcm_multi, is_rectangular_frame, is_orthonormal_frame,
+from .utils import (_transpose_multi, is_rectangular_frame, is_orthonormal_frame,
                     is_normal_frame, normalize_frame, Gram, dual_frame)
 from ..utils import repeat
 from .meta import FrameLike, TensorLike, ArrayWrapper
@@ -331,7 +331,7 @@ class ReferenceFrame(FrameLike):
         elif target is not None:
             S, T = self.dcm(), target.dual().dcm()
             if len(S.shape) == 3:
-                return T @ transpose_dcm_multi(S)
+                return T @ _transpose_multi(S)
             elif len(S.shape) == 2:
                 return T @ S.T
             else: # pragma: no cover

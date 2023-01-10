@@ -18,17 +18,17 @@ from neumann.linalg.sparse import JaggedArray, csr_matrix
 from neumann.linalg.sparse.jaggedarray import get_data
 import neumann.linalg.sparse.utils as spu
 from neumann import linalg
-from neumann.linalg.exceptions import (VectorShapeMismatchError, ArgumentError,
-                                       UfuncNotAllowedError, LinalgOperationInputError,
-                                       LinalgMissingInputError)
+from neumann.linalg.exceptions import (LinalgOperationInputError, LinalgMissingInputError, 
+                                       LinalgInvalidTensorOperationError, TensorShapeMismatchError)
 from neumann.linalg import utils as lautils
 from neumann import repeat
-from neumann.linalg import top, dot
+from neumann.linalg import top, dot, cross
 
 
 def load_tests(loader, tests, ignore):  # pragma: no cover
     tests.addTests(doctest.DocTestSuite(linalg.frame))
     tests.addTests(doctest.DocTestSuite(linalg.vector))
+    tests.addTests(doctest.DocTestSuite(linalg.tensor))
     tests.addTests(doctest.DocTestSuite(linalg.utils))
     tests.addTests(doctest.DocTestSuite(linalg.solve))
     tests.addTests(doctest.DocTestSuite(linalg.sparse.jaggedarray))
@@ -63,8 +63,8 @@ class TestArray(LinalgTestCase):
             TypeError, setattr, array._array, 'frame', 'a')
         np.sqrt(array, out=array)
         np.negative.at(array, [0, 1])
-        
-        
+
+
 class TestFrame(LinalgTestCase):
 
     def _call_frame_ufuncs(self, A: ReferenceFrame):
@@ -243,7 +243,7 @@ class TestTensor(LinalgTestCase):
         # test if dual of dual is self
         frame = ReferenceFrame(np.array([[1., 0, 0], [1, 1, 0], [0, 0, 1]]))
         T = Tensor(arr, frame=frame)
-        self.assertTrue(np.allclose(T.dual().dual(), arr))
+        self.assertTrue(np.allclose(T.dual().dual().show(frame), arr))
 
     def test_Tensor2(self):
         # test if the dedicated implementation of the transformations coincides
@@ -253,13 +253,13 @@ class TestTensor(LinalgTestCase):
         T1 = Tensor2(arr, frame=frame)
         T2 = Tensor(arr, frame=frame)
         self.assertEqual(T1.rank, T2.rank)
-        self.assertTrue(np.allclose(T1.dual(), T2.dual()))
+        self.assertTrue(np.allclose(T1.dual().show(), T2.dual().show()))
         # test if dual of dual is self
         frame = ReferenceFrame(np.array([[1., 0, 0], [1, 1, 0], [0, 0, 1]]))
         T = Tensor2(arr, frame=frame)
-        self.assertTrue(np.allclose(T.dual().dual(), arr))
+        self.assertTrue(np.allclose(T.dual().dual().show(frame), arr))
         # test if transpose of transpose is self
-        self.assertTrue(np.allclose(T, T.T.T))
+        self.assertTrue(np.allclose(T.show(), T.T.T.show()))
 
     def test_Tensor2_tr(self):
         frame = ReferenceFrame(np.eye(3))
@@ -279,7 +279,7 @@ class TestTensor(LinalgTestCase):
         frame = ReferenceFrame(np.eye(3))
         target = frame.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
         T = Tensor(arr, frame=frame)
-        Tensor(arr)
+        Tensor(arr).rank
         self.assertFailsProperly(TypeError, Tensor, arr, frame='a')
         # miscellaneous calls
         self.assertEqual(T.rank, 2)
@@ -289,6 +289,11 @@ class TestTensor(LinalgTestCase):
         amounts[1] = 120 * np.pi / 180
         T.orient('Body', amounts, 'XYZ')
         T.orient_new('Body', amounts, 'XYZ')
+        Tensor2._from_any_input(np.eye(3))
+        Tensor2._from_any_input(np.ones((3, 3, 3)))
+        Tensor2._verify_input(np.ones((3, 3, 3)), bulk=True)
+        Tensor4._verify_input(np.ones((3, 3, 3, 3, 3)), bulk=True)
+        self.assertFailsProperly(ValueError, Tensor2._from_any_input, np.ones((3, 2)))
 
     def test_Tensor2_bulk(self):
         arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]).reshape(3, 3)
@@ -363,6 +368,28 @@ class TestTensor(LinalgTestCase):
         Tensor4x3.symbolic('sympy', as_matrix=True)
         Tensor4x3.symbolic(imap=imap)
 
+    def test_cross(self):
+        """
+        Tests for the dot product.
+        """
+        frame = ReferenceFrame(np.eye(3))
+        target = frame.orient_new('Body', [0.56, -1.33, 3.14], 'XYZ')
+        T = Tensor2(np.eye(3), frame=frame)
+        a = Vector(np.array([1., 0, 0]), frame=frame)
+        b = Vector(np.array([0, 1., 0]), frame=frame)
+
+        self.assertTrue(np.allclose(cross(a, b).show(), [0., 0., 1.]))
+        self.assertTrue(np.allclose(cross(a, b).show(), -cross(b, a).show()))
+        arr = np.array([[0.,  0., -1.], [0.,  0.,  0.], [1.,  0.,  0.]])
+        self.assertTrue(np.allclose(cross(T, b).show(), arr))
+        cross(b, T, frame=target)
+        self.assertFailsProperly(NotImplementedError, cross, T, T)
+        self.assertFailsProperly(LinalgOperationInputError, cross, a.array, b.array,
+                                 frame=target)
+        self.assertFailsProperly(TypeError, cross, T, a.array)
+        self.assertFailsProperly(TypeError, cross, 'a', a.array)
+        cross(a.array, b.array)
+
     def test_dot(self):
         """
         Tests for the dot product.
@@ -374,7 +401,7 @@ class TestTensor(LinalgTestCase):
         v1 = Vector(np.array([1., 0, 0]), frame=frame)
         v2 = Vector(np.array([0, 1., 0]), frame=frame)
         v3 = Vector(np.array([1., 1., 0]), frame=frame)
-        
+
         self.assertTrue(np.isclose(1 + dot(v1, v2), 1.0))
         self.assertTrue(np.isclose(dot(v1, v3), 1.0))
         self.assertTrue(np.isclose(dot(v2, v3), 1.0))
@@ -383,14 +410,15 @@ class TestTensor(LinalgTestCase):
         self.assertTrue(np.allclose(dot(T1, T2).show(), np.ones((3, 3))))
         dot(T1, T2, frame=target)
         dot(v1, [1.0, 1.0, 0.0])
-        self.assertFailsProperly(LinalgOperationInputError, dot, v1, v2, out=v3)
+        self.assertFailsProperly(
+            LinalgOperationInputError, dot, v1, v2, out=v3)
         self.assertFailsProperly(TypeError, dot, v1, 'a')
-        self.assertFailsProperly(LinalgOperationInputError, dot, v1, 
+        self.assertFailsProperly(LinalgOperationInputError, dot, v1,
                                  [1.0, 1.0, 0.0], frame=frame)
-        
+
         # for 2nd order tensors A dot x = x dot A.T
         self.assertTrue(np.allclose(dot(T1, v1).show(), dot(v1, T1.T).show()))
-        
+
         # the inner product between a tensor of order n and a
         # tensor of order m is a tensor of order n + m − 2
         T1 = Tensor(np.ones((3, 3, 3, 3)), frame=frame)
@@ -398,7 +426,45 @@ class TestTensor(LinalgTestCase):
         T = dot(T1, T2, axes=[0, 0])
         self.assertEqual(T.rank, T1.rank + T2.rank - 2)
         self.assertFailsProperly(LinalgMissingInputError, dot, T1, T2)
-        
+
+    def test_behaviour(self):
+        frame = ReferenceFrame(np.eye(3))
+        T = Tensor2(np.eye(3), frame=frame)
+        T4 = Tensor(np.ones((3, 3, 3, 3)), frame=frame)
+        self.assertFailsProperly(
+            LinalgInvalidTensorOperationError, np.multiply, T, 2, out=T)
+        self.assertFailsProperly(LinalgInvalidTensorOperationError, np.min, T)
+        self.assertFailsProperly(NotImplementedError, lambda x: x**2, T)
+        self.assertFailsProperly(TypeError, lambda x: x*'a', T)
+        T * 2
+        def foo(x): x@=x
+        self.assertFailsProperly(LinalgInvalidTensorOperationError, foo, T)
+        self.assertFailsProperly(
+            LinalgInvalidTensorOperationError, lambda x: x @ x, T)
+        T += 1
+        def foo(x, y): x += y
+        self.assertFailsProperly(TensorShapeMismatchError, foo, T, T4)
+        foo(T, 2)
+        foo(T, T)
+        def foo(x, y): x -= y
+        self.assertFailsProperly(TensorShapeMismatchError, foo, T, T4)
+        foo(T, 2)
+        foo(T, T)
+        self.assertFailsProperly(TypeError, lambda x: x/'a', T)
+        T / 2
+        def foo(x, y): x **= y
+        self.assertFailsProperly(NotImplementedError, foo, T, 2)
+        def foo(x, y): x**y
+        self.assertFailsProperly(NotImplementedError, foo, T, 2)
+        def foo(x, y): x *= y
+        self.assertFailsProperly(TypeError, foo, T, 'a')
+        foo(T, 2)
+        def foo(x, y): x /= y
+        self.assertFailsProperly(TypeError, foo, T, 'a')
+        foo(T, 2)
+        self.assertFailsProperly(TypeError, np.stack, T, 'a')
+        self.assertFailsProperly(TypeError, np.dot, T, 'a')
+
 
 class TestVector(LinalgTestCase):
 
@@ -412,16 +478,13 @@ class TestVector(LinalgTestCase):
         B = A.orient_new('Body', amounts, 'XYZ')
         vA.orient(dcm=A.dcm(target=B))
         np.dot(vA, vA)
-        np.inner(vA, vA)
-        np.outer(vA, vA)
-        np.sum(vA)
         vA * 2
         vA = Vector([1., 1., 1.], frame=A)
 
-        self.assertFailsProperly(ArgumentError, np.sqrt, vA, out=vA)
+        self.assertFailsProperly(LinalgInvalidTensorOperationError, np.sqrt, vA, out=vA)
         self.assertFailsProperly(TypeError, np.dot, vA, [1, 0, 0])
         self.assertFailsProperly(TypeError, lambda a, b: a * b, vA, [1, 0, 0])
-        self.assertFailsProperly(UfuncNotAllowedError,
+        self.assertFailsProperly(LinalgInvalidTensorOperationError,
                                  np.negative.at, vA, [0, 1])
         self.assertFailsProperly(TypeError, setattr, vA, 'frame', 'a')
         vA.frame = A.show()
@@ -429,7 +492,6 @@ class TestVector(LinalgTestCase):
 
         C = ReferenceFrame(dim=4)
         vC = Vector([1., 0., 0., 0.], frame=C)
-        self.assertFailsProperly(VectorShapeMismatchError, np.dot, vA, vC)
 
         vA = Vector([[1., 0., 0.], [1., 0., 0.]], frame=A)
         vA.show()
@@ -741,7 +803,7 @@ class TestSparse(LinalgTestCase):
         np.vstack([jagged, jagged])
         np.dot(jagged, jagged)
         np.min(jagged)
-        
+
         get_data([np.eye(2), np.eye(3)], fallback=True)
 
 
@@ -805,6 +867,7 @@ class TestUtils(unittest.TestCase):
                             target=[-1, 1], squeeze=False)
         lautils.to_range_1d([0.3, 0.5], source=[0, 1],
                             target=[-1, 1], squeeze=True)
+        lautils.permutation_tensor(3)
 
         # linspace
         lautils.linspace1d(1, 3, 5)
