@@ -3,7 +3,7 @@ from numba import njit, prange
 import numpy as np
 
 
-__all__ = ['histogram']
+__all__ = ["histogram"]
 
 
 def histogram(data, bins, *args, return_edges=False, **kwargs):
@@ -17,7 +17,7 @@ def histogram(data, bins, *args, return_edges=False, **kwargs):
 
 @njit(nogil=True, parallel=True, cache=True)
 def bin_centers(bin_edges: np.ndarray):
-    res = np.zeros(bin_edges.shape[0]-1, dtype=bin_edges.dtype)
+    res = np.zeros(bin_edges.shape[0] - 1, dtype=bin_edges.dtype)
     for i in prange(res.shape[0]):
         res[i] = (bin_edges[i] + bin_edges[i + 1]) / 2
     return res

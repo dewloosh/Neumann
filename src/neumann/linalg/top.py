@@ -13,9 +13,13 @@ def tr_3333(array: np.ndarray, dcm: np.ndarray):
                         for j in range(3):
                             for k in range(3):
                                 for m in range(3):
-                                    res[p, q, r, s] += \
-                                        Q[p, i] * Q[q, j] * Q[r, k] * \
-                                        Q[s, m] * array[i, j, k, m]
+                                    res[p, q, r, s] += (
+                                        Q[p, i]
+                                        * Q[q, j]
+                                        * Q[r, k]
+                                        * Q[s, m]
+                                        * array[i, j, k, m]
+                                    )
     return res
 
 
@@ -31,26 +35,28 @@ def tr_3333_jit(array: np.ndarray, dcm: np.ndarray):
                         for j in prange(3):
                             for k in prange(3):
                                 for m in prange(3):
-                                    res[p, q, r, s] += \
-                                        Q[p, i] * Q[q, j] * Q[r, k] * \
-                                        Q[s, m] * array[i, j, k, m]
+                                    res[p, q, r, s] += (
+                                        Q[p, i]
+                                        * Q[q, j]
+                                        * Q[r, k]
+                                        * Q[s, m]
+                                        * array[i, j, k, m]
+                                    )
     return res
 
 
-def tr_3333_einsum(array: np.ndarray, dcm: np.ndarray,
-                   optimize='greedy') -> np.ndarray:
+def tr_3333_einsum(array: np.ndarray, dcm: np.ndarray, optimize="greedy") -> np.ndarray:
     Q = dcm.T
-    return np.einsum('pi, qj, rk, sl, ijkl', Q, Q, Q, Q, array,
-                     optimize=optimize)
+    return np.einsum("pi, qj, rk, sl, ijkl", Q, Q, Q, Q, array, optimize=optimize)
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     from neumann.linalg.frame import ReferenceFrame
     from neumann.linalg.tensor import Tensor, Tensor3333
     import time
 
     A = ReferenceFrame()
-    B = A.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
+    B = A.orient_new("Body", [0, 0, 90 * np.pi / 180], "XYZ")
 
     tA = Tensor([[1, 0, 0], [0, 0, 0], [0, 0, 0]], frame=A)
     tA.transform_to_frame(B)
@@ -59,8 +65,7 @@ if __name__ == '__main__':  # pragma: no cover
     dcm = B.dcm()
     array = C._array
     Q = np.transpose(dcm)
-    path = np.einsum_path('pi,qj,rk,sl,ijkl', Q, Q, Q, Q, array,
-                          optimize='greedy')[0]
+    path = np.einsum_path("pi,qj,rk,sl,ijkl", Q, Q, Q, Q, array, optimize="greedy")[0]
 
     # PERFORMENCE MEASURE
     times = []
@@ -69,26 +74,26 @@ if __name__ == '__main__':  # pragma: no cover
     for i in range(100):
         tr_3333(array, dcm)
     te = time.time()
-    times.append((te-ts)*1000)
+    times.append((te - ts) * 1000)
 
     # measuring solution 2
     ts = time.time()
     for i in range(100):
         tr_3333_jit(array, dcm)
     te = time.time()
-    times.append((te-ts)*1000)
+    times.append((te - ts) * 1000)
 
     # measuring solution 4
     ts = time.time()
     for i in range(100):
         tr_3333_einsum(array, dcm)
     te = time.time()
-    times.append((te-ts)*1000)
+    times.append((te - ts) * 1000)
 
     # measuring solution 5
     ts = time.time()
     for i in range(100):
         tr_3333_einsum(array, dcm, optimize=path)
     te = time.time()
-    times.append((te-ts)*1000)
+    times.append((te - ts) * 1000)
     print(times)
