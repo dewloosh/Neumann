@@ -11,11 +11,15 @@ from .top import tr_3333, tr_3333_jit
 from .utils import is_hermitian
 
 
-__all__ = ['Tensor', 'Tensor2', 'Tensor4', 'Tensor2x3', 'Tensor4x3']
+__all__ = ["Tensor", "Tensor2", "Tensor4", "Tensor2x3", "Tensor4x3"]
 
 
-def even(n): return n % 2 == 0
-def swap(x): return x[::-1]
+def even(n):
+    return n % 2 == 0
+
+
+def swap(x):
+    return x[::-1]
 
 
 class Tensor(AbstractTensor):
@@ -30,33 +34,33 @@ class Tensor(AbstractTensor):
         The reference frame the vector is represented by its coordinates.
     kwargs : dict, Optional
         Keyword arguments forwarded to `numpy.ndarray`.
-        
+
     Examples
     --------
     Import the necessary classes:
 
-    >>> from neumann.linalg import Tensor, ReferenceFrame    
+    >>> from neumann.linalg import Tensor, ReferenceFrame
     >>> from numpy.random import rand
-    
+
     Create a Tensor of order 6 in a frame with random components
-    
+
     >>> frame = ReferenceFrame(dim=3)
     >>> array = rand(3, 3, 3, 3, 3, 3)
     >>> A = Tensor(array, frame=frame)
-    
+
     Get the tensor in the dual frame:
-    
+
     >>> A_dual = A.dual()
-    
-    Create an other tensor, in this case a 5th-order one, and calculate their 
+
+    Create an other tensor, in this case a 5th-order one, and calculate their
     generalized dot product, which is a 9th-order tensor:
-    
+
     >>> from neumann.linalg import dot
     >>> array = rand(3, 3, 3, 3, 3)
     >>> B = Tensor(array, frame=frame)
     >>> C = dot(A, B, axes=[0, 0])
     >>> assert C.rank == (A.rank + B.rank - 2)
-    
+
     See Also
     --------
     :class:`~neumann.linalg.vector.Vector`
@@ -65,7 +69,7 @@ class Tensor(AbstractTensor):
 
     _frame_cls_ = Frame
     _einsum_params_ = {}
-    
+
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, **kwargs) -> bool:
         """
@@ -73,7 +77,7 @@ class Tensor(AbstractTensor):
         If not a general Tensor class is returned upon calling the creator.
         """
         return is_hermitian(arr)
-    
+
     @classmethod
     def _from_any_input(cls, *args, **kwargs) -> AbstractTensor:
         if cls._verify_input(*args, **kwargs):
@@ -83,8 +87,8 @@ class Tensor(AbstractTensor):
                 raise ValueError("Invalid input to Tensor class.")
             else:
                 return Tensor(*args, **kwargs)
-    
-    def dual(self) -> 'Tensor2':
+
+    def dual(self) -> "Tensor2":
         """
         Returns the tensor described in the dual (or reciprocal) frame.
         """
@@ -99,12 +103,11 @@ class Tensor(AbstractTensor):
         arr = self.array
         args = [Q for _ in range(r)]
         if r not in self.__class__._einsum_params_:
-            target = latinrange(r, start=ord('a'))
-            source = latinrange(r, start=ord('a') + r)
+            target = latinrange(r, start=ord("a"))
+            source = latinrange(r, start=ord("a") + r)
             terms = [t + s for s, t in zip(source, target)]
-            command = ','.join(terms) + ',' + ''.join(source)
-            einsum_path = np.einsum_path(
-                command, *args, arr, optimize='greedy')[0]
+            command = ",".join(terms) + "," + "".join(source)
+            einsum_path = np.einsum_path(command, *args, arr, optimize="greedy")[0]
             self.__class__._einsum_params_[r] = (command, einsum_path)
         else:
             command, einsum_path = self.__class__._einsum_params_[r]
@@ -112,7 +115,7 @@ class Tensor(AbstractTensor):
 
     def show(self, target: Frame = None, *, dcm: ndarray = None) -> ndarray:
         """
-        Returns the components in a target frame. If the target is 
+        Returns the components in a target frame. If the target is
         `None`, the components are returned in the ambient frame.
 
         The transformation can also be specified with a proper DCM matrix.
@@ -125,7 +128,7 @@ class Tensor(AbstractTensor):
             The DCM matrix of the transformation.
 
         Returns
-        -------      
+        -------
         numpy.ndarray
             The components of the tensor in a specified frame, or
             the ambient frame, depending on the arguments.
@@ -136,7 +139,7 @@ class Tensor(AbstractTensor):
             dcm = self.frame.dcm(target=target)
         return self.transform_components(dcm)
 
-    def orient(self, *args, **kwargs) -> 'Tensor':
+    def orient(self, *args, **kwargs) -> "Tensor":
         """
         Orients the vector inplace. All arguments are forwarded to
         `orient_new`.
@@ -155,7 +158,7 @@ class Tensor(AbstractTensor):
         self.array = self.transform_components(dcm.T)
         return self
 
-    def orient_new(self, *args, **kwargs) -> 'Tensor':
+    def orient_new(self, *args, **kwargs) -> "Tensor":
         """
         Returns a transformed version of the instance.
 
@@ -175,9 +178,8 @@ class Tensor(AbstractTensor):
 
 
 class Tensor2(Tensor):
-        
     @classmethod
-    def _verify_input(cls, arr: ndarray, *_, bulk:bool=False, **kwargs) -> bool:
+    def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
         """
         Ought to verify if an array input is acceptable for the current class.
         If not a general Tensor class is returned upon calling the creator.
@@ -199,20 +201,21 @@ class Tensor2(Tensor):
         Returns the components of the tensor transformed by the matrix Q.
         """
         return Q @ self.array @ Q.T
-            
 
-class Tensor2x3(Tensor2): ...
+
+class Tensor2x3(Tensor2):
+    ...
 
 
 class Tensor4(Tensor):
     """
-    Fourth order tensors have a wide range of applications in physics and mechanics. 
-    Examples include the piezo-optical tensor, the elasto-optical tensor and 
+    Fourth order tensors have a wide range of applications in physics and mechanics.
+    Examples include the piezo-optical tensor, the elasto-optical tensor and
     the flexoelectric tensor, the most well-known probably being the elasticity tensor.
     """
-    
+
     @classmethod
-    def _verify_input(cls, arr: ndarray, *_, bulk:bool=False, **kwargs) -> bool:
+    def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
         """
         Ought to verify if an array input is acceptable for the current class.
         If not a general Tensor class is returned upon calling the creator.
@@ -237,7 +240,7 @@ class Tensor4x3(Tensor):
     Parameters
     ----------
     imap : dict, Optional
-        An invertible index map for second-order tensors that assigns to each pair of indices 
+        An invertible index map for second-order tensors that assigns to each pair of indices
         a single index. The index map used to switch between 4d and 2d representation is inferred
         from this input. The default is the Voigt indicial map:
             0 : (0, 0)
@@ -251,9 +254,8 @@ class Tensor4x3(Tensor):
         a `SymPy` matrix. Default is False.
     """
 
-    __imap__ = {0: (0, 0), 1: (1, 1), 2: (2, 2),
-                3: (1, 2), 4: (0, 2), 5: (0, 1)}
-    
+    __imap__ = {0: (0, 0), 1: (1, 1), 2: (2, 2), 3: (1, 2), 4: (0, 2), 5: (0, 1)}
+
     def __init__(self, *args, symbolic: bool = False, imap: dict = None, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -268,7 +270,7 @@ class Tensor4x3(Tensor):
         if self._array is not None:
             self.collapsed = len(self._array.shape) == 2
 
-    def expand(self) -> 'Tensor4x3':
+    def expand(self) -> "Tensor4x3":
         """
         Changes the representation of the tensor to 4d.
         """
@@ -283,7 +285,7 @@ class Tensor4x3(Tensor):
         self.collapsed = False
         return self
 
-    def collapse(self) -> 'Tensor4x3':
+    def collapse(self) -> "Tensor4x3":
         """
         Changes the representation of the tensor to 2d.
         """
@@ -309,7 +311,7 @@ class Tensor4x3(Tensor):
         if imap1d is None:
             imap1d = cls.__imap__
         indices = np.indices((6, 6))
-        it = np.nditer([*indices], ['multi_index'])
+        it = np.nditer([*indices], ["multi_index"])
         imap2d = dict()
         for _ in it:
             i, j = it.multi_index
@@ -317,7 +319,9 @@ class Tensor4x3(Tensor):
         return imap2d
 
     @classmethod
-    def symbolic(cls, *args, base: str = 'C_', as_matrix: bool = False, imap: dict = None) -> Iterable:
+    def symbolic(
+        cls, *args, base: str = "C_", as_matrix: bool = False, imap: dict = None
+    ) -> Iterable:
         """
         Returns a symbolic representation of a 4th order 3x3x3x3 tensor.
         If the argument 'as_matrix' is True, the function returns a 6x6 matrix,
@@ -336,12 +340,12 @@ class Tensor4x3(Tensor):
         """
         res = np.zeros((3, 3, 3, 3), dtype=object)
         indices = np.indices((3, 3, 3, 3))
-        it = np.nditer([*indices], ['multi_index'])
+        it = np.nditer([*indices], ["multi_index"])
         for _ in it:
             p, q, r, s = it.multi_index
             if q >= p and s >= r:
                 sinds = np.array([p, q, r, s], dtype=np.int16) + 1
-                sym = sy.symbols(base + '_'.join(sinds.astype(str)))
+                sym = sy.symbols(base + "_".join(sinds.astype(str)))
                 res[p, q, r, s] = sym
                 res[q, p, r, s] = sym
                 res[p, q, s, r] = sym
@@ -355,7 +359,7 @@ class Tensor4x3(Tensor):
             imap = cls.imap(imap) if imap is None else imap
             for ij, ijkl in imap.items():
                 mat[ij] = res[ijkl]
-            if 'sympy' in args:
+            if "sympy" in args:
                 res = sy.Matrix(mat)
             else:
                 res = mat

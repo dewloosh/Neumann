@@ -186,7 +186,7 @@ def reverse_mapping(iarray: np.ndarray):
     return order_to_path(iarray)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
     """
     from polydata.mechanics.fem import Uniform3D

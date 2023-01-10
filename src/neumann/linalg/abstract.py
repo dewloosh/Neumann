@@ -4,12 +4,11 @@ import numpy as np
 from numpy import array_repr, array_str
 
 from .meta import TensorLike
-from .exceptions import (LinalgInvalidTensorOperationError,
-                         TensorShapeMismatchError)
+from .exceptions import LinalgInvalidTensorOperationError, TensorShapeMismatchError
 from .utils import dot, cross
 
 
-__all__ = ['AbstractTensor']
+__all__ = ["AbstractTensor"]
 
 
 HANDLED_FUNCTIONS = {}
@@ -17,12 +16,14 @@ HANDLED_FUNCTIONS = {}
 
 def implements(numpy_function):
     """
-    Register an __array_function__ implementation for TensorLike 
+    Register an __array_function__ implementation for TensorLike
     objects.
     """
+
     def decorator(func):
         HANDLED_FUNCTIONS[numpy_function] = func
         return func
+
     return decorator
 
 
@@ -35,7 +36,7 @@ class AbstractTensor(TensorLike):
             raise TypeError("The multiplier must be a scalar.")
         self.array *= other
         return self
-    
+
     def __mul__(self, other) -> TensorLike:
         if not isinstance(other, numbers.Number):
             raise TypeError("The multiplier must be a scalar.")
@@ -44,7 +45,7 @@ class AbstractTensor(TensorLike):
 
     def __imatmul__(self, other) -> TensorLike:
         raise LinalgInvalidTensorOperationError("Use a dot product.")
-    
+
     def __matmul__(self, other) -> TensorLike:
         raise LinalgInvalidTensorOperationError("Use a dot product.")
 
@@ -71,7 +72,7 @@ class AbstractTensor(TensorLike):
             raise TypeError("The divider must be a scalar.")
         self.array /= other
         return self
-    
+
     def __truediv__(self, other) -> TensorLike:
         if not isinstance(other, numbers.Number):
             raise TypeError("The multiplier must be a scalar.")
@@ -80,7 +81,7 @@ class AbstractTensor(TensorLike):
 
     def __ipow__(self, other) -> TensorLike:
         raise NotImplementedError("This operation is not implemented yet.")
-    
+
     def __pow__(self, other) -> TensorLike:
         raise NotImplementedError("This operation is not implemented yet.")
 

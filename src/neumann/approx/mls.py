@@ -10,11 +10,11 @@ from .func import isMLSWeightFunction, ConstantWeightFunction
 
 
 def moving_least_squares(points, *args, w=None, **kwargs):
-    
+
     if not isMLSWeightFunction(w):
         dim = points.shape[1]
         w = ConstantWeightFunction(dim)
-    
+
     def inner(x):
         if not isinstance(x, np.ndarray):
             if isinstance(x, Iterable):
@@ -38,7 +38,7 @@ def weighted_least_squares(points, values, *args, deg=1, order=2, w=None, **kwar
 
     Parameters
     ----------
-    points : Iterable 
+    points : Iterable
         [[X11, X12, ..., X1d], ..., [Xn1, Xn2, ..., Xnd]]
     values : Iterable
         [[f11, f12, ..., f1r], ..., [fn1, fn2, ..., fnr]]
@@ -82,52 +82,109 @@ def weighted_least_squares(points, values, *args, deg=1, order=2, w=None, **kwar
     grad = True if order > 0 else False
     hess = True if order > 1 else False
     if grad:
-        assert hasattr(w, 'gradient')        
+        assert hasattr(w, "gradient")
     if hess:
         grad = True
-        assert hasattr(w, 'gradient')
-        assert hasattr(w, 'Hessian')
+        assert hasattr(w, "gradient")
+        assert hasattr(w, "Hessian")
 
-    def bdx(x): return None
-    def bdy(x): return None
-    def bdxx(x): return None
-    def bdyy(x): return None
-    def bdxy(x): return None
+    def bdx(x):
+        return None
+
+    def bdy(x):
+        return None
+
+    def bdxx(x):
+        return None
+
+    def bdyy(x):
+        return None
+
+    def bdxy(x):
+        return None
+
     if deg == 1:
         if dim == 1:
-            def b(x): return np.array([1, x])
+
+            def b(x):
+                return np.array([1, x])
+
             if grad:
-                def bdx(x): return np.array([0, 1])
+
+                def bdx(x):
+                    return np.array([0, 1])
+
             if hess:
-                def bdxx(x): return np.array([0, 0])
+
+                def bdxx(x):
+                    return np.array([0, 0])
+
         elif dim == 2:
-            def b(x): return np.array([1, x[0], x[1]])
+
+            def b(x):
+                return np.array([1, x[0], x[1]])
+
             if grad:
-                def bdx(x): return np.array([0, 1, 0])
-                def bdy(x): return np.array([0, 0, 1])
+
+                def bdx(x):
+                    return np.array([0, 1, 0])
+
+                def bdy(x):
+                    return np.array([0, 0, 1])
+
             if hess:
-                def bdxx(x): return np.array([0, 0, 0])
-                def bdyy(x): return np.array([0, 0, 0])
-                def bdxy(x): return np.array([0, 0, 0])
+
+                def bdxx(x):
+                    return np.array([0, 0, 0])
+
+                def bdyy(x):
+                    return np.array([0, 0, 0])
+
+                def bdxy(x):
+                    return np.array([0, 0, 0])
+
         else:
             raise
     elif deg == 2:
         if dim == 1:
-            def b(x): return np.array([1, x, x**2])
+
+            def b(x):
+                return np.array([1, x, x**2])
+
             if grad:
-                def bdx(x): return np.array([0, 1, 2*x[0]])
+
+                def bdx(x):
+                    return np.array([0, 1, 2 * x[0]])
+
             if hess:
-                def bdxx(x): return np.array([0, 0, 2])
+
+                def bdxx(x):
+                    return np.array([0, 0, 2])
+
         elif dim == 2:
-            def b(x): return np.array(
-                [1, x[0], x[1], x[0]**2, x[1]**2, x[0]*x[1]])
+
+            def b(x):
+                return np.array([1, x[0], x[1], x[0] ** 2, x[1] ** 2, x[0] * x[1]])
+
             if grad:
-                def bdx(x): return np.array([0, 1, 0, 2*x[0], 0, x[1]])
-                def bdy(x): return np.array([0, 0, 1, 0, 2*x[1], x[0]])
+
+                def bdx(x):
+                    return np.array([0, 1, 0, 2 * x[0], 0, x[1]])
+
+                def bdy(x):
+                    return np.array([0, 0, 1, 0, 2 * x[1], x[0]])
+
             if hess:
-                def bdxx(x): return np.array([0, 0, 0, 2, 0, 0])
-                def bdyy(x): return np.array([0, 0, 0, 0, 2, 0])
-                def bdxy(x): return np.array([0, 0, 0, 0, 0, 1])
+
+                def bdxx(x):
+                    return np.array([0, 0, 0, 2, 0, 0])
+
+                def bdyy(x):
+                    return np.array([0, 0, 0, 0, 2, 0])
+
+                def bdxy(x):
+                    return np.array([0, 0, 0, 0, 0, 1])
+
         else:
             raise
     else:
@@ -135,7 +192,7 @@ def weighted_least_squares(points, values, *args, deg=1, order=2, w=None, **kwar
 
     # moment matrix
     nData = points.shape[0]
-    k = int(fact(deg+dim)/fact(deg)/fact(dim))
+    k = int(fact(deg + dim) / fact(deg) / fact(dim))
     A = np.zeros([k, k])
     B = np.zeros([k, nData])
     Adx, Ady, Bdx, Bdy = 4 * (None,)
@@ -180,11 +237,30 @@ def weighted_least_squares(points, values, *args, deg=1, order=2, w=None, **kwar
     invA = np.linalg.inv(A)
 
     def inner(x):
-        return mls_approx(invA, B, b(x), V,
-                          Adx, Ady, Adxx, Adyy, Adxy,
-                          Bdx, Bdy, Bdxx, Bdyy, Bdxy,
-                          bdx(x), bdy(x), bdxx(x), bdyy(x), bdxy(x),
-                          g=grad, H=hess)
+        return mls_approx(
+            invA,
+            B,
+            b(x),
+            V,
+            Adx,
+            Ady,
+            Adxx,
+            Adyy,
+            Adxy,
+            Bdx,
+            Bdy,
+            Bdxx,
+            Bdyy,
+            Bdxy,
+            bdx(x),
+            bdy(x),
+            bdxx(x),
+            bdyy(x),
+            bdxy(x),
+            g=grad,
+            H=hess,
+        )
+
     return inner
 
 
@@ -194,7 +270,7 @@ def mls_preproc(points, values, deg, w, b, g=True, H=True):
     nRec = values.shape[1]
 
     # moment matrix
-    k = int(fact(deg+nDim)/fact(deg)/fact(nDim))
+    k = int(fact(deg + nDim) / fact(deg) / fact(nDim))
     A = np.zeros([k, k])
     B = np.zeros([k, nData])
     Adx, Ady, Bdx, Bdy = None, None, None, None
@@ -243,11 +319,29 @@ def mls_preproc(points, values, deg, w, b, g=True, H=True):
     return invA, V, B, Adx, Ady, Adxx, Adyy, Adxy, Bdx, Bdy, Bdxx, Bdyy, Bdxy
 
 
-def mls_approx(invA, B, b, V,
-               Adx, Ady, Adxx, Adyy, Adxy,
-               Bdx, Bdy, Bdxx, Bdyy, Bdxy,
-               bdx, bdy, bdxx, bdyy, bdxy,
-               g=True, H=True):
+def mls_approx(
+    invA,
+    B,
+    b,
+    V,
+    Adx,
+    Ady,
+    Adxx,
+    Adyy,
+    Adxy,
+    Bdx,
+    Bdy,
+    Bdxx,
+    Bdyy,
+    Bdxy,
+    bdx,
+    bdy,
+    bdxx,
+    bdyy,
+    bdxy,
+    g=True,
+    H=True,
+):
     gamma = invA @ b
     SHP = gamma @ B
     f = SHP.T @ V
@@ -259,9 +353,27 @@ def mls_approx(invA, B, b, V,
     if g:
         fdx, fdy = mls_g(gamma, gammadx, gammady, B, Bdx, Bdy, V)
     if H:
-        fdxx, fdyy, fdxy = mls_H(invA, bdxx, bdyy, bdxy, Adx, Ady,
-                                 Adxx, Adyy, Adxy, gamma, gammadx, gammady,
-                                 B, Bdx, Bdy, Bdxx, Bdyy, Bdxy, V)
+        fdxx, fdyy, fdxy = mls_H(
+            invA,
+            bdxx,
+            bdyy,
+            bdxy,
+            Adx,
+            Ady,
+            Adxx,
+            Adyy,
+            Adxy,
+            gamma,
+            gammadx,
+            gammady,
+            B,
+            Bdx,
+            Bdy,
+            Bdxx,
+            Bdyy,
+            Bdxy,
+            V,
+        )
     return f, fdx, fdy, fdxx, fdyy, fdxy
 
 
@@ -275,8 +387,27 @@ def mls_g(gamma, gammadx, gammady, B, Bdx, Bdy, V):
 
 
 @njit(nogil=True, parallel=True, fastmath=True, cache=True)
-def mls_H(invA, bdxx, bdyy, bdxy, Adx, Ady, Adxx, Adyy, Adxy,
-          gamma, gammadx, gammady, B, Bdx, Bdy, Bdxx, Bdyy, Bdxy, V):
+def mls_H(
+    invA,
+    bdxx,
+    bdyy,
+    bdxy,
+    Adx,
+    Ady,
+    Adxx,
+    Adyy,
+    Adxy,
+    gamma,
+    gammadx,
+    gammady,
+    B,
+    Bdx,
+    Bdy,
+    Bdxx,
+    Bdyy,
+    Bdxy,
+    V,
+):
     gammadxx = invA @ (bdxx - Adxx @ gamma - 2 * Adx @ gammadx)
     gammadyy = invA @ (bdyy - Adyy @ gamma - 2 * Ady @ gammady)
     gammadxy = invA @ (bdxy - Adxy @ gamma - Adx @ gammady - Ady @ gammadx)

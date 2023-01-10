@@ -7,14 +7,14 @@ from .frame import ReferenceFrame as Frame
 from .abstract import AbstractTensor
 
 
-__all__ = ['Vector']
+__all__ = ["Vector"]
 
 
 class Vector(AbstractTensor):
     """
     Extends `NumPy`'s ``ndarray`` class to handle arrays with associated
     reference frames. The class also provides a mechanism to transform
-    vectors between different frames. Use it like if it was a ``numpy.ndarray`` 
+    vectors between different frames. Use it like if it was a ``numpy.ndarray``
     instance.
 
     All parameters are identical to those of ``numpy.ndarray``, except that
@@ -66,9 +66,9 @@ class Vector(AbstractTensor):
     you type `vB.array`, what is returned is a wrapped object, an instance of `Array`,
     which is also a class of this library. When you say `vB.show(C)`, a NumPy array
     is returned. Since the `Array` class is a direct subclass of NumPy's `ndarray` class,
-    it doesn't really matter and the only difference is the capital first letter. 
+    it doesn't really matter and the only difference is the capital first letter.
 
-    To create a vector in a target frame C, knowing the components in a 
+    To create a vector in a target frame C, knowing the components in a
     source frame A:
 
     >>> vC = Vector(vA.show(C), frame=C)
@@ -81,7 +81,7 @@ class Vector(AbstractTensor):
 
     _frame_cls_ = Frame
     _HANDLED_TYPES_ = (numbers.Number,)
-    
+
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, **kwargs) -> bool:
         """
@@ -89,15 +89,15 @@ class Vector(AbstractTensor):
         If not a general Tensor class is returned upon calling the creator.
         """
         return True
-    
+
     @property
     def rank(self) -> int:
         """
         Returns the tensor rank (or order).
-        """ 
+        """
         return 1
-        
-    def dual(self) -> 'Vector':
+
+    def dual(self) -> "Vector":
         """
         Returns the vector described in the dual (or reciprocal) frame.
         """
@@ -108,7 +108,7 @@ class Vector(AbstractTensor):
 
     def show(self, target: Frame = None, *, dcm: ndarray = None) -> ndarray:
         """
-        Returns the components in a target frame. If the target is 
+        Returns the components in a target frame. If the target is
         `None`, the components are returned in the ambient frame.
 
         The transformation can also be specified with a proper DCM matrix.
@@ -121,7 +121,7 @@ class Vector(AbstractTensor):
             The DCM matrix of the transformation.
 
         Returns
-        -------      
+        -------
         numpy.ndarray
             The components of the vector in a specified frame, or
             the ambient frame, depending on the arguments.
@@ -135,7 +135,7 @@ class Vector(AbstractTensor):
         else:
             return _show_vectors(dcm, self.array)  # dcm @ arr
 
-    def orient(self, *args, dcm: ndarray = None, **kwargs) -> 'Vector':
+    def orient(self, *args, dcm: ndarray = None, **kwargs) -> "Vector":
         """
         Orients the vector inplace. If the transformation is not specified by 'dcm',
         all arguments are forwarded to `orient_new`.
@@ -162,7 +162,7 @@ class Vector(AbstractTensor):
             self.array = np.linalg.inv(dcm) @ self._array
         return self
 
-    def orient_new(self, *args, **kwargs) -> 'Vector':
+    def orient_new(self, *args, **kwargs) -> "Vector":
         """
         Returns a transformed version of the instance.
 

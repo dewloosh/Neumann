@@ -7,15 +7,15 @@ from dewloosh.core.tools import getasany
 from .function import Function
 
 
-__all__ = ['Equality', 'InEquality', 'Relation']
+__all__ = ["Equality", "InEquality", "Relation"]
 
 
 class Relations(Enum):
-    eq = '='
-    gt = '>'
-    ge = '>='
-    lt = '<'
-    le = '<='
+    eq = "="
+    gt = ">"
+    ge = ">="
+    lt = "<"
+    le = "<="
 
     def to_op(self):
         return _rel_to_op[self]
@@ -26,10 +26,10 @@ _rel_to_op = {
     Relations.gt: op.gt,
     Relations.ge: op.ge,
     Relations.lt: op.lt,
-    Relations.le: op.le
+    Relations.le: op.le,
 }
 
-RelationType = TypeVar('RelationType', str, Relations, Callable)
+RelationType = TypeVar("RelationType", str, Relations, Callable)
 
 
 class Relation(Function):
@@ -41,7 +41,7 @@ class Relation(Function):
         super().__init__(*args, **kwargs)
         self.op = None
         self.opfunc = None
-        op = getasany(['op', 'operator'], None, **kwargs)
+        op = getasany(["op", "operator"], None, **kwargs)
         if op:
             if isinstance(op, str):
                 self.op = Relations(op)
@@ -87,7 +87,7 @@ class Equality(Relation):
     """
 
     def __init__(self, *args, **kwargs):
-        kwargs['op'] = Relations.eq
+        kwargs["op"] = Relations.eq
         super().__init__(*args, **kwargs)
 
     def to_eq(self):
@@ -118,7 +118,7 @@ class InEquality(Relation):
     """
 
     def __init__(self, *args, **kwargs):
-        op = getasany(['op', 'operator'], None, **kwargs)
+        op = getasany(["op", "operator"], None, **kwargs)
         if not op:
             raise ValueError("An operator must be defined.")
         super().__init__(*args, **kwargs)

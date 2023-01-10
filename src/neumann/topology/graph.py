@@ -5,14 +5,14 @@ from numba.typed import Dict
 
 from ..linalg.sparse import csr_matrix
 
-__all__ = ['Graph', 'rooted_level_structure', 'pseudo_peripheral_nodes']
+__all__ = ["Graph", "rooted_level_structure", "pseudo_peripheral_nodes"]
 
 try:
     import networkx as ntx
-    
+
     try:
         adjacency_matrix = ntx.to_scipy_sparse_array
-    except Exception: # pragma: no cover
+    except Exception:  # pragma: no cover
         adjacency_matrix = ntx.adjacency_matrix
 
     class Graph(ntx.Graph):
@@ -37,14 +37,14 @@ try:
         >>> G = Graph(grid)
         """
 
-        def adjacency_matrix(self, *args, to_csr:bool=False, **kwargs):
+        def adjacency_matrix(self, *args, to_csr: bool = False, **kwargs):
             """
             Returns the adjacency matrix of the graph.
 
             Parameters
             ----------
             to_csr : bool, Optional
-                If `True`, the result of networkx.adjacency_matrix is 
+                If `True`, the result of networkx.adjacency_matrix is
                 returned as a csr_matrix.
 
             *args : Tuple, Optional
@@ -88,13 +88,14 @@ try:
             """
             Returns the indices of nodes that are possible candidates
             for being peripheral nodes of a graph.
-            
+
             """
             return pseudo_peripheral_nodes(csr_matrix(adjacency_matrix(self)))
-except:  # pragma: no cover
-    Graph = None  
 
-int64A = Array(int64, 1, 'C')
+except:  # pragma: no cover
+    Graph = None
+
+int64A = Array(int64, 1, "C")
 
 
 @jit(nopython=True, nogil=True, fastmath=False, cache=True)

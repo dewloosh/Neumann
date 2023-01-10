@@ -12,24 +12,22 @@ class ABCMeta_MetaFunction(ABCMeta_Weak):
     """
 
     def __new__(metaclass, name, bases, namespace, *args, **kwargs):
-        cls = super().__new__(metaclass, name, bases, namespace,
-                              *args, **kwargs)
-        if 'value' in namespace:
-            cls.f = namespace['value']
-            
-        if 'gradient' in namespace:
-            cls.g = namespace['gradient']
-            
-        if 'Hessian' in namespace:
-            cls.G = namespace['Hessian']
-        
-        return cls 
+        cls = super().__new__(metaclass, name, bases, namespace, *args, **kwargs)
+        if "value" in namespace:
+            cls.f = namespace["value"]
+
+        if "gradient" in namespace:
+            cls.g = namespace["gradient"]
+
+        if "Hessian" in namespace:
+            cls.G = namespace["Hessian"]
+
+        return cls
 
 
 class MetaFunction(metaclass=ABCMeta_MetaFunction):
-    
-    __slots__ = ('f0', 'f1', 'f2', 'dimension', 'domain', 'expr',
-                 'variables', 'vmap')
+
+    __slots__ = ("f0", "f1", "f2", "dimension", "domain", "expr", "variables", "vmap")
 
     def __call__(self, *args, **kwargs):
         return self.f0(*args, **kwargs)
@@ -89,8 +87,7 @@ class MetaFunction(metaclass=ABCMeta_MetaFunction):
         return symbolize(*args, expr=expr, **kwargs)
 
 
-def decode(*args, expr=None, str_expr: str = None, variables=None,
-           **kwargs):
+def decode(*args, expr=None, str_expr: str = None, variables=None, **kwargs):
     try:
         if str_expr is not None:
             expr = parse_expr(str_expr, evaluate=False)
@@ -115,15 +112,19 @@ def decode(*args, expr=None, str_expr: str = None, variables=None,
 
 def symbolize(*args, **kwargs):
     expr, variables = decode(*args, **kwargs)
-    f0 = lambdify([variables], expr, 'numpy')
+    f0 = lambdify([variables], expr, "numpy")
     g = derive_by_array(expr, variables)
-    f1 = lambdify([variables], g, 'numpy')
+    f1 = lambdify([variables], g, "numpy")
     G = derive_by_array(g, variables)
-    f2 = lambdify([variables], G, 'numpy')
-    return {'value': f0, 'gradient': f1,
-            'Hessian': f2, 'd': len(variables),
-            'variables': variables,
-            'expr': expr}
+    f2 = lambdify([variables], G, "numpy")
+    return {
+        "value": f0,
+        "gradient": f1,
+        "Hessian": f2,
+        "d": len(variables),
+        "variables": variables,
+        "expr": expr,
+    }
 
 
 def substitute(expr, values, variables=None, as_string=False):
@@ -147,7 +148,7 @@ def coefficients(expr=None, variables=None, normalize=False):
             res = OrderedDict()
             for key, value in d.items():
                 if len(key.free_symbols) == 0:
-                    res[One()] = value*key
+                    res[One()] = value * key
                 else:
                     res[key] = value
             return res
@@ -155,7 +156,7 @@ def coefficients(expr=None, variables=None, normalize=False):
         return None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    str_expr = 'x*y + y**2 + 6*b + 2'
+    str_expr = "x*y + y**2 + 6*b + 2"
     d = decode(str_expr=str_expr)

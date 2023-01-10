@@ -13,7 +13,7 @@ from .utils import count_cols
 __cache = True
 
 
-__all__ = ['unique2d']
+__all__ = ["unique2d"]
 
 
 ArrayLike = Union[ndarray, akarray]
@@ -22,8 +22,12 @@ i64A = types.int64[:]
 i64A2 = types.int64[:, :]
 
 
-def unique2d(arr: ArrayLike, return_index:bool=False,
-             return_inverse:bool=False, return_counts:bool=False):
+def unique2d(
+    arr: ArrayLike,
+    return_index: bool = False,
+    return_inverse: bool = False,
+    return_counts: bool = False,
+):
     """
     Find the unique elements of a 2d array.
 
@@ -41,31 +45,31 @@ def unique2d(arr: ArrayLike, return_index:bool=False,
     return_index : bool, optional
         If True, also return the indices of `ara` that result in the unique array.
     return_inverse : bool, optional
-        If True, also return the indices of the unique array that can be used to 
+        If True, also return the indices of the unique array that can be used to
         reconstruct `arr`.
     return_counts : bool, optional
         If True, also return the number of times each unique item appears
         in `arr`.
-        
+
     Example
     -------
     >>> from neumann.arraysetops import unique2d
     >>> arr = np.array([[1, 2, 3], [1, 2, 4]], dtype=int)
     >>> unique2d(arr)
     array([1, 2, 3, 4])
-    
+
     >>> unique2d(arr, return_index=True)
     [array([1, 2, 3, 4]), DictType[int64,array(int64, 2d, A)]<iv=None>({1: [[0 0]
      [1 0]], 2: [[0 1]
      [1 1]], 3: [[0 2]], 4: [[1 2]]})]
-     
+
     >>> unique2d(arr, return_inverse=True)
     [array([1, 2, 3, 4]), array([[0, 1, 2],
            [0, 1, 3]], dtype=int64)]
-           
+
     >>> unique2d(arr, return_counts=True)
     [array([1, 2, 3, 4]), array([2, 2, 1, 1], dtype=int64)]
-    
+
     >>> from neumann.linalg.sparse import JaggedArray
     >>> arr = JaggedArray(np.array([1, 2, 1, 2, 3]), cuts=[2, 3])
     >>> unique2d(arr)
@@ -73,7 +77,9 @@ def unique2d(arr: ArrayLike, return_index:bool=False,
     """
     if isinstance(arr, ndarray):
         unique, counts, inverse, indices = _unique2d_njit(arr)
-        res = [unique, ]
+        res = [
+            unique,
+        ]
         if return_index:
             res.append(indices)
         if return_inverse:
@@ -85,7 +91,9 @@ def unique2d(arr: ArrayLike, return_index:bool=False,
         assert arr.ndim == 2, "Only 2 dimensional awkward arrays are supported!"
         flatarr = ak.flatten(arr).to_numpy()
         unique, counts, inverse, indices = _unique1d_njit(flatarr)
-        res = [unique, ]
+        res = [
+            unique,
+        ]
         if return_index:
             res.append(indices)
         if return_inverse:
@@ -94,18 +102,24 @@ def unique2d(arr: ArrayLike, return_index:bool=False,
             res.append(counts)
         return res if len(res) > 1 else res[0]
     else:
-        if hasattr(arr, 'is_jagged'):
+        if hasattr(arr, "is_jagged"):
             if not arr.is_jagged():
-                return unique2d(arr.to_numpy(), return_index=return_index,
-                                return_inverse=return_inverse,
-                                return_counts=return_counts)
+                return unique2d(
+                    arr.to_numpy(),
+                    return_index=return_index,
+                    return_inverse=return_inverse,
+                    return_counts=return_counts,
+                )
             else:
-                return unique2d(arr.to_ak(), return_index=return_index,
-                                return_inverse=return_inverse,
-                                return_counts=return_counts)
+                return unique2d(
+                    arr.to_ak(),
+                    return_index=return_index,
+                    return_inverse=return_inverse,
+                    return_counts=return_counts,
+                )
     raise TypeError(f"Invalid input type {type(arr)}")
-            
-        
+
+
 @njit(nogil=True, parallel=False, fastmath=False, cache=__cache)
 def _unique1d_njit(flatdata: ndarray):
     unique = np.unique(flatdata)
@@ -157,6 +171,7 @@ def _unique2d_njit(data: ndarray):
             indices[unique[i]][counts[i], 1] = c
             counts[i] += 1
     return unique, counts, inverse, indices
+
 
 """
 @njit(nogil=True, parallel=False, fastmath=False, cache=__cache)

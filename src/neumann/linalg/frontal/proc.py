@@ -7,9 +7,14 @@ from .topo import signed_topo_bulk
 
 
 @jit(nopython=True, nogil=True, cache=True)
-def frontal_sym_bulk_uniform(A: np.ndarray, topology: np.ndarray,
-                             B: np.ndarray, presc_bool: np.ndarray,
-                             presc_val: np.ndarray, epath: np.ndarray):
+def frontal_sym_bulk_uniform(
+    A: np.ndarray,
+    topology: np.ndarray,
+    B: np.ndarray,
+    presc_bool: np.ndarray,
+    presc_val: np.ndarray,
+    epath: np.ndarray,
+):
     nEQ, nRHS = B.shape
     nE, nXE = topology.shape
     topology += 1
@@ -56,7 +61,7 @@ def frontal_sym_bulk_uniform(A: np.ndarray, topology: np.ndarray,
                 jfront = loc_to_front[jXE]
                 index = flatind_sym(ifront, jfront)
                 A_front[index] += A[iE, iXE, jXE]
-            gind = - topo_sig[iE, iXE]
+            gind = -topo_sig[iE, iXE]
             if gind > 0:
                 # because RHS is assumed to be present as a full array,
                 # assembly happends only the last time the variable is
@@ -71,7 +76,7 @@ def frontal_sym_bulk_uniform(A: np.ndarray, topology: np.ndarray,
             if cElim == nElim:
                 break
             ifront = loc_to_front[iXE]
-            gind = - topo_sig[iE, iXE]
+            gind = -topo_sig[iE, iXE]
             if gind < 0:
                 continue
             else:
@@ -93,7 +98,7 @@ def frontal_sym_bulk_uniform(A: np.ndarray, topology: np.ndarray,
                     B_front[jfront] -= lhs[gind, jfront] * presc_val[gind]
             else:
                 if abs(pivot) < 1e-12:
-                    raise Exception('The matrix is singular!')
+                    raise Exception("The matrix is singular!")
                 for jfront in range(frontwidth):
                     factor = lhs[gind, jfront] / pivot
                     if abs(factor) < 1e-12:
@@ -121,7 +126,7 @@ def frontal_sym_bulk_uniform(A: np.ndarray, topology: np.ndarray,
     return lhs, rhs, eqpath, glob_to_front, glob_to_width
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
     """
     from polydata.mechanics.fem import Uniform3D

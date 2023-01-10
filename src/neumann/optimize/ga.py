@@ -4,21 +4,25 @@ import numpy as np
 from numpy import ndarray
 
 
-__all__ = ['GeneticAlgorithm', 'BinaryGeneticAlgorithm']
+__all__ = ["GeneticAlgorithm", "BinaryGeneticAlgorithm"]
 
 
-def even(n): return n % 2 == 0
-def odd(n): return not even(n)
+def even(n):
+    return n % 2 == 0
+
+
+def odd(n):
+    return not even(n)
 
 
 class GeneticAlgorithm:
     """
-    Base class for Genetic Algorithms (GA). Use this as a base 
+    Base class for Genetic Algorithms (GA). Use this as a base
     class to your custom implementation of a GA.
 
     The class has 4 abstract methods wich upon being implemented, yield
     a working genetic algorithm. These are :func:`populate`, :func:`decode`,
-    :func:`crossover`, :func:`mutate` and :func:`select`. 
+    :func:`crossover`, :func:`mutate` and :func:`select`.
     See :class:`~neumann.optimize.ga.BinaryGeneticAlgorithm` for an example.
 
     Parameters
@@ -45,10 +49,10 @@ class GeneticAlgorithm:
 
     Note
     ----
-    Be cautious what you use a genetic algorithm for. Like all metahauristic methods, a 
-    genetic algorithm can be wery demanding on the computational side. If the objective 
-    unction takes a lot of time to evaluate, it is probably not a good idea to use a heuristic 
-    approach, unless you have a dedicated solver that is able to run efficiently for a large 
+    Be cautious what you use a genetic algorithm for. Like all metahauristic methods, a
+    genetic algorithm can be wery demanding on the computational side. If the objective
+    unction takes a lot of time to evaluate, it is probably not a good idea to use a heuristic
+    approach, unless you have a dedicated solver that is able to run efficiently for a large
     number of problems.
 
     See also
@@ -56,12 +60,21 @@ class GeneticAlgorithm:
     :class:`~neumann.optimize.ga.BinaryGeneticAlgorithm`
     """
 
-    def __init__(self, fnc: Callable, ranges: Iterable, *, length: int = 5, p_c: float = 1,
-                 p_m: float = 0.2, nPop: int = 100, **kwargs):
+    def __init__(
+        self,
+        fnc: Callable,
+        ranges: Iterable,
+        *,
+        length: int = 5,
+        p_c: float = 1,
+        p_m: float = 0.2,
+        nPop: int = 100,
+        **kwargs
+    ):
         super().__init__()
         self.fnc = fnc
         self.ranges = np.array(ranges)
-        self.dim = getattr(fnc, 'dimension', self.ranges.shape[0])
+        self.dim = getattr(fnc, "dimension", self.ranges.shape[0])
         self.length = length
         self.p_c = p_c
         self.p_m = p_m
@@ -70,7 +83,7 @@ class GeneticAlgorithm:
         # This assumes that population size is a multiple of 4.
         if odd(nPop):
             nPop += 1
-        if odd(int(nPop/2)):
+        if odd(int(nPop / 2)):
             nPop += 2
         assert nPop % 4 == 0
         assert nPop >= 4
@@ -103,8 +116,9 @@ class GeneticAlgorithm:
         self._evolver = self.evolver()
         self._evolver.send(None)
 
-    def _set_solution_params(self, tol=1e-12, maxiter=200, miniter=100,
-                             elitism=1, **kwargs):
+    def _set_solution_params(
+        self, tol=1e-12, maxiter=200, miniter=100, elitism=1, **kwargs
+    ):
         self.tol = tol
         self.maxiter = np.max([miniter, maxiter])
         self.miniter = np.min([miniter, maxiter])
@@ -118,7 +132,8 @@ class GeneticAlgorithm:
         _ = yield
         while True:
             self.genotypes = self.populate(
-                self.select(self._genotypes, self.phenotypes))
+                self.select(self._genotypes, self.phenotypes)
+            )
             yield self._genotypes
 
     def evolve(self, cycles=1):
@@ -148,8 +163,7 @@ class GeneticAlgorithm:
         criteria.send(self.fnc(self.best_phenotype()))
         finished = False
         nIter = 0
-        while (not finished and nIter < self.maxiter) or \
-                (nIter < self.miniter):
+        while (not finished and nIter < self.maxiter) or (nIter < self.miniter):
             next(self._evolver)
             finished = criteria.send(self.fnc(self.best_phenotype()))
             next(criteria)
@@ -163,8 +177,7 @@ class GeneticAlgorithm:
         of the population described by the argument `phenotypes`.
         """
         if phenotypes is not None:
-            self._fittness = np.array([self.fnc(x) for x in phenotypes],
-                                      dtype=float)
+            self._fittness = np.array([self.fnc(x) for x in phenotypes], dtype=float)
         return self._fittness
 
     def best_phenotype(self, lastknown: bool = False) -> ndarray:
@@ -187,7 +200,7 @@ class GeneticAlgorithm:
 
     def divide(self, fittness: ndarray = None) -> Tuple[List]:
         """
-        Divides population to elit and others, and returns the corresponding 
+        Divides population to elit and others, and returns the corresponding
         index arrays.
 
         Parameters
@@ -207,12 +220,12 @@ class GeneticAlgorithm:
         assert fittness is not None, "No available fittness data detected."
         if self.elitism < 1:
             argsort = np.argsort(fittness)
-            elit = argsort[:int(self.nPop*self.elitism)]
-            others = argsort[int(self.nPop*self.elitism):]
+            elit = argsort[: int(self.nPop * self.elitism)]
+            others = argsort[int(self.nPop * self.elitism) :]
         elif self.elitism > 1:
             argsort = np.argsort(fittness)
-            elit = argsort[:self.elitism]
-            others = argsort[self.elitism:]
+            elit = argsort[: self.elitism]
+            others = argsort[self.elitism :]
         else:
             elit = []
             others = list(range(self.nPop))
@@ -223,7 +236,7 @@ class GeneticAlgorithm:
         """
         Yields random pairs from a list of genotypes.
 
-        The implemantation assumes that the length of the input array 
+        The implemantation assumes that the length of the input array
         is a multiple of 2.
 
         Parameters
@@ -233,7 +246,7 @@ class GeneticAlgorithm:
 
         Yields
         ------
-        numpy.ndarray 
+        numpy.ndarray
             The first parent.
         numpy.ndarray
             The second parent.
@@ -266,9 +279,11 @@ class GeneticAlgorithm:
         ...
 
     @abstractmethod
-    def crossover(self, parent1: ndarray = None, parent2: ndarray = None) -> Tuple[ndarray]:
+    def crossover(
+        self, parent1: ndarray = None, parent2: ndarray = None
+    ) -> Tuple[ndarray]:
         """
-        Takes in two parents, returns two offspring. You'd probably want to use it inside 
+        Takes in two parents, returns two offspring. You'd probably want to use it inside
         the populator.
         """
         ...
@@ -291,9 +306,9 @@ class GeneticAlgorithm:
 
 class BinaryGeneticAlgorithm(GeneticAlgorithm):
     """
-    An implementation of a Binary Genetic Algorithm (BGA) for finding 
-    minimums of real valued unconstrained problems of continuous variables 
-    in n-dimensional vector spaces. 
+    An implementation of a Binary Genetic Algorithm (BGA) for finding
+    minimums of real valued unconstrained problems of continuous variables
+    in n-dimensional vector spaces.
 
     In other words, it solves the following problem:
 
@@ -301,7 +316,7 @@ class BinaryGeneticAlgorithm(GeneticAlgorithm):
         :nowrap:
 
         \\begin{eqnarray}
-            & minimize&  \quad  f(\mathbf{x}) \quad in \quad \mathbf{x} \in \mathbf{R}^n. 
+            & minimize&  \quad  f(\mathbf{x}) \quad in \quad \mathbf{x} \in \mathbf{R}^n.
         \\end{eqnarray}
 
     Parameters
@@ -323,7 +338,7 @@ class BinaryGeneticAlgorithm(GeneticAlgorithm):
 
     Examples
     --------
-    Find the minimizer of the Rosenbrock function. 
+    Find the minimizer of the Rosenbrock function.
     The exact value of the solution is x = [1.0, 1.0].
 
     >>> from neumann.optimize import BinaryGeneticAlgorithm
@@ -337,7 +352,7 @@ class BinaryGeneticAlgorithm(GeneticAlgorithm):
     >>> fx = Rosenbrock(x)
     ...
 
-    The following code prints the history using the `evolve` generator of 
+    The following code prints the history using the `evolve` generator of
     the object
 
     >>> from neumann.optimize import BinaryGeneticAlgorithm
@@ -380,47 +395,48 @@ class BinaryGeneticAlgorithm(GeneticAlgorithm):
         """
         Decodes the genotypes to phenotypes.
         """
-        span = (2**self.length - 2**0)
+        span = 2**self.length - 2**0
         genotypes = genotypes.reshape((self.nPop, self.dim, self.length))
-        precisions = [(self.ranges[d, -1] - self.ranges[d, 0]) / span
-                      for d in range(self.dim)]
-        phenotypes = \
-            np.sum([genotypes[:, :, i]*2**i
-                    for i in range(self.length)], axis=0).astype(float)
+        precisions = [
+            (self.ranges[d, -1] - self.ranges[d, 0]) / span for d in range(self.dim)
+        ]
+        phenotypes = np.sum(
+            [genotypes[:, :, i] * 2**i for i in range(self.length)], axis=0
+        ).astype(float)
         for d in range(self.dim):
             phenotypes[:, d] *= precisions[d]
             phenotypes[:, d] += self.ranges[d, 0]
         return phenotypes
 
-    def crossover(self, parent1: ndarray = None, parent2: ndarray = None,
-                  nCut: int = None) -> Tuple[ndarray]:
+    def crossover(
+        self, parent1: ndarray = None, parent2: ndarray = None, nCut: int = None
+    ) -> Tuple[ndarray]:
         """
-        Performs crossover on the parents `parent1` and `parent2`, 
+        Performs crossover on the parents `parent1` and `parent2`,
         using an `nCut` number of cuts and returns two childs.
         """
         if np.random.rand() > self.p_c:
             return parent1, parent2
 
         if nCut is None:
-            nCut = np.random.randint(1, self.dim*self.length-1)
+            nCut = np.random.randint(1, self.dim * self.length - 1)
 
         cuts = [0, self.dim * self.length]
-        p = np.random.choice(range(1, self.length * self.dim - 1),
-                             nCut, replace=False)
+        p = np.random.choice(range(1, self.length * self.dim - 1), nCut, replace=False)
         cuts.extend(p)
         cuts = np.sort(cuts)
 
-        child1 = np.zeros(self.dim*self.length, dtype=int)
-        child2 = np.zeros(self.dim*self.length, dtype=int)
+        child1 = np.zeros(self.dim * self.length, dtype=int)
+        child2 = np.zeros(self.dim * self.length, dtype=int)
 
         randBool = np.random.rand() > 0.5
-        for i in range(nCut+1):
+        for i in range(nCut + 1):
             if (i % 2 == 0) == randBool:
-                child1[cuts[i]:cuts[i+1]] = parent1[cuts[i]:cuts[i+1]]
-                child2[cuts[i]:cuts[i+1]] = parent2[cuts[i]:cuts[i+1]]
+                child1[cuts[i] : cuts[i + 1]] = parent1[cuts[i] : cuts[i + 1]]
+                child2[cuts[i] : cuts[i + 1]] = parent2[cuts[i] : cuts[i + 1]]
             else:
-                child1[cuts[i]:cuts[i+1]] = parent2[cuts[i]:cuts[i+1]]
-                child2[cuts[i]:cuts[i+1]] = parent1[cuts[i]:cuts[i+1]]
+                child1[cuts[i] : cuts[i + 1]] = parent2[cuts[i] : cuts[i + 1]]
+                child2[cuts[i] : cuts[i + 1]] = parent1[cuts[i] : cuts[i + 1]]
 
         return self.mutate(child1), self.mutate(child2)
 
@@ -429,7 +445,7 @@ class BinaryGeneticAlgorithm(GeneticAlgorithm):
         Returns a mutated genotype. Children come in, mutants go out.
         """
         p = np.random.rand(self.dim * self.length)
-        return np.where(p > self.p_m, child, 1-child)
+        return np.where(p > self.p_m, child, 1 - child)
 
     def select(self, genotypes: ndarray = None, phenotypes: ndarray = None) -> ndarray:
         """
