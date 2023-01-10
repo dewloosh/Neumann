@@ -19,10 +19,11 @@ from neumann.linalg.sparse.jaggedarray import get_data
 import neumann.linalg.sparse.utils as spu
 from neumann import linalg
 from neumann.linalg.exceptions import (VectorShapeMismatchError, ArgumentError,
-                                       UfuncNotAllowedError)
+                                       UfuncNotAllowedError, LinalgOperationInputError,
+                                       LinalgMissingInputError)
 from neumann.linalg import utils as lautils
 from neumann import repeat
-from neumann.linalg import top
+from neumann.linalg import top, dot
 
 
 def load_tests(loader, tests, ignore):  # pragma: no cover
@@ -257,6 +258,8 @@ class TestTensor(LinalgTestCase):
         frame = ReferenceFrame(np.array([[1., 0, 0], [1, 1, 0], [0, 0, 1]]))
         T = Tensor2(arr, frame=frame)
         self.assertTrue(np.allclose(T.dual().dual(), arr))
+        # test if transpose of transpose is self
+        self.assertTrue(np.allclose(T, T.T.T))
 
     def test_Tensor2_tr(self):
         frame = ReferenceFrame(np.eye(3))
@@ -360,6 +363,42 @@ class TestTensor(LinalgTestCase):
         Tensor4x3.symbolic('sympy', as_matrix=True)
         Tensor4x3.symbolic(imap=imap)
 
+    def test_dot(self):
+        """
+        Tests for the dot product.
+        """
+        frame = ReferenceFrame(np.eye(3))
+        target = frame.orient_new('Body', [0.56, -1.33, 3.14], 'XYZ')
+        T1 = Tensor2(np.eye(3), frame=frame)
+        T2 = Tensor2(np.ones((3, 3)), frame=frame)
+        v1 = Vector(np.array([1., 0, 0]), frame=frame)
+        v2 = Vector(np.array([0, 1., 0]), frame=frame)
+        v3 = Vector(np.array([1., 1., 0]), frame=frame)
+        
+        self.assertTrue(np.isclose(1 + dot(v1, v2), 1.0))
+        self.assertTrue(np.isclose(dot(v1, v3), 1.0))
+        self.assertTrue(np.isclose(dot(v2, v3), 1.0))
+        self.assertTrue(np.allclose(dot(T1, v1).show(), [1., 0., 0.]))
+        self.assertTrue(np.allclose(dot(v1, T1).show(), [1., 0., 0.]))
+        self.assertTrue(np.allclose(dot(T1, T2).show(), np.ones((3, 3))))
+        dot(T1, T2, frame=target)
+        dot(v1, [1.0, 1.0, 0.0])
+        self.assertFailsProperly(LinalgOperationInputError, dot, v1, v2, out=v3)
+        self.assertFailsProperly(TypeError, dot, v1, 'a')
+        self.assertFailsProperly(LinalgOperationInputError, dot, v1, 
+                                 [1.0, 1.0, 0.0], frame=frame)
+        
+        # for 2nd order tensors A dot x = x dot A.T
+        self.assertTrue(np.allclose(dot(T1, v1).show(), dot(v1, T1.T).show()))
+        
+        # the inner product between a tensor of order n and a
+        # tensor of order m is a tensor of order n + m − 2
+        T1 = Tensor(np.ones((3, 3, 3, 3)), frame=frame)
+        T2 = Tensor(np.ones((3, 3, 3)), frame=frame)
+        T = dot(T1, T2, axes=[0, 0])
+        self.assertEqual(T.rank, T1.rank + T2.rank - 2)
+        self.assertFailsProperly(LinalgMissingInputError, dot, T1, T2)
+        
 
 class TestVector(LinalgTestCase):
 
@@ -708,17 +747,19 @@ class TestSparse(LinalgTestCase):
 
 class TestPosDef(unittest.TestCase):
 
-    def test_random_pos_semidef(self, N=2):
+    def test_random_pos_semidef(self, N=5):
         """
         Tests the creation of random, positive semidefinite matrices.
         """
-        assert ispossemidef(random_pos_semidef_matrix(N))
+        self.assertTrue(ispossemidef(random_pos_semidef_matrix(N)))
+        self.assertTrue(lautils.is_pos_semidef(random_pos_semidef_matrix(N)))
 
     def test_random_posdef(self, N=2):
         """
         Tests the creation of random, positive definite matrices.
         """
-        assert isposdef(random_posdef_matrix(N))
+        self.assertTrue(isposdef(random_posdef_matrix(N)))
+        self.assertTrue(lautils.is_pos_def(random_posdef_matrix(N)))
 
 
 class TestUtils(unittest.TestCase):

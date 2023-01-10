@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Tuple
 
 import numpy as np
 from numpy import ndarray
@@ -8,19 +8,20 @@ from dewloosh.core.tools.alphabet import latinrange
 from .frame import ReferenceFrame as Frame
 from .meta import TensorLike
 from .top import tr_3333, tr_3333_jit
+from .utils import is_hermitian
 
 
 __all__ = ['Tensor', 'Tensor2', 'Tensor4', 'Tensor2x3', 'Tensor4x3']
 
 
 def even(n): return n % 2 == 0
-def swap(x) : return x[::-1]
+def swap(x): return x[::-1]
 
 
 class Tensor(TensorLike):
     """
     A class to handle tensors.
-            
+
     Parameters
     ----------
     args : tuple, Optional
@@ -32,14 +33,25 @@ class Tensor(TensorLike):
     """
 
     _frame_cls_ = Frame
-    _einsum_params_ = None
-            
-    @property
-    def rank(self) -> int:
+    _einsum_params_ = {}
+    
+    @classmethod
+    def _verify_input(cls, arr: ndarray, *_, **kwargs) -> bool:
         """
-        Returns the tensor rank (or order).
-        """ 
-        return len(self.array.shape)
+        Ought to verify if an array input is acceptable for the current class.
+        If not a general Tensor class is returned upon calling the creator.
+        """
+        return is_hermitian(arr)
+    
+    @classmethod
+    def _from_any_input(cls, *args, **kwargs) -> TensorLike:
+        if cls._verify_input(*args, **kwargs):
+            return cls(*args, **kwargs)
+        else:
+            if not Tensor._verify_input(*args, **kwargs):
+                raise ValueError("Invalid input to Tensor class.")
+            else:
+                return Tensor(*args, **kwargs)
     
     def dual(self) -> 'Tensor2':
         """
@@ -47,29 +59,33 @@ class Tensor(TensorLike):
         """
         a = self.transform_components(self.frame.Gram())
         return self.__class__(a, frame=self.frame.dual())
-    
+
     def transform_components(self, Q: ndarray) -> ndarray:
+        """
+        Returns the components of the tensor transformed by the matrix Q.
+        """
         r = self.rank
         arr = self.array
         args = [Q for _ in range(r)]
-        if self.__class__._einsum_params_ is None:
+        if r not in self.__class__._einsum_params_:
             target = latinrange(r, start=ord('a'))
             source = latinrange(r, start=ord('a') + r)
             terms = [t + s for s, t in zip(source, target)]
             command = ','.join(terms) + ',' + ''.join(source)
-            einsum_path = np.einsum_path(command, *args, arr, optimize='greedy')[0]
-            self.__class__._einsum_params_ = (command, einsum_path)
+            einsum_path = np.einsum_path(
+                command, *args, arr, optimize='greedy')[0]
+            self.__class__._einsum_params_[r] = (command, einsum_path)
         else:
-            command, einsum_path = self.__class__._einsum_params_
+            command, einsum_path = self.__class__._einsum_params_[r]
         return np.einsum(command, *args, arr, optimize=einsum_path)
-    
-    def show(self, target: Frame = None, *, dcm:ndarray=None) -> ndarray:
+
+    def show(self, target: Frame = None, *, dcm: ndarray = None) -> ndarray:
         """
         Returns the components in a target frame. If the target is 
         `None`, the components are returned in the ambient frame.
-        
+
         The transformation can also be specified with a proper DCM matrix.
-        
+
         Parameters
         ----------
         target : numpy.ndarray, Optional
@@ -88,17 +104,17 @@ class Tensor(TensorLike):
                 target = Frame(dim=self._array.shape[-1])
             dcm = self.frame.dcm(target=target)
         return self.transform_components(dcm)
-        
+
     def orient(self, *args, **kwargs) -> 'Tensor':
         """
         Orients the vector inplace. All arguments are forwarded to
         `orient_new`.
-        
+
         Returns
         -------
         Vector
             The same vector the function is called upon.
-        
+
         See Also
         --------
         :func:`orient_new`
@@ -111,12 +127,12 @@ class Tensor(TensorLike):
     def orient_new(self, *args, **kwargs) -> 'Tensor':
         """
         Returns a transformed version of the instance.
-        
+
         Returns
         -------
         Vector
             A new vector.
-        
+
         See Also
         --------
         :func:`orient`
@@ -125,25 +141,36 @@ class Tensor(TensorLike):
         dcm = fcls.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
         array = self.transform_components(dcm.T)
         return self.__class__(array, frame=self.frame)
-    
+
 
 class Tensor2(Tensor):
-    
-    _einsum_params_ = None 
-    
+        
+    @classmethod
+    def _verify_input(cls, arr: ndarray, *_, bulk:bool=False, **kwargs) -> bool:
+        """
+        Ought to verify if an array input is acceptable for the current class.
+        If not a general Tensor class is returned upon calling the creator.
+        """
+        if bulk:
+            return len(arr.shape) == 3 and is_hermitian(arr[0])
+        else:
+            return len(arr.shape) == 2 and is_hermitian(arr)
+
     @property
     def rank(self) -> int:
         """
         Returns the tensor rank (or order).
-        """ 
+        """
         return 2
-        
-    def transform_components(self, Q: ndarray) -> ndarray:
-        return  Q @ self.array @ Q.T
-    
 
-class Tensor2x3(Tensor2):
-    _einsum_params_ = None 
+    def transform_components(self, Q: ndarray) -> ndarray:
+        """
+        Returns the components of the tensor transformed by the matrix Q.
+        """
+        return Q @ self.array @ Q.T
+            
+
+class Tensor2x3(Tensor2): ...
 
 
 class Tensor4(Tensor):
@@ -153,20 +180,29 @@ class Tensor4(Tensor):
     the flexoelectric tensor, the most well-known probably being the elasticity tensor.
     """
     
-    _einsum_params_ = None
-                
+    @classmethod
+    def _verify_input(cls, arr: ndarray, *_, bulk:bool=False, **kwargs) -> bool:
+        """
+        Ought to verify if an array input is acceptable for the current class.
+        If not a general Tensor class is returned upon calling the creator.
+        """
+        if bulk:
+            return len(arr.shape) == 5 and is_hermitian(arr[0])
+        else:
+            return len(arr.shape) == 4 and is_hermitian(arr)
+
     @property
     def rank(self) -> int:
         """
         Returns the tensor rank (or order).
-        """ 
+        """
         return 4
 
 
 class Tensor4x3(Tensor):
     """
     A class for fourth-order tensors, where each index ranges from 1 to 3.
-    
+
     Parameters
     ----------
     imap : dict, Optional
@@ -186,9 +222,8 @@ class Tensor4x3(Tensor):
 
     __imap__ = {0: (0, 0), 1: (1, 1), 2: (2, 2),
                 3: (1, 2), 4: (0, 2), 5: (0, 1)}
-    _einsum_params_ = None
     
-    def __init__(self, *args, symbolic:bool=False, imap:dict=None, **kwargs):
+    def __init__(self, *args, symbolic: bool = False, imap: dict = None, **kwargs):
         super().__init__(*args, **kwargs)
 
         if isinstance(imap, dict):
@@ -201,7 +236,7 @@ class Tensor4x3(Tensor):
         self.collapsed = None
         if self._array is not None:
             self.collapsed = len(self._array.shape) == 2
-            
+
     def expand(self) -> 'Tensor4x3':
         """
         Changes the representation of the tensor to 4d.
@@ -233,7 +268,7 @@ class Tensor4x3(Tensor):
         return self
 
     @classmethod
-    def imap(cls, imap1d:dict=None) -> dict:
+    def imap(cls, imap1d: dict = None) -> dict:
         """
         Returns a 2d-to-4d index map used to collapse or expand a tensor,
         based on the 1d-to-2d mapping of the class the function is called on,
@@ -251,7 +286,7 @@ class Tensor4x3(Tensor):
         return imap2d
 
     @classmethod
-    def symbolic(cls, *args, base:str='C_', as_matrix:bool=False, imap:dict=None) -> Iterable:
+    def symbolic(cls, *args, base: str = 'C_', as_matrix: bool = False, imap: dict = None) -> Iterable:
         """
         Returns a symbolic representation of a 4th order 3x3x3x3 tensor.
         If the argument 'as_matrix' is True, the function returns a 6x6 matrix,
@@ -260,16 +295,13 @@ class Tensor4x3(Tensor):
         provided, it must be a dictionary including exactly 6 keys and
         values. The keys must be integers in the integer range (0, 6), the
         values must be tuples on the integer range (0, 3).
-        The default mapping is
-
-                0 : (0, 0) --> normal stress x
-                1 : (1, 1) --> normal stress y
-                2 : (2, 2) --> normal stress z
-                3 : (1, 2) --> shear stress yz
-                4 : (0, 2) --> shear stress xz
-                5 : (0, 1) --> shear stress xy
-
-        and it means the classical Voigt unfolding of the tensor indices.
+        The default mapping is the Voigt indicial map:
+            0 : (0, 0)
+            1 : (1, 1)
+            2 : (2, 2)
+            3 : (1, 2)
+            4 : (0, 2)
+            5 : (0, 1)
         """
         res = np.zeros((3, 3, 3, 3), dtype=object)
         indices = np.indices((3, 3, 3, 3))
@@ -324,7 +356,7 @@ class Tensor4x3(Tensor):
             array = tr_3333(self._array, dcm, dtype=object)
         return array
 
-        
+
 """r = self.rank
 arr = self.array
 Q = self.frame.Gram()
@@ -341,4 +373,3 @@ if self.__class__._einsum_params_dual_ is None:
 else:
     command, einsum_path = self.__class__._einsum_params_dual_
 a = np.einsum(command, *args, arr, optimize=einsum_path)"""
-

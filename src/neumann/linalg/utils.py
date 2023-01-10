@@ -1,10 +1,113 @@
+from typing import Union, Tuple, Iterable
+
 import numpy as np
 from numpy import ndarray
 from numba import njit, prange, guvectorize as guv
 import sympy as sy
 from sympy import symbols, Matrix
 
+from dewloosh.core.tools.alphabet import latinrange
+
+from .meta import TensorLike, ArrayWrapper, FrameLike, ArrayLike
+from .exceptions import LinalgOperationInputError, LinalgMissingInputError
+
 __cache = True
+
+
+def dot(a: Union[TensorLike, ArrayWrapper], b: Union[TensorLike, ArrayWrapper],
+        out: Union[TensorLike, ArrayWrapper] = None, frame: FrameLike = None,
+        axes: Union[list, tuple] = None) -> Union[TensorLike, ndarray]:
+    """
+    Returns the doc product of two quantities. The behaviour coincides with NumPy
+    when all inputs are arrays and generalizes when they are not, but all inputs 
+    must be either all arrays or tensors of some kind. The operation for tensors
+    of order 1 and 2 have dedicated implementations, for higher order tensors
+    it generalizes to tensor contraction along specified axes.
+    
+    Parameters
+    ----------
+    a : TensorLike or ArrayLike
+        A tensor or an array.
+    b : TensorLike or ArrayLike
+        A tensor or an array.
+    out : ArrayLike, Optional
+        Output argument. This must have the exact kind that would be returned if it was 
+        not used. See `numpy.dot` for the details. Only if all inputs are ArrayLike. 
+        Default is None.
+    frame : FrameLike, Optinal
+        The target frame of the output. Only if all inputs are TensorLike. If not specified,
+        the returned tensor migh be returned in an arbitrary frame, depending on the inputs.
+        Default is None.
+    axes : tuple or list, Optional
+        The indices along which contraction happens if any of the input tensors have a rank
+        higher than 2. Default is None.
+        
+    Returns
+    -------
+    TensorLike or ndarray
+        An array or a tensor, depending on the inputs.
+        
+    Examples
+    --------
+    When working with NumPy arrays, the behaviour coincides with `numpy.dot`. To take the dot
+    product of a 2nd order tensor and a vector, use it like this:
+    
+    >>> from neumann.linalg import ReferenceFrame, Vector, Tensor2
+    >>> from neumann.linalg import dot
+    >>> frame = ReferenceFrame(np.eye(3))
+    >>> A = Tensor2(np.eye(3), frame=frame)
+    >>> v = Vector(np.array([1., 0, 0]), frame=frame)
+    >>> dot(A, v)
+    Array([1., 0., 0.])
+    
+    For general tensors, you have to specify the axes along which contraction happens:
+    
+    >>> from neumann.linalg import Tensor
+    >>> A = Tensor(np.ones((3, 3, 3, 3)), frame=frame)
+    >>> B = Tensor(np.ones((3, 3, 3)), frame=frame)
+    >>> dot(A, B, axes=(0, 0)).rank
+    5
+    """
+    if isinstance(a, TensorLike) and isinstance(b, TensorLike):
+        ra, rb = a.rank, b.rank
+        result = None
+        if ra == 1 and rb == 1:
+            if out is not None:
+                raise LinalgOperationInputError("Parameter 'out' is not allowed with tensors.")
+            return np.dot(a.show(), b.show())
+        elif ra == 2 and rb == 1:
+            arr = (a.array @ b.show(a.frame.dual()).T).T
+            result = b.__class__(arr, frame=a.frame)
+        elif ra == 1 and rb == 2:
+            arr = (a.array.T @ b.show(a.frame.dual()).T).T
+            result = a.__class__(arr, frame=a.frame)
+        elif ra == 2 and rb == 2:
+            g = a.frame.Gram()
+            result = a.__class__(a @ g @ b.show(a.frame), frame=a.frame)
+        else:
+            # If ever implemented, the inner product between a tensor of order n and a
+            # tensor of order m is a tensor of order n + m − 2.
+            if not axes:
+                msg = "The parameter 'axes' is required for tensor contraction of general tensors."
+                raise LinalgMissingInputError(msg)
+            ia = latinrange(ra, start=ord('a'))
+            ib = latinrange(rb, start=ord('a') + ra)
+            ax_a, ax_b = axes
+            ic = latinrange(1, start=ord('a') + ra + rb)[0]
+            ia[ax_a] = ic
+            ib[ax_b] = ic
+            command = '...' + ''.join(ia) + ',' + '...' + ''.join(ib)
+            arr = np.einsum(command, a.show(), b.show(), optimize='greedy')
+            result = a.__class__._from_any_input(arr)
+        if frame:
+            result.frame = frame
+        return result
+    if frame:
+        raise LinalgOperationInputError("Parameter 'frame' is exclusive for tensorial inputs.")
+    if not all([isinstance(x, (ndarray, ArrayWrapper, list)) for x in [a, b]]):
+        raise TypeError("Invalid types encountered for dot product.")
+    inputs = [x._array if isinstance(x, ArrayWrapper) else x for x in [a, b]]
+    return np.dot(*inputs, out=out)
 
 
 @njit(nogil=True, cache=__cache)
@@ -12,14 +115,14 @@ def show_vector(dcm: np.ndarray, arr: np.ndarray):
     """
     Returns the coordinates of a single vector in a frame specified
     by a DCM matrix.
-    
+
     Parameters
     ----------
     dcm : numpy.ndarray
         The dcm matrix of the transformation as a 2d float array.
     arr : numpy.ndarray
         1d float array of coordinates of a single vector.
-    
+
     Returns
     -------      
     numpy.ndarray
@@ -33,14 +136,14 @@ def show_vectors(dcm: np.ndarray, arr: np.ndarray):
     """
     Returns the coordinates of multiple vectors in a frame specified
     by a DCM matrix.
-    
+
     Parameters
     ----------
     dcm : numpy.ndarray
         The dcm matrix of the transformation as a 2d float array.
     arr : numpy.ndarray
         2d float array of coordinates of multiple vectors.
-    
+
     Returns
     -------      
     numpy.ndarray
@@ -56,14 +159,14 @@ def show_vectors(dcm: np.ndarray, arr: np.ndarray):
 def show_vectors_multi(dcm: np.ndarray, arr: np.ndarray):
     """
     Returns the coordinates of multiple vectors and multiple DCM matrices.
-    
+
     Parameters
     ----------
     dcm : numpy.ndarray
         The dcm matrix of the transformation as a 3d float array.
     arr : numpy.ndarray
         2d float array of coordinates of multiple vectors.
-    
+
     Returns
     -------      
     numpy.ndarray
@@ -87,7 +190,7 @@ def transpose_dcm_multi(dcm: np.ndarray):
 def is_rectangular_frame(axes: ndarray):
     """
     Returns True if a frame is Cartesian.
-    
+
     Parameters
     ----------
     axes : numpy.ndarray
@@ -103,7 +206,7 @@ def is_normal_frame(axes: ndarray):
     """
     Returns True if a frame is normal, meaning, that it's base vectors
     are all of unit length.
-    
+
     Parameters
     ----------
     axes : numpy.ndarray
@@ -115,7 +218,7 @@ def is_normal_frame(axes: ndarray):
 def is_orthonormal_frame(axes: ndarray):
     """
     Returns True if a frame is orthonormal.
-    
+
     Parameters
     ----------
     axes : numpy.ndarray
@@ -124,10 +227,10 @@ def is_orthonormal_frame(axes: ndarray):
     return is_rectangular_frame(axes) and is_normal_frame(axes)
 
 
-def is_independent_frame(axes:ndarray, tol:float=0):
+def is_independent_frame(axes: ndarray, tol: float = 0):
     """
     Returns True if a the base vectors of a frame are linearly independent.
-    
+
     Parameters
     ----------
     axes : numpy.ndarray
@@ -136,10 +239,19 @@ def is_independent_frame(axes:ndarray, tol:float=0):
     return np.linalg.det(Gram(axes)) > tol
 
 
+def is_hermitian(arr:ndarray) -> bool:
+    """
+    Returns True if the input is a hermitian array.
+    """
+    shp = arr.shape
+    s0 = shp[0]
+    return all([s == s0 for s in shp[1:]])
+
+
 def normalize_frame(axes: ndarray):
     """
     Returns the frame with normalized base vectors.
-    
+
     Parameters
     ----------
     axes : numpy.ndarray
@@ -152,19 +264,19 @@ def Gram(axes: ndarray):
     """
     Returns the Gram matrix. If a second frame is not provided,
     the Gram matrix of a single frame is returned.
-    
+
     Parameters
     ----------
     axes : numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
     return axes @ axes.T
-    
-    
+
+
 def dual_frame(axes: ndarray) -> ndarray:
     """
     Returns the dual frame of the input.
-    
+
     Parameters
     ----------
     axes : numpy.ndarray
@@ -202,10 +314,10 @@ def random_pos_semidef_matrix(N) -> ndarray:
     return A.T @ A
 
 
-def random_posdef_matrix(N, alpha:float=1e-12) -> ndarray:
+def random_posdef_matrix(N, alpha: float = 1e-12) -> ndarray:
     """
     Returns a random positive definite matrix of shape (N, N).
-    
+
     All eigenvalues of this matrix are >= alpha.
 
     Example
@@ -217,7 +329,7 @@ def random_posdef_matrix(N, alpha:float=1e-12) -> ndarray:
     """
     A = np.random.rand(N, N)
     return A @ A.T + alpha*np.eye(N)
-    
+
 
 def inv_sym_3x3(m: Matrix, as_adj_det=False):
     P11, P12, P13, P21, P22, P23, P31, P32, P33 = \
@@ -431,7 +543,7 @@ def _to_range_1d(vals: ndarray, source: ndarray, target: ndarray):
 
 
 def to_range_1d(vals: ndarray, *args, source: ndarray, target: ndarray = None,
-             squeeze=False, **kwargs):
+                squeeze=False, **kwargs):
     if not isinstance(vals, ndarray):
         vals = np.array([vals, ])
     source = np.array([0., 1.]) if source is None else np.array(source)

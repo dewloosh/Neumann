@@ -1,9 +1,18 @@
+class VectorShapeMismatchError(Exception):
+    """Mismatch in the shape of the inputs."""
 
 
-class VectorShapeMismatchError(Exception): ...
+class ArgumentError(Exception):
+    """Invalid argument."""
 
 
-class ArgumentError(Exception): ...
+class UfuncNotAllowedError(Exception):
+    """Universal function not supported by this class."""
+    
 
+class LinalgOperationInputError(Exception):
+    """Invalid input for this operation."""
+    
 
-class UfuncNotAllowedError(Exception): ...
+class LinalgMissingInputError(Exception):
+    """Invalid input for this operation."""

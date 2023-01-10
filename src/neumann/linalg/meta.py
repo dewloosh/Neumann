@@ -1,6 +1,6 @@
-from abc import abstractmethod, abstractproperty
+from abc import abstractmethod
 import weakref
-from typing import Tuple
+from typing import Tuple, Union
 import numbers
 
 import numpy as np
@@ -11,9 +11,10 @@ from dewloosh.core import Wrapper
 from dewloosh.core.abc import ABC_Safe
 
 from ..utils import ascont, minmax
+from .exceptions import LinalgMissingInputError
 
 
-__all__ = ['ArrayWrapper', 'TensorLike', 'FrameLike']
+__all__ = ['ArrayWrapper', 'ArrayLike', 'TensorLike', 'FrameLike']
 
 
 class Array(ABC_Safe, ndarray):
@@ -249,24 +250,50 @@ class TensorLike(ArrayWrapper):
     
     _frame_cls_ = None
     
-    def __init__(self, *args, frame:FrameLike=None, **kwargs):
+    def __init__(self, *args, frame:FrameLike=None, bulk:bool=None, 
+                 rank:int=None, **kwargs):
+        if len(args) > 0 and isinstance(args[0], np.ndarray):
+            if not self._verify_input(args[0]):
+                raise ValueError("Invalid input to Tensor class.")
         cls_params = kwargs.get('cls_params', dict())
         if frame is not None:
             if not isinstance(frame, FrameLike):
                 raise TypeError(f"The frame must be of type {FrameLike}.")
+            cls_params['frame'] = frame
+        else:
+            if not (len(args) > 0 and isinstance(args[0], np.ndarray)):
+                raise LinalgMissingInputError("A frame or an array of components is required.")
+            arr = args[0]
+            if not self._verify_input(*args, bulk=bulk, rank=rank, **kwargs):
+                raise ValueError("Invalid input to Tensor class.")
+            if bulk:
+                frame = self._frame_cls_(dim=arr.shape[1])
+            else:
+                frame = self._frame_cls_(dim=arr.shape[0])
             cls_params['frame'] = frame
         kwargs['cls_params'] = cls_params
         super().__init__(*args, **kwargs)
         if self._array._frame is None:
             self._array._frame = self._frame_cls_(dim=self._array.shape)
         self.frame._register_tensorial_(self)
+        self._bulk = bulk
+        self._rank = rank
         
-    @abstractproperty
+    @classmethod
+    def _from_any_input(cls, *args, **kwargs) -> 'TensorLike': ...       
+        
+    @classmethod
+    def _verify_input(cls, arr: ndarray, *_, **kwargs) -> bool: ...
+    
+    @property
     def rank(self) -> int: 
         """
-        Ought to return the rank (or order) of the tensor.
+        Returns the tensor rank (or order).
         """ 
-        ...
+        if self._rank:
+            return self._rank
+        else:
+            return len(self.array.shape)
         
     @property
     def array(self) -> Array:
@@ -311,7 +338,16 @@ class TensorLike(ArrayWrapper):
         self.array = array
         self.array.frame = f
         f._register_tensorial_(self)
-                
+    
+    @property
+    def T(self) -> 'TensorLike':
+        """
+        Returns the transpose.
+        """
+        f = self.frame
+        frame = f.__class__(np.copy(f.axes))
+        return self.__class__(self.array.T, frame=frame)
+    
     @abstractmethod
     def show(self) -> Array: ...
     
@@ -319,5 +355,17 @@ class TensorLike(ArrayWrapper):
     def orient(self) -> 'TensorLike': ...
         
     @abstractmethod
-    def orient_new(self) -> 'TensorLike':  ...
+    def orient_new(self) -> 'TensorLike': ...
     
+    def is_bulk(self):
+        """
+        Returns True if the object represents a collection of tensors, False
+        otherwise.
+        """
+        if self._bulk:
+            return True
+        else:
+            not self.rank == len(self.array.shape)
+
+
+ArrayLike = Union[ArrayWrapper, ndarray, Array]

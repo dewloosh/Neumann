@@ -99,6 +99,14 @@ class Vector(TensorLike):
     _frame_cls_ = Frame
     _HANDLED_TYPES_ = (numbers.Number,)
     
+    @classmethod
+    def _verify_input(cls, arr: ndarray, *_, **kwargs) -> bool:
+        """
+        Ought to verify if an array input is acceptable for the current class.
+        If not a general Tensor class is returned upon calling the creator.
+        """
+        return True
+    
     @property
     def rank(self) -> int:
         """
