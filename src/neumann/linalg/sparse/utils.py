@@ -2,6 +2,7 @@
 import numpy as np
 from numpy import ndarray
 from numba import njit, prange
+
 __cache = True
 
 
@@ -17,10 +18,10 @@ def upper_spdata(data: ndarray, rows: ndarray, cols: ndarray):
 
 @njit(nogil=True, parallel=True, cache=__cache)
 def get_shape_sp(indptr: np.ndarray):
-    nE = len(indptr)-1
+    nE = len(indptr) - 1
     widths = np.zeros(nE, dtype=indptr.dtype)
     for iE in prange(nE):
-        widths[iE] = indptr[iE+1] - indptr[iE]
+        widths[iE] = indptr[iE + 1] - indptr[iE]
     return nE, widths.max()
 
 

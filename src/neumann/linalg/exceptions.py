@@ -1,9 +1,17 @@
+class TensorShapeMismatchError(Exception):
+    """Mismatch in the shape of the inputs."""
 
 
-class VectorShapeMismatchError(Exception): ...
+class LinalgOperationInputError(Exception):
+    """Invalid input for this operation."""
 
 
-class ArgumentError(Exception): ...
+class LinalgMissingInputError(Exception):
+    """Invalid input for this operation."""
 
 
-class UfuncNotAllowedError(Exception): ...
+class LinalgInvalidTensorOperationError(Exception):
+    """
+    Tensors don't support this operation. Try to call this using
+    the arrays of the tensorial inputs.
+    """

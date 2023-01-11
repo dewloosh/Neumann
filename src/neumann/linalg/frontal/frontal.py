@@ -7,9 +7,15 @@ from .postproc import backsub_fr
 from .path import order_to_path
 
 
-def frsolve(A: np.ndarray, B: np.ndarray, presc_bool: np.ndarray = None,
-            presc_val: np.ndarray = None, topology: np.ndarray = None,
-            epath: np.ndarray = None, eorder=None):
+def frsolve(
+    A: np.ndarray,
+    B: np.ndarray,
+    presc_bool: np.ndarray = None,
+    presc_val: np.ndarray = None,
+    topology: np.ndarray = None,
+    epath: np.ndarray = None,
+    eorder=None,
+):
     try:
         nEQ = len(B)
         if len(B.shape) == 1:
@@ -23,20 +29,21 @@ def frsolve(A: np.ndarray, B: np.ndarray, presc_bool: np.ndarray = None,
         if not pre:
             presc_bool = np.zeros((nEQ,), dtype=int)
             presc_val = np.zeros((nEQ,), dtype=float)
-        lhs, rhs, eqpath, glob_to_front, glob_to_width = \
-            frontal_sym_bulk_uniform(A, topology, B,
-                                     presc_bool, presc_val, epath)
-        res = backsub_fr(lhs, rhs, presc_bool, presc_val, eqpath,
-                         glob_to_front, glob_to_width)
+        lhs, rhs, eqpath, glob_to_front, glob_to_width = frontal_sym_bulk_uniform(
+            A, topology, B, presc_bool, presc_val, epath
+        )
+        res = backsub_fr(
+            lhs, rhs, presc_bool, presc_val, eqpath, glob_to_front, glob_to_width
+        )
         if pre:
             return res
         else:
             return res[0]
     except Exception:
-        raise LinAlgError('The matrix is singular!')
+        raise LinAlgError("The matrix is singular!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
     """
     from polydata.mechanics.fem import Uniform3D

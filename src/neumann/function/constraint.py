@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 from enum import Enum
 
 import numpy as np
 
 from .function import Function
-
 
 
 class ConstraintType(Enum):
@@ -14,16 +12,15 @@ class ConstraintType(Enum):
 
 
 class ConstraintFunction(Function):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.constraintType = ConstraintType.nan
         for arg in args:
-            if arg in ['eq', 'equality']:
+            if arg in ["eq", "equality"]:
                 self.constraintType = ConstraintType.equality
                 break
-            elif arg in ['iq', 'inequality']:
+            elif arg in ["iq", "inequality"]:
                 self.constraintType = ConstraintType.inequality
                 break
             elif isinstance(arg, ConstraintType):
@@ -33,16 +30,13 @@ class ConstraintFunction(Function):
 
 
 class EqualityConstraint(ConstraintFunction):
-
     def __init__(self, *args, **kwargs):
-        super().__init__('eq', *args, **kwargs)
+        super().__init__("eq", *args, **kwargs)
 
 
 class InequalityConstraint(ConstraintFunction):
-
     def __init__(self, *args, **kwargs):
-        super().__init__('iq', *args, **kwargs)
-
+        super().__init__("iq", *args, **kwargs)
 
 
 class PenaltyType(Enum):
@@ -58,18 +52,18 @@ class PenaltyFunction(EqualityConstraint):
         super().__init__(*args, **kwargs)
         self.PenaltyType = PenaltyType.courant
 
-        if 'penalty' in kwargs:
-            assert isinstance(kwargs['penalty'], float)
-            self.penalty = kwargs['penalty']
+        if "penalty" in kwargs:
+            assert isinstance(kwargs["penalty"], float)
+            self.penalty = kwargs["penalty"]
         else:
-            self.penalty = np.array(1e+12)
+            self.penalty = np.array(1e12)
 
     def f(self, *args, **kwargs):
         try:
             if self.PenaltyType == PenaltyType.courant:
                 f = self.f0(*args, **kwargs)
                 p = self.penalty
-                return np.multiply(0.5*p, np.power(f, 2))
+                return np.multiply(0.5 * p, np.power(f, 2))
         except:
             return None
 

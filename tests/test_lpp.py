@@ -33,7 +33,7 @@ class TestLPP(unittest.TestCase):
         ieq2 = InEquality(x2 - 1, op='>=', variables=syms)
         ieq3 = InEquality(x1 + x2 - 4, op='<=', variables=syms)
         lpp = LPP(cost=f, constraints=[ieq1, ieq2, ieq3], variables=syms)
-        #lpp.feasible()
+        lpp.feasible([0, 0])
         
     def test_lpp_create(self):
         x1, x2 = sy.symbols(['x1', 'x2'], positive=True)
@@ -56,9 +56,10 @@ class TestLPP(unittest.TestCase):
         ieq2 = InEquality(x2 - 1, op='>=', variables=syms)
         ieq3 = InEquality(x1 + x2 - 4, op='<=', variables=syms)
         lpp = LPP(cost=f, constraints=[ieq1, ieq2, ieq3], variables=syms)
-        x = atleast2d(lpp.solve()['x'])
+        x = lpp.solve()['x']
         _x = np.array([1.0, 1.0])
-        assert np.all(np.isclose(_x, x))
+        self.assertTrue(np.all(np.isclose(_x, x)))
+        self.assertTrue(lpp.feasible(x))
             
     def test_degenerate_solution(self):
         variables = ['x1', 'x2', 'x3', 'x4']

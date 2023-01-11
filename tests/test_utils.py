@@ -41,6 +41,18 @@ class TestUtils(unittest.TestCase):
         arraysetops.unique2d(arr, return_inverse=True)
         arraysetops.unique2d(arr, return_counts=True)
         
+        data = np.array([1, 2, 1, 2, 3, 5])
+        arr = JaggedArray(data, cuts=[3, 3], force_numpy=True)
+        arraysetops.unique2d(arr)
+        
+        failed_properly = False
+        try:
+            arraysetops.unique2d('aaa')
+        except TypeError:
+            failed_properly = True
+        finally:
+            self.assertTrue(failed_properly)
+        
     def test_decorators(self):
         
         @squeeze(default=True)

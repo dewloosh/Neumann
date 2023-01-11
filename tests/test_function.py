@@ -5,27 +5,67 @@ import sympy as sy
 import numpy as np
 
 import neumann.function as fnc
+from neumann.function.metafunction import decode, substitute, coefficients
 from neumann.function import Function
 from neumann.function import Equality, InEquality, Relation
 from neumann.approx.lagrange import gen_Lagrange_1d
 
 
 def load_tests(loader, tests, ignore):  # pragma: no cover
+    tests.addTests(doctest.DocTestSuite(fnc.function))
     tests.addTests(doctest.DocTestSuite(fnc.relation))
     return tests
 
 
 class TestFunction(unittest.TestCase):
-
-    def test_linearity(self):
-        def f0(x=None, y=None):
-            return x**2 + y
-
-        def f1(x=None, y=None):
-            return np.array([2*x, 1])
+    
+    def assertFailsProperly(self, exc, fnc, *args, **kwargs):
+        failed_properly = False
+        try:
+            fnc(*args, **kwargs)
+        except exc:
+            failed_properly = True
+        finally:
+            self.assertTrue(failed_properly)
+        
+    def test_bulk(self):
+        def f0(x, y): return x**2 + y
+        def f1(x, y): return np.array([2*x, 1])
         
         f = Function(f0, f1, d=2)
-        assert f.linear
+        self.assertFalse(f.symbolic)
+        #f.to_latex()
+        f.coefficients()
+        f.linear_coefficients()
+        
+        Function(value=f0, gradient=f1, Hessian=None, d=2)
+        
+        class MyFunction(Function):
+            def value(x, y): return f0(x, y)
+            def gradient(x, y): return f1(x, y)
+            def Hessian(x, y): ...
+            
+        f = Function()
+        self.assertFailsProperly(TypeError, f, [0, 0])
+        self.assertFailsProperly(TypeError, lambda x : x.to_latex(), f)
+        self.assertFailsProperly(TypeError, lambda x : x.subs([0, 0]), f)
+        self.assertFailsProperly(TypeError, f.g, [0, 0])
+        self.assertFailsProperly(TypeError, f.G, [0, 0])
+        decode(expr = [])
+        
+        g = Function('3*x + 4*y - 2', variables=['x', 'y', 'z'])
+        g.subs([0, 0, 0], ['x', 'y', 'z'], inplace=True)
+        
+        coefficients(g.expr)
+        substitute(g.expr, [0,0])
+            
+    def test_linearity(self):
+        def f0(x=None, y=None): return x**2 + y
+        def f1(x=None, y=None): return np.array([2*x, 1])
+        
+        f = Function(f0, f1, d=2)
+        self.assertFalse(f.symbolic)
+        self.assertTrue(f.linear)
         
     def test_sym(self):
         f = gen_Lagrange_1d(N=2)
@@ -39,8 +79,10 @@ class TestFunction(unittest.TestCase):
         assert np.isclose(f2([-1]), 0.0)
         assert np.isclose(f2([1]), 1.0)
         f1.coefficients()
+        f1.linear_coefficients()
         f1.to_latex()
         f1.f([-1]), f1.g([-1]), f1.G([-1])
+        f1.subs([1], variables=f1.variables)
 
 
 class TestRelations(unittest.TestCase):
