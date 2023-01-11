@@ -5,6 +5,7 @@ import sympy as sy
 import numpy as np
 
 import neumann.function as fnc
+from neumann.function.metafunction import decode, substitute, coefficients
 from neumann.function import Function
 from neumann.function import Equality, InEquality, Relation
 from neumann.approx.lagrange import gen_Lagrange_1d
@@ -17,6 +18,15 @@ def load_tests(loader, tests, ignore):  # pragma: no cover
 
 
 class TestFunction(unittest.TestCase):
+    
+    def assertFailsProperly(self, exc, fnc, *args, **kwargs):
+        failed_properly = False
+        try:
+            fnc(*args, **kwargs)
+        except exc:
+            failed_properly = True
+        finally:
+            self.assertTrue(failed_properly)
         
     def test_bulk(self):
         def f0(x, y): return x**2 + y
@@ -34,6 +44,17 @@ class TestFunction(unittest.TestCase):
             def value(x, y): return f0(x, y)
             def gradient(x, y): return f1(x, y)
             def Hessian(x, y): ...
+            
+        f = Function()
+        self.assertFailsProperly(TypeError, f, [0, 0])
+        self.assertFailsProperly(TypeError, lambda x : x.to_latex(), f)
+        self.assertFailsProperly(TypeError, lambda x : x.subs([0, 0]), f)
+        self.assertFailsProperly(TypeError, f.g, [0, 0])
+        self.assertFailsProperly(TypeError, f.G, [0, 0])
+        decode(expr = [])
+        
+        g = Function('3*x + 4*y - 2', variables=['x', 'y', 'z'])
+        g.subs([0, 0, 0], ['x', 'y', 'z'], inplace=True)
             
     def test_linearity(self):
         def f0(x=None, y=None): return x**2 + y

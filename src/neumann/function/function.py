@@ -179,7 +179,10 @@ class Function(MetaFunction):
         else:
             return self.f2 is None
 
-    def linear_coefficients(self, normalize=False):
+    def linear_coefficients(self, normalize:bool=False):
+        """
+        Returns the linear coeffiecients, if the function is symbolic. 
+        """
         d = self.coefficients(normalize)
         if d:
             return {
@@ -187,7 +190,10 @@ class Function(MetaFunction):
             }
         return None
 
-    def coefficients(self, normalize=False):
+    def coefficients(self, normalize:bool=False):
+        """
+        Returns the coefficients if the function is symbolic.
+        """
         try:
             d = OrderedDict({x: 0 for x in self.variables})
             d.update(self.expr.as_coefficients_dict())
@@ -207,24 +213,19 @@ class Function(MetaFunction):
     def to_latex(self):
         """
         Returns the LaTeX code of the symbolic expression of the object.
-
         Only for simbolic functions.
-
         """
-        assert self.symbolic, "This is exclusive to symbolic functions."
-        try:
+        if self.symbolic:
             return latex(self.expr)
-        except Exception:
-            return None
+        else:
+            raise TypeError("This is exclusive to symbolic functions.")
 
     def subs(self, values, variables=None, inplace=False):
         """
         Substitites values for variables.
-
         """
-        assert self.symbolic, "This is exclusive to symbolic functions."
-        if self.expr is None:
-            return None
+        if not self.symbolic:
+            raise TypeError("This is exclusive to symbolic functions.")
         expr = substitute(self.expr, values, variables, as_string=self.from_str)
         kwargs = self._sympy_to_func(expr=expr, variables=variables)
         if not inplace:

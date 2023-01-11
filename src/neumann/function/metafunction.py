@@ -42,10 +42,7 @@ class MetaFunction(metaclass=ABCMeta_MetaFunction):
             <...>
             return <...>
         """
-        try:
-            return self.f0(*args, **kwargs)
-        except Exception:
-            return None
+        return self.f0(*args, **kwargs)
 
     def g(self, *args, **kwargs):
         """
@@ -57,10 +54,7 @@ class MetaFunction(metaclass=ABCMeta_MetaFunction):
             <...>
             return <...>
         """
-        try:
-            return self.f1(*args, **kwargs)
-        except Exception:
-            return None
+        return self.f1(*args, **kwargs)
 
     def G(self, *args, **kwargs):
         """
@@ -72,11 +66,7 @@ class MetaFunction(metaclass=ABCMeta_MetaFunction):
             <...>
             return <...>
         """
-
-        try:
-            return self.f2(*args, **kwargs)
-        except Exception:
-            return None
+        return self.f2(*args, **kwargs)
 
     @classmethod
     def _str_to_func(cls, str_expr: str, *args, **kwargs):
