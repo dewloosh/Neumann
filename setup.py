@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import codecs
 import os.path
 from setuptools import find_packages, setup
