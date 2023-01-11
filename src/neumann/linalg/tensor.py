@@ -56,7 +56,7 @@ class Tensor(AbstractTensor):
     See Also
     --------
     :class:`~neumann.linalg.vector.Vector`
-    :class:`~neumann.linalg.frame.frame.ReferenceFrame`
+    :class:`~neumann.linalg.frame.ReferenceFrame`
     """
 
     _frame_cls_ = Frame
