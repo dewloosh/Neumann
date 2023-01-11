@@ -11,7 +11,7 @@ import sympy as sy
 from neumann.linalg.utils import random_pos_semidef_matrix, random_posdef_matrix
 from neumann.logical import ispossemidef, isposdef
 from neumann.linalg import (ReferenceFrame, RectangularFrame, CartesianFrame, ArrayWrapper,
-                            Vector, Tensor, Tensor2, Tensor4, Tensor2x3, Tensor4x3,
+                            Vector, TensorLike, Tensor, Tensor2, Tensor4, Tensor2x3, Tensor4x3,
                             inv3x3, det3x3, inv2x2u, inv3x3u, inv2x2, det2x2)
 from neumann.linalg.solve import linsolve, reduce
 from neumann.linalg.sparse import JaggedArray, csr_matrix
@@ -75,7 +75,11 @@ class TestFrame(LinalgTestCase):
         A **= 2
         A @= A
         np.sqrt(A, out=A)
-
+        np.negative.at(A, [0, 1])
+        np.unique(A, return_counts=True)
+        np.min(A)
+        self.assertFailsProperly(TypeError, np.add, A, 'A')
+        
     def _call_frame_methods(self, f: ReferenceFrame):
         f.is_independent()
         f.is_cartesian()
@@ -119,6 +123,9 @@ class TestFrame(LinalgTestCase):
         self.assertFailsProperly(TypeError, setattr, f, 'name', 5)
         self.assertFailsProperly(TypeError, setattr, f, 'axes', "a")
         self.assertFailsProperly(RuntimeError, setattr, f, 'axes', np.eye(5))
+        
+        # misc
+        ReferenceFrame(repeat(np.eye(3), 2)).dcm(target=f)       
 
     def test_frame(self):
         #  GENERAL FRAMES
@@ -280,6 +287,7 @@ class TestTensor(LinalgTestCase):
         target = frame.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
         T = Tensor(arr, frame=frame)
         Tensor(arr).rank
+        self.assertFalse(T.is_bulk())
         self.assertFailsProperly(TypeError, Tensor, arr, frame='a')
         # miscellaneous calls
         self.assertEqual(T.rank, 2)
@@ -294,6 +302,15 @@ class TestTensor(LinalgTestCase):
         Tensor2._verify_input(np.ones((3, 3, 3)), bulk=True)
         Tensor4._verify_input(np.ones((3, 3, 3, 3, 3)), bulk=True)
         self.assertFailsProperly(ValueError, Tensor2._from_any_input, np.ones((3, 2)))
+        self.assertFailsProperly(ValueError, Tensor2, np.ones((3, 2)))
+        self.assertFailsProperly(LinalgMissingInputError, Tensor2)
+        T = Tensor2(np.ones((3, 3, 3)), bulk=True, rank=2)
+        self.assertTrue(T.is_bulk())
+        print(T)
+        repr(T)
+        np.isclose(T, 1)
+        np.allclose(T, 1)
+        #self.assertFailsProperly(NotIM, Tensor2, )
 
     def test_Tensor2_bulk(self):
         arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]).reshape(3, 3)

@@ -124,9 +124,11 @@ def array_str_implementation(*args, **kwargs):
 
 @implements(np.allclose)
 def allclose_implementation(*args, **kwargs):
-    return np.allclose(args[0].show(), args[1].show(), **kwargs)
+    inputs = [x.show() if isinstance(x, TensorLike) else x for x in args]
+    return np.allclose(*inputs, **kwargs)
 
 
 @implements(np.isclose)
 def isclose_implementation(*args, **kwargs):
-    return np.isclose(args[0].show(), args[1].show(), **kwargs)
+    inputs = [x.show() if isinstance(x, TensorLike) else x for x in args]
+    return np.isclose(*inputs, **kwargs)

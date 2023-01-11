@@ -2,6 +2,7 @@ from sympy.parsing.sympy_parser import parse_expr
 from sympy import lambdify, derive_by_array, symbols, Expr
 from sympy.core.numbers import One
 from collections import OrderedDict
+from typing import Iterable
 
 from dewloosh.core.abc import ABCMeta_Weak
 
@@ -77,7 +78,9 @@ class MetaFunction(metaclass=ABCMeta_MetaFunction):
         return symbolize(*args, expr=expr, **kwargs)
 
 
-def decode(*args, expr=None, str_expr: str = None, variables=None, **kwargs):
+def decode(
+    *args, expr=None, str_expr: str = None, variables: Iterable = None, **kwargs
+):
     try:
         if str_expr is not None:
             expr = parse_expr(str_expr, evaluate=False)
@@ -127,23 +130,21 @@ def substitute(expr, values, variables=None, as_string=False):
 
 
 def coefficients(expr=None, variables=None, normalize=False):
-    try:
-        if variables is None:
-            variables = tuple(expr.free_symbols)
-        d = OrderedDict({x: 0 for x in variables})
-        d.update(expr.as_coefficients_dict())
-        if not normalize:
-            return d
-        else:
-            res = OrderedDict()
-            for key, value in d.items():
-                if len(key.free_symbols) == 0:
-                    res[One()] = value * key
-                else:
-                    res[key] = value
-            return res
-    except Exception:
-        return None
+
+    if variables is None:
+        variables = tuple(expr.free_symbols)
+    d = OrderedDict({x: 0 for x in variables})
+    d.update(expr.as_coefficients_dict())
+    if not normalize:
+        return d
+    else:
+        res = OrderedDict()
+        for key, value in d.items():
+            if len(key.free_symbols) == 0:
+                res[One()] = value * key
+            else:
+                res[key] = value
+        return res
 
 
 if __name__ == "__main__":

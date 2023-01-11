@@ -179,9 +179,9 @@ class Function(MetaFunction):
         else:
             return self.f2 is None
 
-    def linear_coefficients(self, normalize:bool=False):
+    def linear_coefficients(self, normalize: bool = False):
         """
-        Returns the linear coeffiecients, if the function is symbolic. 
+        Returns the linear coeffiecients, if the function is symbolic.
         """
         d = self.coefficients(normalize)
         if d:
@@ -190,7 +190,7 @@ class Function(MetaFunction):
             }
         return None
 
-    def coefficients(self, normalize:bool=False):
+    def coefficients(self, normalize: bool = False):
         """
         Returns the coefficients if the function is symbolic.
         """

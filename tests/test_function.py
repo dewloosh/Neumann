@@ -55,6 +55,9 @@ class TestFunction(unittest.TestCase):
         
         g = Function('3*x + 4*y - 2', variables=['x', 'y', 'z'])
         g.subs([0, 0, 0], ['x', 'y', 'z'], inplace=True)
+        
+        coefficients(g.expr)
+        substitute(g.expr, [0,0])
             
     def test_linearity(self):
         def f0(x=None, y=None): return x**2 + y

@@ -22,9 +22,6 @@ from .meta import FrameLike, TensorLike, ArrayWrapper
 __all__ = ["ReferenceFrame", "RectangularFrame", "CartesianFrame"]
 
 
-HANDLED_FUNCTIONS = {}
-
-
 def inplace_binary(obj: FrameLike, other, bop: Callable, rtype: FrameLike = None):
     """
     Performs a binary operation inplace. Components of registered tensorial entities
@@ -529,15 +526,8 @@ class ReferenceFrame(FrameLike):
         return inplace_binary(self, other, np.power)
 
     def __array_function__(self, func, types, args, kwargs):
-        if func not in HANDLED_FUNCTIONS:
-            arrs = [arg._array for arg in args]
-            return func(*arrs, **kwargs)
-        # Note: this allows subclasses that don't override
-        # __array_function__ to handle ReferenceFrame objects.
-        handled_types = self._HANDLED_TYPES_ + (ReferenceFrame,)
-        if not all(issubclass(t, handled_types) for t in types):
-            return NotImplementedError
-        return HANDLED_FUNCTIONS[func](*args, **kwargs)
+        arrs = [arg._array if isinstance(arg, ArrayWrapper) else arg for arg in args]
+        return func(*arrs, **kwargs)
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         """
@@ -550,7 +540,8 @@ class ReferenceFrame(FrameLike):
         handled_types = self._HANDLED_TYPES_ + (ReferenceFrame,)
         for x in inputs + out:
             if not isinstance(x, handled_types):
-                return NotImplementedError
+                msg = f"Invalid type {type(x)} encountered at {ufunc}."
+                raise TypeError(msg)
 
         # mark reference frames among outputs and create backup
         if out:

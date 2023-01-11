@@ -271,7 +271,7 @@ class TensorLike(ArrayWrapper):
         **kwargs,
     ):
         if len(args) > 0 and isinstance(args[0], np.ndarray):
-            if not self._verify_input(args[0]):
+            if not self._verify_input(args[0], bulk=bulk, rank=rank):
                 raise ValueError("Invalid input to Tensor class.")
         cls_params = kwargs.get("cls_params", dict())
         if frame is not None:
@@ -284,8 +284,6 @@ class TensorLike(ArrayWrapper):
                     "A frame or an array of components is required."
                 )
             arr = args[0]
-            if not self._verify_input(*args, bulk=bulk, rank=rank, **kwargs):
-                raise ValueError("Invalid input to Tensor class.")
             if bulk:
                 frame = self._frame_cls_(dim=arr.shape[1])
             else:
@@ -301,11 +299,11 @@ class TensorLike(ArrayWrapper):
 
     @classmethod
     def _from_any_input(cls, *args, **kwargs) -> "TensorLike":
-        ...
+        raise NotImplementedError
 
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, **kwargs) -> bool:
-        ...
+        raise NotImplementedError
 
     @property
     def rank(self) -> int:

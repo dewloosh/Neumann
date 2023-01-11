@@ -14,14 +14,6 @@ from .utils import is_hermitian
 __all__ = ["Tensor", "Tensor2", "Tensor4", "Tensor2x3", "Tensor4x3"]
 
 
-def even(n):
-    return n % 2 == 0
-
-
-def swap(x):
-    return x[::-1]
-
-
 class Tensor(AbstractTensor):
     """
     A class to handle tensors.
