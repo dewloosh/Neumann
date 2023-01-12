@@ -12,18 +12,8 @@
    it with confidence, just don't forget to pin down the version of Neumann in your 
    'requirements.txt'. 
 
-Features
---------
-
-* | Numba-jitted classes and an extendible factory to define and manipulate 
-  | vectors and tensors.
-
-* | Classes to define and solve linear and nonlinear optimization
-  | problems.
-
-* | A set of array routines for fast prorotyping, including random data creation
-  | to assure well posedness, or other properties of test problems.
-
+.. include:: features.md
+    :parser: myst_parser.sphinx_
 
 .. admonition:: Important
    :class: important
@@ -31,25 +21,35 @@ Features
    Be aware, that the library uses JIT-compilation through Numba, and as a result,
    first calls to these functions may take longer, but pay off in the long run. 
 
+   .. admonition:: Tip
+      :class: tip
+
+      Create a minimal example that best describes a typical usage scenario of yours and
+      name it like 'compile.py' or so. You can integrate this file into your CI/CD workflow.
+
 
 .. include:: user_guide.md
     :parser: myst_parser.sphinx_
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
     :glob:
-    :caption: Contents
-   
+    
     notebooks
-    auto_examples/index.rst 
 
 .. toctree::
     :maxdepth: 6
     :glob:
     :hidden:
-    :caption: API
-   
+    
     api
+
+.. toctree::
+    :glob:
+    :hidden:
+    
+    license
+
    
 Indices and tables
 ------------------

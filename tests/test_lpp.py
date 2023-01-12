@@ -64,7 +64,7 @@ class TestLPP(unittest.TestCase):
     def test_degenerate_solution(self):
         variables = ['x1', 'x2', 'x3', 'x4']
         x1, x2, x3, x4 = syms = sy.symbols(variables, positive=True)
-        obj2 = Function(3*x1 + x2 + 9*x3 + x4, variables=syms)
+        obj2 = Function(3*x1 + x2 - 6*x3 + x4, variables=syms)
         eq21 = Equality(x1 + 2*x3 + x4, variables=syms)
         eq22 = Equality(x2 + x3 - x4 - 2, variables=syms)
         P2 = LPP(cost=obj2, constraints=[eq21, eq22], variables=syms)

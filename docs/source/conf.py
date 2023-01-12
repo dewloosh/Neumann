@@ -99,7 +99,7 @@ nitpick_ignore = [
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
-pygments_dark_style = "monokai"
+pygments_dark_style = "github-dark"
 highlight_language = 'python3'
 
 intersphinx_mapping = {
@@ -146,10 +146,14 @@ html_sidebars = {
 
 html_theme_options = {
     "light_css_variables": {
-        #"color-brand-primary": "red",
-        #"color-brand-content": "#CC3333",
         "color-brand-primary": "#7C4DFF",
         "color-brand-content": "#7C4DFF",
+    },
+    "dark_css_variables": {
+        #"color-brand-primary": "red",
+        #"color-brand-content": "#CC3333",
+        "color-brand-primary": "orange",
+        "color-brand-content": "orange",
         #"color-admonition-background": "orange",
     },
     "footer_icons": [

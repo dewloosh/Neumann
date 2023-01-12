@@ -1,8 +1,9 @@
-Notebooks
-=========
+========
+Examples
+========
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     
     _notebooks/vectors
     _notebooks/lpp
