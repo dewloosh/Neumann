@@ -9,7 +9,12 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 > **Warning**
-> The library is in a beta stage overall. Wait until version 1.0.
+> Neumann is in the early stages of it's lifetime, and some concepts may change in 
+> the future. If you want long-term stability, wait until version 1.0, which is 
+> planned to be released if the core concepts all seem to sit. Nonetheless, the library
+> is well tested with a coverage value above 90%, so if something catches your eye use 
+> it with confidence, just don't forget to pin down the version of Neumann in your 
+> 'requirements.txt'.
 
 `Neumann` is a Python library that provides tools to formulate and solve problems related to all kinds of scientific disciplines. It is a part of the DewLoosh ecosystem which is designed mainly to solve problems related to computational solid mechanics, but if something is general enough, it ends up here. A good example is the included vector and tensor algebra modules, or the various optimizers, which are applicable in a much broader context than they were originally designed for.
 
@@ -28,6 +33,10 @@ The most important features:
 
 * Graph Theory
   * Algorithms to calculate rooted level structures and pseudo peripheral nodes of a `networkx` graph, which are useful if you want to minimize the bandwidth of sparse symmetrix matrices.
+
+> **Note**
+> Be aware, that the library uses JIT-compilation through Numba, and as a result,
+> first calls to these functions may take longer, but pay off in the long run.
 
 ## **Documentation**
 

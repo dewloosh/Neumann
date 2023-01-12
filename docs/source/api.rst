@@ -1,8 +1,9 @@
+=============
 API Reference
 =============
 
 .. toctree::
-    api_vs
+    api_linalg
     api_function
     api_lp
     api_ga
