@@ -171,7 +171,7 @@ class Tensor2(Tensor):
     that provide higher performence utilizing implicit parallelization. Examples include
     the metric tensor, or the stress and strain tensors of elasticity.
     """
-    
+
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
         if bulk:
@@ -194,9 +194,9 @@ class Tensor2x3(Tensor2):
 class Tensor4(Tensor):
     """
     A class to handle 4th-order tensors. Some operations have dedicated implementations
-    that provide higher performence utilizing implicit parallelization. Examples include 
+    that provide higher performence utilizing implicit parallelization. Examples include
     the piezo-optical tensor, the elasto-optical tensor, the flexoelectric tensor or the
-    elasticity tensor.    
+    elasticity tensor.
     """
 
     @classmethod
