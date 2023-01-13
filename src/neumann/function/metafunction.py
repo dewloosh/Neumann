@@ -3,6 +3,7 @@ from sympy import lambdify, derive_by_array, symbols, Expr
 from sympy.core.numbers import One
 from collections import OrderedDict
 from typing import Iterable
+import sympy as sy
 
 from dewloosh.core.abc import ABCMeta_Weak
 
@@ -78,29 +79,16 @@ class MetaFunction(metaclass=ABCMeta_MetaFunction):
         return symbolize(*args, expr=expr, **kwargs)
 
 
-def decode(
-    *args, expr=None, str_expr: str = None, variables: Iterable = None, **kwargs
-):
-    try:
-        if str_expr is not None:
-            expr = parse_expr(str_expr, evaluate=False)
-        if not variables:
-            variables = []
-            """
-            for arg in expr.args:
-                syms = list(arg.free_symbols)
-                if len(syms) == 1:
-                    variables.append(syms[0])
-            """
-            variables = tuple(expr.free_symbols)
-        else:
-            try:
-                variables = list(symbols(variables))
-            except Exception:
-                pass
-        return expr, variables
-    except Exception:
-        return None, None
+def decode(*_, expr=None, str_expr: str = None, variables: Iterable = None, **__):
+    if str_expr is not None:
+        expr = parse_expr(str_expr, evaluate=False)
+    if not variables:
+        variables = []
+        variables = tuple(expr.free_symbols)
+    else:
+        if not all([isinstance(v, sy.Expr) for v in variables]):
+            variables = list(symbols(variables))
+    return expr, variables
 
 
 def symbolize(*args, **kwargs):
@@ -145,9 +133,3 @@ def coefficients(expr=None, variables=None, normalize=False):
             else:
                 res[key] = value
         return res
-
-
-if __name__ == "__main__":
-
-    str_expr = "x*y + y**2 + 6*b + 2"
-    d = decode(str_expr=str_expr)

@@ -198,13 +198,13 @@ def cross(
 
     Parameters
     ----------
-    *args : Tuple, Optinal
+    *args : Tuple, Optional
         Positional arguments forwarded to NumPy, if all input objects are arrays.
     a : TensorLike or ArrayLike
         A tensor or an array.
     b : TensorLike or ArrayLike
         A tensor or an array.
-    frame : FrameLike, Optinal
+    frame : FrameLike, Optional
         The target frame of the output. Only if all inputs are TensorLike. If not specified,
         the returned tensor migh be returned in an arbitrary frame, depending on the inputs.
         Default is None.
@@ -276,7 +276,7 @@ def cross(
 
 
 @njit(nogil=True, cache=__cache)
-def _show_vector(dcm: np.ndarray, arr: np.ndarray):
+def _show_vector(dcm: np.ndarray, arr: np.ndarray) -> ndarray:
     """
     Returns the coordinates of a single vector in a frame specified
     by a DCM matrix.
@@ -297,7 +297,7 @@ def _show_vector(dcm: np.ndarray, arr: np.ndarray):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def _show_vectors(dcm: np.ndarray, arr: np.ndarray):
+def _show_vectors(dcm: np.ndarray, arr: np.ndarray) -> ndarray:
     """
     Returns the coordinates of multiple vectors in a frame specified
     by a DCM matrix.
@@ -321,7 +321,7 @@ def _show_vectors(dcm: np.ndarray, arr: np.ndarray):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def _show_vectors_multi(dcm: np.ndarray, arr: np.ndarray):
+def _show_vectors_multi(dcm: np.ndarray, arr: np.ndarray) -> ndarray:
     """
     Returns the coordinates of multiple vectors and multiple DCM matrices.
 
@@ -344,7 +344,7 @@ def _show_vectors_multi(dcm: np.ndarray, arr: np.ndarray):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def _transpose_multi(dcm: np.ndarray):
+def _transpose_multi(dcm: np.ndarray) -> ndarray:
     N = dcm.shape[0]
     res = np.zeros_like(dcm)
     for i in prange(N):
@@ -352,7 +352,7 @@ def _transpose_multi(dcm: np.ndarray):
     return res
 
 
-def is_rectangular_frame(axes: ndarray):
+def is_rectangular_frame(axes: ndarray) -> bool:
     """
     Returns True if a frame is Cartesian.
 
@@ -367,7 +367,7 @@ def is_rectangular_frame(axes: ndarray):
     return np.isclose(np.trace(agram), np.sum(agram))
 
 
-def is_normal_frame(axes: ndarray):
+def is_normal_frame(axes: ndarray) -> bool:
     """
     Returns True if a frame is normal, meaning, that it's base vectors
     are all of unit length.
@@ -380,7 +380,7 @@ def is_normal_frame(axes: ndarray):
     return np.allclose(np.linalg.norm(axes, axis=1), 1.0)
 
 
-def is_orthonormal_frame(axes: ndarray):
+def is_orthonormal_frame(axes: ndarray) -> bool:
     """
     Returns True if a frame is orthonormal.
 
@@ -392,7 +392,7 @@ def is_orthonormal_frame(axes: ndarray):
     return is_rectangular_frame(axes) and is_normal_frame(axes)
 
 
-def is_independent_frame(axes: ndarray, tol: float = 0):
+def is_independent_frame(axes: ndarray, tol: float = 0) -> bool:
     """
     Returns True if a the base vectors of a frame are linearly independent.
 
@@ -413,7 +413,7 @@ def is_hermitian(arr: ndarray) -> bool:
     return all([s == s0 for s in shp[1:]])
 
 
-def normalize_frame(axes: ndarray):
+def normalize_frame(axes: ndarray) -> ndarray:
     """
     Returns the frame with normalized base vectors.
 
@@ -425,10 +425,9 @@ def normalize_frame(axes: ndarray):
     return np.array([normalize(a) for a in axes], dtype=axes.dtype)
 
 
-def Gram(axes: ndarray):
+def Gram(axes: ndarray) -> ndarray:
     """
-    Returns the Gram matrix. If a second frame is not provided,
-    the Gram matrix of a single frame is returned.
+    Returns the Gram matrix of a frame.
 
     Parameters
     ----------
@@ -450,14 +449,14 @@ def dual_frame(axes: ndarray) -> ndarray:
     return np.linalg.inv(axes).T
 
 
-def is_pos_def(arr):
+def is_pos_def(arr) -> bool:
     """
     Returns True if the input is positive definite.
     """
     return np.all(np.linalg.eigvals(arr) > 0)
 
 
-def is_pos_semidef(arr):
+def is_pos_semidef(arr) -> bool:
     """
     Returns True if the input is positive semi definite.
     """
@@ -515,7 +514,7 @@ def inv_sym_3x3(m: Matrix, as_adj_det=False) -> Matrix:
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def vpath(p1: ndarray, p2: ndarray, n: int):
+def vpath(p1: ndarray, p2: ndarray, n: int) -> ndarray:
     nD = len(p1)
     dist = p2 - p1
     length = np.linalg.norm(dist)
@@ -528,37 +527,37 @@ def vpath(p1: ndarray, p2: ndarray, n: int):
 
 
 @njit(nogil=True, cache=__cache)
-def linsolve(A, b):
+def linsolve(A, b) -> ndarray:
     return np.linalg.solve(A, b)
 
 
 @njit(nogil=True, cache=__cache)
-def inv(A: ndarray):
+def inv(A: ndarray) -> ndarray:
     return np.linalg.inv(A)
 
 
 @njit(nogil=True, cache=__cache)
-def matmul(A: ndarray, B: ndarray):
+def matmul(A: ndarray, B: ndarray) -> ndarray:
     return A @ B
 
 
 @njit(nogil=True, cache=__cache)
-def ATB(A: ndarray, B: ndarray):
+def ATB(A: ndarray, B: ndarray) -> ndarray:
     return A.T @ B
 
 
 @njit(nogil=True, cache=__cache)
-def matmulw(A: ndarray, B: ndarray, w: float = 1.0):
+def matmulw(A: ndarray, B: ndarray, w: float = 1.0) -> ndarray:
     return w * (A @ B)
 
 
 @njit(nogil=True, cache=__cache)
-def ATBA(A: ndarray, B: ndarray):
+def ATBA(A: ndarray, B: ndarray) -> ndarray:
     return A.T @ B @ A
 
 
 @njit(nogil=True, cache=__cache)
-def ATBAw(A: ndarray, B: ndarray, w: float = 1.0):
+def ATBAw(A: ndarray, B: ndarray, w: float = 1.0) -> ndarray:
     return w * (A.T @ B @ A)
 
 
@@ -580,7 +579,7 @@ def det2x2(A, res):
 
 
 @njit(nogil=True, cache=__cache)
-def inv2x2(A):
+def inv2x2(A) -> ndarray:
     res = np.zeros_like(A)
     d = A[0, 0] * A[1, 1] - A[0, 1] * A[1, 0]
     res[0, 0] = A[1, 1] / d
@@ -658,7 +657,7 @@ def inv3x3(A):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def inv3x3_bulk(A):
+def inv3x3_bulk(A) -> ndarray:
     res = np.zeros_like(A)
     for i in prange(A.shape[0]):
         det = (
@@ -683,7 +682,7 @@ def inv3x3_bulk(A):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def inv3x3_bulk2(A):
+def inv3x3_bulk2(A) -> ndarray:
     res = np.zeros_like(A)
     for i in prange(A.shape[0]):
         res[i] = inv3x3(A[i])
@@ -691,12 +690,12 @@ def inv3x3_bulk2(A):
 
 
 @njit(nogil=True, cache=__cache)
-def normalize(A):
+def normalize(A) -> ndarray:
     return A / np.linalg.norm(A)
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def normalize2d(A):
+def normalize2d(A) -> ndarray:
     res = np.zeros_like(A)
     for i in prange(A.shape[0]):
         res[i] = normalize(A[i])
@@ -704,12 +703,12 @@ def normalize2d(A):
 
 
 @njit(nogil=True, cache=__cache)
-def norm(A):
+def norm(A) -> float:
     return np.linalg.norm(A)
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def norm2d(A):
+def norm2d(A) -> ndarray:
     res = np.zeros(A.shape[0])
     for i in prange(A.shape[0]):
         res[i] = norm(A[i, :])
@@ -717,7 +716,7 @@ def norm2d(A):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def _to_range_1d(vals: ndarray, source: ndarray, target: ndarray):
+def _to_range_1d(vals: ndarray, source: ndarray, target: ndarray) -> ndarray:
     res = np.zeros_like(vals)
     s0, s1 = source
     t0, t1 = target
@@ -735,7 +734,7 @@ def to_range_1d(
     target: ndarray = None,
     squeeze=False,
     **kwargs,
-):
+) -> ndarray:
     if not isinstance(vals, ndarray):
         vals = np.array(
             [
@@ -765,7 +764,7 @@ def _linspace(p0: ndarray, p1: ndarray, N):
     return res
 
 
-def linspace(start, stop, N):
+def linspace(start, stop, N) -> ndarray:
     if isinstance(start, ndarray):
         return _linspace(start, stop, N)
     else:
@@ -773,7 +772,7 @@ def linspace(start, stop, N):
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def linspace1d(start, stop, N):
+def linspace1d(start, stop, N) -> ndarray:
     res = np.zeros(N)
     di = (stop - start) / (N - 1)
     for i in prange(N):

@@ -56,7 +56,7 @@ class Tensor(AbstractTensor):
     See Also
     --------
     :class:`~neumann.linalg.vector.Vector`
-    :class:`~neumann.linalg.frame.frame.ReferenceFrame`
+    :class:`~neumann.linalg.frame.ReferenceFrame`
     """
 
     _frame_cls_ = Frame
@@ -64,10 +64,6 @@ class Tensor(AbstractTensor):
 
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, **kwargs) -> bool:
-        """
-        Ought to verify if an array input is acceptable for the current class.
-        If not a general Tensor class is returned upon calling the creator.
-        """
         return is_hermitian(arr)
 
     @classmethod
@@ -170,12 +166,14 @@ class Tensor(AbstractTensor):
 
 
 class Tensor2(Tensor):
+    """
+    A class to handle 2nd-order tensors. Some operations have dedicated implementations
+    that provide higher performence utilizing implicit parallelization. Examples include
+    the metric tensor, or the stress and strain tensors of elasticity.
+    """
+
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
-        """
-        Ought to verify if an array input is acceptable for the current class.
-        If not a general Tensor class is returned upon calling the creator.
-        """
         if bulk:
             return len(arr.shape) == 3 and is_hermitian(arr[0])
         else:
@@ -183,15 +181,9 @@ class Tensor2(Tensor):
 
     @property
     def rank(self) -> int:
-        """
-        Returns the tensor rank (or order).
-        """
         return 2
 
     def transform_components(self, Q: ndarray) -> ndarray:
-        """
-        Returns the components of the tensor transformed by the matrix Q.
-        """
         return Q @ self.array @ Q.T
 
 
@@ -201,17 +193,14 @@ class Tensor2x3(Tensor2):
 
 class Tensor4(Tensor):
     """
-    Fourth order tensors have a wide range of applications in physics and mechanics.
-    Examples include the piezo-optical tensor, the elasto-optical tensor and
-    the flexoelectric tensor, the most well-known probably being the elasticity tensor.
+    A class to handle 4th-order tensors. Some operations have dedicated implementations
+    that provide higher performence utilizing implicit parallelization. Examples include
+    the piezo-optical tensor, the elasto-optical tensor, the flexoelectric tensor or the
+    elasticity tensor.
     """
 
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
-        """
-        Ought to verify if an array input is acceptable for the current class.
-        If not a general Tensor class is returned upon calling the creator.
-        """
         if bulk:
             return len(arr.shape) == 5 and is_hermitian(arr[0])
         else:
@@ -219,9 +208,6 @@ class Tensor4(Tensor):
 
     @property
     def rank(self) -> int:
-        """
-        Returns the tensor rank (or order).
-        """
         return 4
 
 

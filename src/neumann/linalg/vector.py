@@ -76,7 +76,7 @@ class Vector(AbstractTensor):
     See Also
     --------
     :class:`~neumann.linalg.tensor.Tensor`
-    :class:`~neumann.linalg.frame.frame.ReferenceFrame`
+    :class:`~neumann.linalg.frame.ReferenceFrame`
     """
 
     _frame_cls_ = Frame

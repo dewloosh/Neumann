@@ -51,7 +51,10 @@ class TestFunction(unittest.TestCase):
         self.assertFailsProperly(TypeError, lambda x : x.subs([0, 0]), f)
         self.assertFailsProperly(TypeError, f.g, [0, 0])
         self.assertFailsProperly(TypeError, f.G, [0, 0])
-        decode(expr = [])
+        
+        str_expr = "x*y + y**2 + 6*b + 2"
+        decode(str_expr=str_expr)
+        self.assertFailsProperly(Exception, decode, expr=[])
         
         g = Function('3*x + 4*y - 2', variables=['x', 'y', 'z'])
         g.subs([0, 0, 0], ['x', 'y', 'z'], inplace=True)
