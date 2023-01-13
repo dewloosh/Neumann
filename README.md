@@ -1,20 +1,15 @@
 # **Neumann** - A Python Library for Applied Mathematics in Physical Sciences
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dewloosh/Neumann/main?labpath=examples%2Flpp.ipynb?urlpath=lab)
 [![CircleCI](https://circleci.com/gh/dewloosh/Neumann.svg?style=shield)](https://circleci.com/gh/dewloosh/Neumann)
 [![Documentation Status](https://readthedocs.org/projects/neumann/badge/?version=latest)](https://neumann.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI](https://badge.fury.io/py/Neumann.svg)](https://pypi.org/project/Neumann)
 [![codecov](https://codecov.io/gh/dewloosh/Neumann/branch/main/graph/badge.svg?token=TBI6GG4ECG)](https://codecov.io/gh/dewloosh/Neumann)
+[![Python 3.7-3.10](https://img.shields.io/badge/python-3.7%E2%80%923.10-blue)](https://www.python.org)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 > **Warning**
-> Neumann is in the early stages of it's lifetime, and some concepts may change in 
-> the future. If you want long-term stability, wait until version 1.0, which is 
-> planned to be released if the core concepts all seem to sit. Nonetheless, the library
-> is well tested with a coverage value above 90%, so if something catches your eye use 
-> it with confidence, just don't forget to pin down the version of Neumann in your 
-> 'requirements.txt'.
+> Neumann is in the early stages of it's lifetime, and some concepts may change in the future. If you want long-term stability, wait until version 1.0, which is planned to be released if the core concepts all seem to sit. Nonetheless, the library is well tested with a coverage value above 90%, so if something catches your eye use it with confidence, just don't forget to pin down the version of Neumann in your 'requirements.txt'.
 
 `Neumann` is a Python library that provides tools to formulate and solve problems related to all kinds of scientific disciplines. It is a part of the DewLoosh ecosystem which is designed mainly to solve problems related to computational solid mechanics, but if something is general enough, it ends up here. A good example is the included vector and tensor algebra modules, or the various optimizers, which are applicable in a much broader context than they were originally designed for.
 
