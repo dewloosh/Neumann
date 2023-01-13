@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI](https://badge.fury.io/py/Neumann.svg)](https://pypi.org/project/Neumann)
 [![codecov](https://codecov.io/gh/dewloosh/Neumann/branch/main/graph/badge.svg?token=TBI6GG4ECG)](https://codecov.io/gh/dewloosh/Neumann)
-[![Python 3.7-3.10](https://img.shields.io/badge/python-3.7%E2%80%923.11-blue)](https://www.python.org)
+[![Python 3.7-3.10](https://img.shields.io/badge/python-3.7%E2%80%923.10-blue)](https://www.python.org)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 > **Warning**
