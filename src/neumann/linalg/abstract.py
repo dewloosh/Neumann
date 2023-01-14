@@ -4,7 +4,9 @@ import numpy as np
 from numpy import array_repr, array_str
 
 from .meta import TensorLike
-from .exceptions import LinalgInvalidTensorOperationError, TensorShapeMismatchError
+from .exceptions import (LinalgInvalidTensorOperationError, 
+                         TensorShapeMismatchError, 
+                         LinalgOperationInputError)
 from .utils import dot, cross
 
 
@@ -12,16 +14,20 @@ __all__ = ["AbstractTensor"]
 
 
 HANDLED_FUNCTIONS = {}
+HANDLED_UNIVERSAL_FUNCTIONS = {}
 
 
-def implements(numpy_function):
+def implements(numpy_function, ufunc:bool=False):
     """
     Register an __array_function__ implementation for TensorLike
     objects.
     """
 
     def decorator(func):
-        HANDLED_FUNCTIONS[numpy_function] = func
+        if ufunc:
+            HANDLED_UNIVERSAL_FUNCTIONS[numpy_function] = func
+        else:
+            HANDLED_FUNCTIONS[numpy_function] = func
         return func
 
     return decorator
@@ -95,11 +101,23 @@ class AbstractTensor(TensorLike):
             return HANDLED_FUNCTIONS[func](*args, **kwargs)
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        if ufunc in HANDLED_UNIVERSAL_FUNCTIONS:
+            return HANDLED_UNIVERSAL_FUNCTIONS[ufunc](method, *inputs, **kwargs)
         msg = """
         NumPy universal functions are not supported by tensors. Try calling 
         this method using the arrays of the tensorial inputs.
         """
         raise LinalgInvalidTensorOperationError(msg)
+
+
+@implements(np.negative, ufunc=True)
+def negative_implementation(method, *args, **kwargs):
+    if 'out' in kwargs:
+        msg = "The parameter 'out' is not allowed for tensors."
+        raise LinalgOperationInputError(msg)
+    obj = args[0]
+    arr = getattr(np.negative, method)(obj._array, **kwargs)
+    return obj.__class__(arr, frame=obj.frame)
 
 
 @implements(np.dot)
