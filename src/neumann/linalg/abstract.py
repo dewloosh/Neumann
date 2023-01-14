@@ -112,6 +112,9 @@ class AbstractTensor(TensorLike):
 
 @implements(np.negative, ufunc=True)
 def negative_implementation(method, *args, **kwargs):
+    if method != '__call__':
+        msg = f"Method {method} method of {np.negative} is not allowed for tensors."
+        raise LinalgInvalidTensorOperationError(msg)
     if 'out' in kwargs:
         msg = "The parameter 'out' is not allowed for tensors."
         raise LinalgOperationInputError(msg)

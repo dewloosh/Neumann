@@ -1,8 +1,8 @@
-dewloosh.core>=1.0.14
-numba
-numpy
-scipy
+dewloosh.core==1.0.14
+numba==0.56.4
+numpy==1.23.5
+scipy==1.9.3
 awkward==1.10.2
-sympy
+sympy==1.11.1
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
 wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability

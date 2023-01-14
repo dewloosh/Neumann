@@ -11,7 +11,7 @@ import sympy as sy
 from neumann.linalg.utils import random_pos_semidef_matrix, random_posdef_matrix
 from neumann.logical import ispossemidef, isposdef
 from neumann.linalg import (ReferenceFrame, RectangularFrame, CartesianFrame, ArrayWrapper,
-                            Vector, TensorLike, Tensor, Tensor2, Tensor4, Tensor2x3, Tensor4x3,
+                            Vector, Tensor, Tensor2, Tensor4, Tensor2x3, Tensor4x3,
                             inv3x3, det3x3, inv2x2u, inv3x3u, inv2x2, det2x2)
 from neumann.linalg.solve import linsolve, reduce
 from neumann.linalg.sparse import JaggedArray, csr_matrix
@@ -124,9 +124,14 @@ class TestFrame(LinalgTestCase):
         self.assertFailsProperly(TypeError, setattr, f, 'axes', "a")
         self.assertFailsProperly(RuntimeError, setattr, f, 'axes', np.eye(5))
         
+        # copy and deepcopy
+        f = ReferenceFrame(dim=3) 
+        f.copy()
+        f.deepcopy() 
+        
         # misc
-        ReferenceFrame(repeat(np.eye(3), 2)).dcm(target=f)       
-
+        f = ReferenceFrame(repeat(np.eye(3), 2)).dcm(target=f)
+        
     def test_frame(self):
         #  GENERAL FRAMES
         f = ReferenceFrame(dim=3)
@@ -481,6 +486,8 @@ class TestTensor(LinalgTestCase):
         foo(T, 2)
         self.assertFailsProperly(TypeError, np.stack, T, 'a')
         self.assertFailsProperly(TypeError, np.dot, T, 'a')
+        T.copy()
+        T.deepcopy()
 
 
 class TestVector(LinalgTestCase):
@@ -497,6 +504,8 @@ class TestVector(LinalgTestCase):
         np.dot(vA, vA)
         vA * 2
         vA = Vector([1., 1., 1.], frame=A)
+        -vA
+        self.assertFailsProperly(LinalgOperationInputError, np.negative, vA, out=vA)
 
         self.assertFailsProperly(LinalgInvalidTensorOperationError, np.sqrt, vA, out=vA)
         self.assertFailsProperly(TypeError, np.dot, vA, [1, 0, 0])
@@ -516,6 +525,9 @@ class TestVector(LinalgTestCase):
         A = ReferenceFrame(dim=3)
         vA = Vector([1., 0., 0.], frame=A)
         np.cross(vA, vA)
+        
+        vA.copy()
+        vA.deepcopy()
 
     def test_tr_vector_1(self, i=1, a=120.):
         """

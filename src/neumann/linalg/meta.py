@@ -199,8 +199,8 @@ class ArrayWrapper(NDArrayOperatorsMixin, Wrapper):
 
     def __str__(self):
         return array_str(self)
-
-
+    
+    
 class FrameLike(ArrayWrapper):
     """
     Base class for reference frames.

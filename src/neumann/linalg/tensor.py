@@ -1,4 +1,5 @@
 from typing import Iterable
+from copy import deepcopy as dcopy
 
 import numpy as np
 from numpy import ndarray
@@ -163,6 +164,22 @@ class Tensor(AbstractTensor):
         dcm = fcls.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
         array = self.transform_components(dcm.T)
         return self.__class__(array, frame=self.frame)
+    
+    def copy(self, deep:bool=False, name:str=None) -> "Tensor":
+        """
+        Returns a shallow or deep copy of this object, depending of the
+        argument `deepcopy` (default is False).
+        """
+        if deep:
+            return self.__class__(dcopy(self.array), name=name)
+        else:
+            return self.__class__(self.array, name=name)
+        
+    def deepcopy(self, name:str=None) -> "Tensor":
+        """
+        Returns a deep copy of the frame.
+        """
+        return self.copy(deep=True, name=name)
 
 
 class Tensor2(Tensor):
