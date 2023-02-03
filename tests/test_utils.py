@@ -20,6 +20,15 @@ def load_tests(loader, tests, ignore):  # pragma: no cover
 
 
 class TestUtils(unittest.TestCase):
+    
+    def assertFailsProperly(self, exc, fnc, *args, **kwargs):
+        failed_properly = False
+        try:
+            fnc(*args, **kwargs)
+        except exc:
+            failed_properly = True
+        finally:
+            self.assertTrue(failed_properly)
 
     def test_arraysetops(self):
         arr = np.array([[1, 2, 3], [1, 2, 4]], dtype=int)
@@ -109,7 +118,7 @@ class TestUtils(unittest.TestCase):
         nu.to_range_1d([0.3, 0.5], source=[0, 1], target=[-1, 1], squeeze=True)
         
         histogram([1, 2, 1], bins=[0, 1, 2, 3])   
-        histogram([1, 2, 1], bins=[0, 1, 2, 3], return_edges=True)                
+        histogram([1, 2, 1], bins=[0, 1, 2, 3], return_edges=True)           
         
         
 if __name__ == "__main__":

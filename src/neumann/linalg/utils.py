@@ -50,6 +50,7 @@ __all__ = [
     "to_range_1d",
     "linspace",
     "linspace1d",
+    "inv"
 ]
 
 
@@ -352,6 +353,15 @@ def _transpose_multi(dcm: np.ndarray) -> ndarray:
     return res
 
 
+def transpose_axes(a:ndarray, axes=None) -> ndarray:
+    if len(a.shape) == 2:
+        return a.T
+    elif len(a.shape) == 3:
+        return _transpose_multi(a)
+    else:
+        return np.transpose(a, axes)
+
+
 def is_rectangular_frame(axes: ndarray) -> bool:
     """
     Returns True if a frame is Cartesian.
@@ -446,7 +456,7 @@ def dual_frame(axes: ndarray) -> ndarray:
     axes : numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
-    return np.linalg.inv(axes).T
+    return _transpose_multi(np.linalg.inv(axes))
 
 
 def is_pos_def(arr) -> bool:

@@ -188,6 +188,7 @@ class Tensor2(Tensor):
     that provide higher performence utilizing implicit parallelization. Examples include
     the metric tensor, or the stress and strain tensors of elasticity.
     """
+    _rank_ = 2
 
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
@@ -195,11 +196,7 @@ class Tensor2(Tensor):
             return len(arr.shape) == 3 and is_hermitian(arr[0])
         else:
             return len(arr.shape) == 2 and is_hermitian(arr)
-
-    @property
-    def rank(self) -> int:
-        return 2
-
+        
     def transform_components(self, Q: ndarray) -> ndarray:
         return Q @ self.array @ Q.T
 
@@ -215,6 +212,7 @@ class Tensor4(Tensor):
     the piezo-optical tensor, the elasto-optical tensor, the flexoelectric tensor or the
     elasticity tensor.
     """
+    _rank_ = 4
 
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
@@ -222,10 +220,6 @@ class Tensor4(Tensor):
             return len(arr.shape) == 5 and is_hermitian(arr[0])
         else:
             return len(arr.shape) == 4 and is_hermitian(arr)
-
-    @property
-    def rank(self) -> int:
-        return 4
 
 
 class Tensor4x3(Tensor):
@@ -235,9 +229,9 @@ class Tensor4x3(Tensor):
     Parameters
     ----------
     imap : dict, Optional
-        An invertible index map for second-order tensors that assigns to each pair of indices
-        a single index. The index map used to switch between 4d and 2d representation is inferred
-        from this input. The default is the Voigt indicial map:
+        An invertible index map for second-order tensors that assigns to each pair 
+        of indices a single index. The index map used to switch between 4d and 2d 
+        representation is inferred from this input. The default is the Voigt indicial map:
             0 : (0, 0)
             1 : (1, 1)
             2 : (2, 2)
@@ -261,10 +255,13 @@ class Tensor4x3(Tensor):
             self.transform_components = self._transform_sym_
             self.dtype = object
 
-        self.collapsed = None
+    @property
+    def collapsed(self):
         if self._array is not None:
-            self.collapsed = len(self._array.shape) == 2
-
+            return self._array.shape[-1] == 6
+        else:
+            raise ValueError("There is no data.")
+    
     def expand(self) -> "Tensor4x3":
         """
         Changes the representation of the tensor to 4d.
@@ -277,7 +274,6 @@ class Tensor4x3(Tensor):
         for ij, ijkl in imap.items():
             T[ijkl] = m[ij]
         self._array = T
-        self.collapsed = False
         return self
 
     def collapse(self) -> "Tensor4x3":
@@ -292,7 +288,6 @@ class Tensor4x3(Tensor):
         for ij, ijkl in imap.items():
             m[ij] = T[ijkl]
         self._array = m
-        self.collapsed = True
         return self
 
     @classmethod
@@ -385,21 +380,3 @@ class Tensor4x3(Tensor):
         else:
             array = tr_3333(self._array, dcm, dtype=object)
         return array
-
-
-"""r = self.rank
-arr = self.array
-Q = self.frame.Gram()
-args = [Q for _ in range(r)]
-if self.__class__._einsum_params_dual_ is None:
-    target = latinrange(r, start=ord('i'))
-    source = latinrange(r, start=ord('i') + r)
-    source.reverse()
-    terms = [s + t for s, t in zip(source, target)]
-    terms = [swap(x) if even(i) else x for i, x in enumerate(terms)]
-    command = ','.join(terms) + ',' + ''.join(source)
-    einsum_path = np.einsum_path(command, *args, arr, optimize='greedy')[0]
-    self.__class__._einsum_params_dual_ = (command, einsum_path)
-else:
-    command, einsum_path = self.__class__._einsum_params_dual_
-a = np.einsum(command, *args, arr, optimize=einsum_path)"""

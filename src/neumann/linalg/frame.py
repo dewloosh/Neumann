@@ -15,6 +15,7 @@ from .utils import (
     normalize_frame,
     Gram,
     dual_frame,
+    transpose_axes
 )
 from ..utils import repeat
 from .meta import FrameLike, TensorLike, ArrayWrapper
@@ -332,13 +333,13 @@ class ReferenceFrame(FrameLike):
         """
         if source is not None:
             S, T = source.dcm(), self.dual().dcm()
-            return T @ S.T
+            return T @ transpose_axes(S)
         elif target is not None:
             S, T = self.dcm(), target.dual().dcm()
             if len(S.shape) == 3:
                 return T @ _transpose_multi(S)
             elif len(S.shape) == 2:
-                return T @ S.T
+                return T @ transpose_axes(S)
             else:  # pragma: no cover
                 msg = (
                     "There is no transformation rule implemented for"
