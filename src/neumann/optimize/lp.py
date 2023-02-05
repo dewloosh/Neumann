@@ -771,7 +771,7 @@ class LinearProgrammingProblem:
         tol: float = 1e-10,
     ):
         """
-        Solves the problem and return the solution(s) if there are any.
+        Solves the problem and returns the solution(s) if there are any.
 
         Parameters
         ----------

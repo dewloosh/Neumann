@@ -114,8 +114,7 @@ class TestUtils(unittest.TestCase):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)
         y = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=float)
         nu.indices_of_equal_rows(x, y)
-        nu.to_range_1d([0.3, 0.5], source=[0, 1], target=[-1, 1], squeeze=False)
-        nu.to_range_1d([0.3, 0.5], source=[0, 1], target=[-1, 1], squeeze=True)
+        nu.to_range_1d([0.3, 0.5], source=[0, 1], target=[-1, 1])
         
         histogram([1, 2, 1], bins=[0, 1, 2, 3])   
         histogram([1, 2, 1], bins=[0, 1, 2, 3], return_edges=True)           

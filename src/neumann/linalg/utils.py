@@ -739,11 +739,9 @@ def _to_range_1d(vals: ndarray, source: ndarray, target: ndarray) -> ndarray:
 
 def to_range_1d(
     vals: ndarray,
-    *args,
+    *_,
     source: ndarray,
     target: ndarray = None,
-    squeeze=False,
-    **kwargs,
 ) -> ndarray:
     if not isinstance(vals, ndarray):
         vals = np.array(
@@ -753,10 +751,7 @@ def to_range_1d(
         )
     source = np.array([0.0, 1.0]) if source is None else np.array(source)
     target = np.array([-1.0, 1.0]) if target is None else np.array(target)
-    if squeeze:
-        return np.squeeze(_to_range_1d(vals, source, target))
-    else:
-        return _to_range_1d(vals, source, target)
+    return _to_range_1d(vals, source, target)
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
