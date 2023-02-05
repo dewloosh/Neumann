@@ -456,7 +456,7 @@ def dual_frame(axes: ndarray) -> ndarray:
     axes : numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
-    return _transpose_multi(np.linalg.inv(axes))
+    return transpose_axes(np.linalg.inv(axes))
 
 
 def is_pos_def(arr) -> bool:

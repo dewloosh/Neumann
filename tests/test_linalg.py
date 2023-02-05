@@ -309,13 +309,12 @@ class TestTensor(LinalgTestCase):
         self.assertFailsProperly(ValueError, Tensor2._from_any_input, np.ones((3, 2)))
         self.assertFailsProperly(ValueError, Tensor2, np.ones((3, 2)))
         self.assertFailsProperly(LinalgMissingInputError, Tensor2)
-        T = Tensor2(np.ones((3, 3, 3)), bulk=True, rank=2)
+        T = Tensor2(np.ones((3, 3, 3)), bulk=True)
         self.assertTrue(T.is_bulk())
         print(T)
         repr(T)
         np.isclose(T, 1)
         np.allclose(T, 1)
-        #self.assertFailsProperly(NotIM, Tensor2, )
 
     def test_Tensor2_bulk(self):
         arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]).reshape(3, 3)
@@ -829,11 +828,15 @@ class TestSparse(LinalgTestCase):
         jagged.to_list()
         jagged.flatten()
         jagged.flatten(return_cuts=True)
+        jagged.size
         np.vstack([jagged, jagged])
+        self.assertFailsProperly(TypeError, np.vstack, jagged, np.eye(3))
         np.dot(jagged, jagged)
         np.min(jagged)
 
         get_data([np.eye(2), np.eye(3)], fallback=True)
+        get_data(jagged.to_ak(), fallback=True)
+        self.assertFailsProperly(TypeError, get_data, 'data')
 
 
 class TestPosDef(unittest.TestCase):

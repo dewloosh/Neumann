@@ -29,8 +29,8 @@ class TestFunction(unittest.TestCase):
             self.assertTrue(failed_properly)
         
     def test_bulk(self):
-        def f0(x, y): return x**2 + y
-        def f1(x, y): return np.array([2*x, 1])
+        def f0(x, y): return x**2 + y  # pragma: no cover
+        def f1(x, y): return np.array([2*x, 1])  # pragma: no cover
         
         f = Function(f0, f1, d=2)
         self.assertFalse(f.symbolic)
@@ -40,7 +40,7 @@ class TestFunction(unittest.TestCase):
         
         Function(value=f0, gradient=f1, Hessian=None, d=2)
         
-        class MyFunction(Function):
+        class MyFunction(Function):  # pragma: no cover
             def value(x, y): return f0(x, y)
             def gradient(x, y): return f1(x, y)
             def Hessian(x, y): ...
@@ -63,8 +63,8 @@ class TestFunction(unittest.TestCase):
         substitute(g.expr, [0,0])
             
     def test_linearity(self):
-        def f0(x=None, y=None): return x**2 + y
-        def f1(x=None, y=None): return np.array([2*x, 1])
+        def f0(x=None, y=None): return x**2 + y  # pragma: no cover
+        def f1(x=None, y=None): return np.array([2*x, 1])  # pragma: no cover
         
         f = Function(f0, f1, d=2)
         self.assertFalse(f.symbolic)
@@ -95,7 +95,7 @@ class TestRelations(unittest.TestCase):
         x1, _, x3, x4 = syms = sy.symbols(variables, positive=True) 
         r = Relation(x1 + 2*x3 + x4 - 4, variables=syms)
         r.operator
-        r = Relation(x1 + 2*x3 + x4 - 4, variables=syms, op=lambda x, y: x <= y)
+        r = Relation(x1 + 2*x3 + x4 - 4, variables=syms, op=lambda x, y: x <= y)  # pragma: no cover
     
     def test_Equality(self):
         variables = ['x1', 'x2', 'x3', 'x4'] 

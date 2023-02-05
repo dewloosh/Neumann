@@ -21,15 +21,6 @@ def load_tests(loader, tests, ignore):  # pragma: no cover
 
 class TestUtils(unittest.TestCase):
     
-    def assertFailsProperly(self, exc, fnc, *args, **kwargs):
-        failed_properly = False
-        try:
-            fnc(*args, **kwargs)
-        except exc:
-            failed_properly = True
-        finally:
-            self.assertTrue(failed_properly)
-
     def test_arraysetops(self):
         arr = np.array([[1, 2, 3], [1, 2, 4]], dtype=int)
         arraysetops.unique2d(arr)
