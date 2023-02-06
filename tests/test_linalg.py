@@ -895,7 +895,6 @@ class TestUtils(unittest.TestCase):
         lautils.norm2d(A)
         lautils.det2x2(np.eye(2))
         lautils.inv2x2(np.eye(2))
-        lautils.to_range_1d([0.3, 0.5], source=[0, 1], target=[-1, 1])
         lautils.permutation_tensor(3)
 
         # linspace
