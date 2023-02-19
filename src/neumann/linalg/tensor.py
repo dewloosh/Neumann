@@ -1,4 +1,5 @@
 from typing import Iterable
+from copy import deepcopy as dcopy
 
 import numpy as np
 from numpy import ndarray
@@ -164,6 +165,22 @@ class Tensor(AbstractTensor):
         array = self.transform_components(dcm.T)
         return self.__class__(array, frame=self.frame)
 
+    def copy(self, deep: bool = False, name: str = None) -> "Tensor":
+        """
+        Returns a shallow or deep copy of this object, depending of the
+        argument `deepcopy` (default is False).
+        """
+        if deep:
+            return self.__class__(dcopy(self.array), name=name)
+        else:
+            return self.__class__(self.array, name=name)
+
+    def deepcopy(self, name: str = None) -> "Tensor":
+        """
+        Returns a deep copy of the frame.
+        """
+        return self.copy(deep=True, name=name)
+
 
 class Tensor2(Tensor):
     """
@@ -172,16 +189,14 @@ class Tensor2(Tensor):
     the metric tensor, or the stress and strain tensors of elasticity.
     """
 
+    _rank_ = 2
+
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
         if bulk:
             return len(arr.shape) == 3 and is_hermitian(arr[0])
         else:
             return len(arr.shape) == 2 and is_hermitian(arr)
-
-    @property
-    def rank(self) -> int:
-        return 2
 
     def transform_components(self, Q: ndarray) -> ndarray:
         return Q @ self.array @ Q.T
@@ -199,16 +214,14 @@ class Tensor4(Tensor):
     elasticity tensor.
     """
 
+    _rank_ = 4
+
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
         if bulk:
             return len(arr.shape) == 5 and is_hermitian(arr[0])
         else:
             return len(arr.shape) == 4 and is_hermitian(arr)
-
-    @property
-    def rank(self) -> int:
-        return 4
 
 
 class Tensor4x3(Tensor):
@@ -218,9 +231,9 @@ class Tensor4x3(Tensor):
     Parameters
     ----------
     imap : dict, Optional
-        An invertible index map for second-order tensors that assigns to each pair of indices
-        a single index. The index map used to switch between 4d and 2d representation is inferred
-        from this input. The default is the Voigt indicial map:
+        An invertible index map for second-order tensors that assigns to each pair
+        of indices a single index. The index map used to switch between 4d and 2d
+        representation is inferred from this input. The default is the Voigt indicial map:
             0 : (0, 0)
             1 : (1, 1)
             2 : (2, 2)
@@ -244,9 +257,12 @@ class Tensor4x3(Tensor):
             self.transform_components = self._transform_sym_
             self.dtype = object
 
-        self.collapsed = None
+    @property
+    def collapsed(self):
         if self._array is not None:
-            self.collapsed = len(self._array.shape) == 2
+            return self._array.shape[-1] == 6
+        else:
+            raise ValueError("There is no data.")
 
     def expand(self) -> "Tensor4x3":
         """
@@ -260,7 +276,6 @@ class Tensor4x3(Tensor):
         for ij, ijkl in imap.items():
             T[ijkl] = m[ij]
         self._array = T
-        self.collapsed = False
         return self
 
     def collapse(self) -> "Tensor4x3":
@@ -275,7 +290,6 @@ class Tensor4x3(Tensor):
         for ij, ijkl in imap.items():
             m[ij] = T[ijkl]
         self._array = m
-        self.collapsed = True
         return self
 
     @classmethod
@@ -368,21 +382,3 @@ class Tensor4x3(Tensor):
         else:
             array = tr_3333(self._array, dcm, dtype=object)
         return array
-
-
-"""r = self.rank
-arr = self.array
-Q = self.frame.Gram()
-args = [Q for _ in range(r)]
-if self.__class__._einsum_params_dual_ is None:
-    target = latinrange(r, start=ord('i'))
-    source = latinrange(r, start=ord('i') + r)
-    source.reverse()
-    terms = [s + t for s, t in zip(source, target)]
-    terms = [swap(x) if even(i) else x for i, x in enumerate(terms)]
-    command = ','.join(terms) + ',' + ''.join(source)
-    einsum_path = np.einsum_path(command, *args, arr, optimize='greedy')[0]
-    self.__class__._einsum_params_dual_ = (command, einsum_path)
-else:
-    command, einsum_path = self.__class__._einsum_params_dual_
-a = np.einsum(command, *args, arr, optimize=einsum_path)"""

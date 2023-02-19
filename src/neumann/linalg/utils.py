@@ -47,9 +47,9 @@ __all__ = [
     "normalize2d",
     "norm",
     "norm2d",
-    "to_range_1d",
     "linspace",
     "linspace1d",
+    "inv",
 ]
 
 
@@ -352,6 +352,15 @@ def _transpose_multi(dcm: np.ndarray) -> ndarray:
     return res
 
 
+def transpose_axes(a: ndarray, axes=None) -> ndarray:
+    if len(a.shape) == 2:
+        return a.T
+    elif len(a.shape) == 3:
+        return _transpose_multi(a)
+    else:
+        return np.transpose(a, axes)
+
+
 def is_rectangular_frame(axes: ndarray) -> bool:
     """
     Returns True if a frame is Cartesian.
@@ -446,7 +455,7 @@ def dual_frame(axes: ndarray) -> ndarray:
     axes : numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
-    return np.linalg.inv(axes).T
+    return transpose_axes(np.linalg.inv(axes))
 
 
 def is_pos_def(arr) -> bool:
@@ -713,40 +722,6 @@ def norm2d(A) -> ndarray:
     for i in prange(A.shape[0]):
         res[i] = norm(A[i, :])
     return res
-
-
-@njit(nogil=True, parallel=True, cache=__cache)
-def _to_range_1d(vals: ndarray, source: ndarray, target: ndarray) -> ndarray:
-    res = np.zeros_like(vals)
-    s0, s1 = source
-    t0, t1 = target
-    b = (t1 - t0) / (s1 - s0)
-    a = (t0 + t1) / 2 - b * (s0 + s1) / 2
-    for i in prange(res.shape[0]):
-        res[i] = a + b * vals[i]
-    return res
-
-
-def to_range_1d(
-    vals: ndarray,
-    *args,
-    source: ndarray,
-    target: ndarray = None,
-    squeeze=False,
-    **kwargs,
-) -> ndarray:
-    if not isinstance(vals, ndarray):
-        vals = np.array(
-            [
-                vals,
-            ]
-        )
-    source = np.array([0.0, 1.0]) if source is None else np.array(source)
-    target = np.array([-1.0, 1.0]) if target is None else np.array(target)
-    if squeeze:
-        return np.squeeze(_to_range_1d(vals, source, target))
-    else:
-        return _to_range_1d(vals, source, target)
 
 
 @njit(nogil=True, parallel=True, cache=__cache)

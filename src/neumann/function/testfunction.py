@@ -4,7 +4,6 @@ from .function import Function
 
 
 class TestFunction(Function):
-
     __slots__ = ("optimums", "optText")
 
     def __init__(self, *args, **kwargs):

@@ -261,6 +261,7 @@ class TensorLike(ArrayWrapper):
     """
 
     _frame_cls_ = None
+    _rank_: int = None
 
     def __init__(
         self,
@@ -273,29 +274,43 @@ class TensorLike(ArrayWrapper):
         if len(args) > 0 and isinstance(args[0], np.ndarray):
             if not self._verify_input(args[0], bulk=bulk, rank=rank):
                 raise ValueError("Invalid input to Tensor class.")
+
         cls_params = kwargs.get("cls_params", dict())
         if frame is not None:
             if not isinstance(frame, FrameLike):
                 raise TypeError(f"The frame must be of type {FrameLike}.")
+
             cls_params["frame"] = frame
         else:
             if not (len(args) > 0 and isinstance(args[0], np.ndarray)):
                 raise LinalgMissingInputError(
                     "A frame or an array of components is required."
                 )
+
             arr = args[0]
             if bulk:
                 frame = self._frame_cls_(dim=arr.shape[1])
             else:
                 frame = self._frame_cls_(dim=arr.shape[0])
             cls_params["frame"] = frame
+
         kwargs["cls_params"] = cls_params
         super().__init__(*args, **kwargs)
+
         if self._array._frame is None:
             self._array._frame = self._frame_cls_(dim=self._array.shape)
+
         self.frame._register_tensorial_(self)
+
         self._bulk = bulk
-        self._rank = rank
+
+        if rank is not None:
+            if self.__class__._rank_ is not None:
+                raise ValueError("Rank is already defined on the class level.")
+            else:
+                self._rank = rank
+        else:
+            self._rank = None
 
     @classmethod
     def _from_any_input(cls, *args, **kwargs) -> "TensorLike":
@@ -313,7 +328,13 @@ class TensorLike(ArrayWrapper):
         if self._rank:
             return self._rank
         else:
-            return len(self.array.shape)
+            if self.__class__._rank_:
+                return self.__class__._rank_
+            else:
+                if self._bulk:
+                    return len(self.array.shape) - 1
+                else:
+                    return len(self.array.shape)
 
     @property
     def array(self) -> Array:

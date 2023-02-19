@@ -11,7 +11,7 @@ import sympy as sy
 from neumann.linalg.utils import random_pos_semidef_matrix, random_posdef_matrix
 from neumann.logical import ispossemidef, isposdef
 from neumann.linalg import (ReferenceFrame, RectangularFrame, CartesianFrame, ArrayWrapper,
-                            Vector, TensorLike, Tensor, Tensor2, Tensor4, Tensor2x3, Tensor4x3,
+                            Vector, Tensor, Tensor2, Tensor4, Tensor2x3, Tensor4x3,
                             inv3x3, det3x3, inv2x2u, inv3x3u, inv2x2, det2x2)
 from neumann.linalg.solve import linsolve, reduce
 from neumann.linalg.sparse import JaggedArray, csr_matrix
@@ -124,9 +124,14 @@ class TestFrame(LinalgTestCase):
         self.assertFailsProperly(TypeError, setattr, f, 'axes', "a")
         self.assertFailsProperly(RuntimeError, setattr, f, 'axes', np.eye(5))
         
+        # copy and deepcopy
+        f = ReferenceFrame(dim=3) 
+        f.copy()
+        f.deepcopy() 
+        
         # misc
-        ReferenceFrame(repeat(np.eye(3), 2)).dcm(target=f)       
-
+        f = ReferenceFrame(repeat(np.eye(3), 2)).dcm(target=f)
+        
     def test_frame(self):
         #  GENERAL FRAMES
         f = ReferenceFrame(dim=3)
@@ -304,13 +309,12 @@ class TestTensor(LinalgTestCase):
         self.assertFailsProperly(ValueError, Tensor2._from_any_input, np.ones((3, 2)))
         self.assertFailsProperly(ValueError, Tensor2, np.ones((3, 2)))
         self.assertFailsProperly(LinalgMissingInputError, Tensor2)
-        T = Tensor2(np.ones((3, 3, 3)), bulk=True, rank=2)
+        T = Tensor2(np.ones((3, 3, 3)), bulk=True)
         self.assertTrue(T.is_bulk())
         print(T)
         repr(T)
         np.isclose(T, 1)
         np.allclose(T, 1)
-        #self.assertFailsProperly(NotIM, Tensor2, )
 
     def test_Tensor2_bulk(self):
         arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]).reshape(3, 3)
@@ -481,6 +485,8 @@ class TestTensor(LinalgTestCase):
         foo(T, 2)
         self.assertFailsProperly(TypeError, np.stack, T, 'a')
         self.assertFailsProperly(TypeError, np.dot, T, 'a')
+        T.copy()
+        T.deepcopy()
 
 
 class TestVector(LinalgTestCase):
@@ -497,6 +503,8 @@ class TestVector(LinalgTestCase):
         np.dot(vA, vA)
         vA * 2
         vA = Vector([1., 1., 1.], frame=A)
+        -vA
+        self.assertFailsProperly(LinalgOperationInputError, np.negative, vA, out=vA)
 
         self.assertFailsProperly(LinalgInvalidTensorOperationError, np.sqrt, vA, out=vA)
         self.assertFailsProperly(TypeError, np.dot, vA, [1, 0, 0])
@@ -516,6 +524,9 @@ class TestVector(LinalgTestCase):
         A = ReferenceFrame(dim=3)
         vA = Vector([1., 0., 0.], frame=A)
         np.cross(vA, vA)
+        
+        vA.copy()
+        vA.deepcopy()
 
     def test_tr_vector_1(self, i=1, a=120.):
         """
@@ -817,11 +828,15 @@ class TestSparse(LinalgTestCase):
         jagged.to_list()
         jagged.flatten()
         jagged.flatten(return_cuts=True)
+        jagged.size
         np.vstack([jagged, jagged])
+        self.assertFailsProperly(TypeError, np.vstack, jagged, np.eye(3))
         np.dot(jagged, jagged)
         np.min(jagged)
 
         get_data([np.eye(2), np.eye(3)], fallback=True)
+        get_data(jagged.to_ak(), fallback=True)
+        self.assertFailsProperly(TypeError, get_data, 'data')
 
 
 class TestPosDef(unittest.TestCase):
@@ -880,10 +895,6 @@ class TestUtils(unittest.TestCase):
         lautils.norm2d(A)
         lautils.det2x2(np.eye(2))
         lautils.inv2x2(np.eye(2))
-        lautils.to_range_1d([0.3, 0.5], source=[0, 1],
-                            target=[-1, 1], squeeze=False)
-        lautils.to_range_1d([0.3, 0.5], source=[0, 1],
-                            target=[-1, 1], squeeze=True)
         lautils.permutation_tensor(3)
 
         # linspace

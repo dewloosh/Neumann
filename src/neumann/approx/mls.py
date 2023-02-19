@@ -10,7 +10,6 @@ from .func import isMLSWeightFunction, ConstantWeightFunction
 
 
 def moving_least_squares(points, *args, w=None, **kwargs):
-
     if not isMLSWeightFunction(w):
         dim = points.shape[1]
         w = ConstantWeightFunction(dim)

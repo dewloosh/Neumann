@@ -1,4 +1,5 @@
 from typing import Iterable, Callable
+from copy import deepcopy as dcopy
 
 import numpy as np
 from numpy import ndarray
@@ -14,6 +15,7 @@ from .utils import (
     normalize_frame,
     Gram,
     dual_frame,
+    transpose_axes,
 )
 from ..utils import repeat
 from .meta import FrameLike, TensorLike, ArrayWrapper
@@ -331,13 +333,13 @@ class ReferenceFrame(FrameLike):
         """
         if source is not None:
             S, T = source.dcm(), self.dual().dcm()
-            return T @ S.T
+            return T @ transpose_axes(S)
         elif target is not None:
             S, T = self.dcm(), target.dual().dcm()
             if len(S.shape) == 3:
                 return T @ _transpose_multi(S)
             elif len(S.shape) == 2:
-                return T @ S.T
+                return T @ transpose_axes(S)
             else:  # pragma: no cover
                 msg = (
                     "There is no transformation rule implemented for"
@@ -448,9 +450,12 @@ class ReferenceFrame(FrameLike):
         >>> A = ReferenceFrame(dim=3)
         >>> B = A.orient_new('Body', [0, 0, np.pi], 'XYZ')
         """
-        result = self.__class__(axes=self.axes, name=name)
-        result.orient(*args, **kwargs)
-        return result
+        result = self.deepcopy(name=name)
+        if (len(args) + len(kwargs)) == 0:
+            return result
+        else:
+            result.orient(*args, **kwargs)
+            return result
 
     def rotate(self, *args, inplace: bool = True, **kwargs) -> "ReferenceFrame":
         """
@@ -585,6 +590,22 @@ class ReferenceFrame(FrameLike):
         else:
             # one return value
             return ReferenceFrame(result)
+
+    def copy(self, deep: bool = False, name: str = None) -> "ReferenceFrame":
+        """
+        Returns a shallow or deep copy of this object, depending of the
+        argument `deepcopy` (default is False).
+        """
+        if deep:
+            return self.__class__(dcopy(self.axes), name=name)
+        else:
+            return self.__class__(self.axes, name=name)
+
+    def deepcopy(self, name: str = None) -> "ReferenceFrame":
+        """
+        Returns a deep copy of the frame.
+        """
+        return self.copy(deep=True, name=name)
 
 
 class RectangularFrame(ReferenceFrame):

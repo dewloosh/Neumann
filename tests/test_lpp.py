@@ -4,8 +4,7 @@ import numpy as np
 
 from neumann.utils import atleast2d
 from neumann.function import Function, Equality, InEquality
-from neumann.optimize import LinearProgrammingProblem as LPP, \
-    DegenerateProblemError, NoSolutionError
+from neumann.optimize import LinearProgrammingProblem as LPP, NoSolutionError
 import sympy as sy
 
 from neumann import optimize
@@ -17,6 +16,15 @@ def load_tests(loader, tests, ignore):  # pragma: no cover
 
        
 class TestLPP(unittest.TestCase):
+    
+    def assertFailsProperly(self, exc, fnc, *args, **kwargs):
+        failed_properly = False
+        try:
+            fnc(*args, **kwargs)
+        except exc:
+            failed_properly = True
+        finally:
+            self.assertTrue(failed_properly)
     
     def test_coverage(self):
         P = LPP.example_unique()
@@ -68,13 +76,8 @@ class TestLPP(unittest.TestCase):
         eq21 = Equality(x1 + 2*x3 + x4, variables=syms)
         eq22 = Equality(x2 + x3 - x4 - 2, variables=syms)
         P2 = LPP(cost=obj2, constraints=[eq21, eq22], variables=syms)
-        try:
-            P2.solve(raise_errors=True)
-        except DegenerateProblemError:
-            pass
-        except Exception:
-            assert False
-                
+        P2.solve(raise_errors=False)
+            
     def test_no_solution(self):
         """
         Example for no solution.
@@ -85,12 +88,7 @@ class TestLPP(unittest.TestCase):
         eq31 = Equality(x1 - 2*x3 - x4 + 2, variables=syms)
         eq32 = Equality(x2 + x3 - x4 - 2, variables=syms)
         P3 = LPP(cost=obj3, constraints=[eq31, eq32], variables=syms)
-        try:
-            P3.solve(raise_errors=True)
-        except NoSolutionError:
-            pass
-        except Exception:
-            assert False
+        self.assertFailsProperly(NoSolutionError, P3.solve, raise_errors=True)
         
     def test_multiple_solution(self):
         """
@@ -133,7 +131,6 @@ class TestLPP(unittest.TestCase):
         lpp.to_numpy()
         
     def test_feasible(self):
-        return
         x1, x2 = sy.symbols(['x1', 'x2'], positive=True)
         syms = [x1, x2]
         f = Function(-x1 - x2, variables=syms)
@@ -141,7 +138,9 @@ class TestLPP(unittest.TestCase):
         ieq2 = InEquality(x2 - 1, op='>=', variables=syms)
         ieq3 = InEquality(x1 + x2 - 4, op='<=', variables=syms)
         lpp = LPP(cost=f, constraints=[ieq1, ieq2, ieq3], variables=syms)
-        lpp.feasible()
+        self.assertTrue(lpp.feasible([1, 1]))
+        self.assertFalse(lpp.feasible([0, 1]))
+        self.assertFalse(lpp.feasible([1, 0]))
     
     def test_1(self):
         variables = ['x1', 'x2']

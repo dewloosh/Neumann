@@ -1,4 +1,3 @@
-""  # -*- coding: utf-8 -*-
 import numpy as np
 from numpy.linalg import norm
 from collections.abc import Iterable
@@ -8,7 +7,6 @@ from ..function import Function
 
 class MLSWeightFunction(Function):
     def __init__(self, core):
-
         if not isinstance(core, np.ndarray):
             if isinstance(core, Iterable):
                 core = np.array(core)
@@ -74,7 +72,6 @@ class CubicWeightFunction(MLSWeightFunction):
         return
 
     def inner(self, x):
-
         d = np.subtract(self.core, x)
         difX = d[0]
         difY = d[1]
