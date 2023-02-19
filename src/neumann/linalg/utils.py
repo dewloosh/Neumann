@@ -49,7 +49,7 @@ __all__ = [
     "norm2d",
     "linspace",
     "linspace1d",
-    "inv"
+    "inv",
 ]
 
 
@@ -352,7 +352,7 @@ def _transpose_multi(dcm: np.ndarray) -> ndarray:
     return res
 
 
-def transpose_axes(a:ndarray, axes=None) -> ndarray:
+def transpose_axes(a: ndarray, axes=None) -> ndarray:
     if len(a.shape) == 2:
         return a.T
     elif len(a.shape) == 3:

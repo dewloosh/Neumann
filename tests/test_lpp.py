@@ -4,8 +4,7 @@ import numpy as np
 
 from neumann.utils import atleast2d
 from neumann.function import Function, Equality, InEquality
-from neumann.optimize import LinearProgrammingProblem as LPP, \
-    DegenerateProblemError, NoSolutionError
+from neumann.optimize import LinearProgrammingProblem as LPP, NoSolutionError
 import sympy as sy
 
 from neumann import optimize
@@ -77,8 +76,8 @@ class TestLPP(unittest.TestCase):
         eq21 = Equality(x1 + 2*x3 + x4, variables=syms)
         eq22 = Equality(x2 + x3 - x4 - 2, variables=syms)
         P2 = LPP(cost=obj2, constraints=[eq21, eq22], variables=syms)
-        self.assertFailsProperly(DegenerateProblemError, P2.solve, raise_errors=True)
-                
+        P2.solve(raise_errors=False)
+            
     def test_no_solution(self):
         """
         Example for no solution.

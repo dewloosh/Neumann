@@ -255,7 +255,7 @@ class JaggedArray(NDArrayOperatorsMixin, Wrapper):
         Returns the number of columns for each row.
         """
         return count_cols(self._wrapped)
-    
+
     @property
     def size(self) -> int:
         """

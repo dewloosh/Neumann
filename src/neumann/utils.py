@@ -330,7 +330,7 @@ def repeat1d(a: ndarray, N=1) -> ndarray:
     M = a.shape[0]
     res = np.zeros(N * M, dtype=a.dtype)
     for i in prange(N):
-        res[i * M: (i + 1) * M] = a
+        res[i * M : (i + 1) * M] = a
     return res
 
 
@@ -361,7 +361,7 @@ def tile1d(a: ndarray, da: ndarray, N=1) -> ndarray:
     M = a.shape[0]
     res = np.zeros(N * M, dtype=a.dtype)
     for i in prange(N):
-        res[i * M: (i + 1) * M] = a + i * da
+        res[i * M : (i + 1) * M] = a + i * da
     return res
 
 

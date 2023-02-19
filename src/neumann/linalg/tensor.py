@@ -164,8 +164,8 @@ class Tensor(AbstractTensor):
         dcm = fcls.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
         array = self.transform_components(dcm.T)
         return self.__class__(array, frame=self.frame)
-    
-    def copy(self, deep:bool=False, name:str=None) -> "Tensor":
+
+    def copy(self, deep: bool = False, name: str = None) -> "Tensor":
         """
         Returns a shallow or deep copy of this object, depending of the
         argument `deepcopy` (default is False).
@@ -174,8 +174,8 @@ class Tensor(AbstractTensor):
             return self.__class__(dcopy(self.array), name=name)
         else:
             return self.__class__(self.array, name=name)
-        
-    def deepcopy(self, name:str=None) -> "Tensor":
+
+    def deepcopy(self, name: str = None) -> "Tensor":
         """
         Returns a deep copy of the frame.
         """
@@ -188,6 +188,7 @@ class Tensor2(Tensor):
     that provide higher performence utilizing implicit parallelization. Examples include
     the metric tensor, or the stress and strain tensors of elasticity.
     """
+
     _rank_ = 2
 
     @classmethod
@@ -196,7 +197,7 @@ class Tensor2(Tensor):
             return len(arr.shape) == 3 and is_hermitian(arr[0])
         else:
             return len(arr.shape) == 2 and is_hermitian(arr)
-        
+
     def transform_components(self, Q: ndarray) -> ndarray:
         return Q @ self.array @ Q.T
 
@@ -212,6 +213,7 @@ class Tensor4(Tensor):
     the piezo-optical tensor, the elasto-optical tensor, the flexoelectric tensor or the
     elasticity tensor.
     """
+
     _rank_ = 4
 
     @classmethod
@@ -229,8 +231,8 @@ class Tensor4x3(Tensor):
     Parameters
     ----------
     imap : dict, Optional
-        An invertible index map for second-order tensors that assigns to each pair 
-        of indices a single index. The index map used to switch between 4d and 2d 
+        An invertible index map for second-order tensors that assigns to each pair
+        of indices a single index. The index map used to switch between 4d and 2d
         representation is inferred from this input. The default is the Voigt indicial map:
             0 : (0, 0)
             1 : (1, 1)
@@ -261,7 +263,7 @@ class Tensor4x3(Tensor):
             return self._array.shape[-1] == 6
         else:
             raise ValueError("There is no data.")
-    
+
     def expand(self) -> "Tensor4x3":
         """
         Changes the representation of the tensor to 4d.

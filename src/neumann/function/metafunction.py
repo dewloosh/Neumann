@@ -28,7 +28,6 @@ class ABCMeta_MetaFunction(ABCMeta_Weak):
 
 
 class MetaFunction(metaclass=ABCMeta_MetaFunction):
-
     __slots__ = ("f0", "f1", "f2", "dimension", "domain", "expr", "variables", "vmap")
 
     def __call__(self, *args, **kwargs):
@@ -118,7 +117,6 @@ def substitute(expr, values, variables=None, as_string=False):
 
 
 def coefficients(expr=None, variables=None, normalize=False):
-
     if variables is None:
         variables = tuple(expr.free_symbols)
     d = OrderedDict({x: 0 for x in variables})

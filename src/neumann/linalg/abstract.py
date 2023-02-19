@@ -4,9 +4,11 @@ import numpy as np
 from numpy import array_repr, array_str
 
 from .meta import TensorLike
-from .exceptions import (LinalgInvalidTensorOperationError, 
-                         TensorShapeMismatchError, 
-                         LinalgOperationInputError)
+from .exceptions import (
+    LinalgInvalidTensorOperationError,
+    TensorShapeMismatchError,
+    LinalgOperationInputError,
+)
 from .utils import dot, cross
 
 
@@ -17,7 +19,7 @@ HANDLED_FUNCTIONS = {}
 HANDLED_UNIVERSAL_FUNCTIONS = {}
 
 
-def implements(numpy_function, ufunc:bool=False):
+def implements(numpy_function, ufunc: bool = False):
     """
     Register an __array_function__ implementation for TensorLike
     objects.
@@ -34,7 +36,6 @@ def implements(numpy_function, ufunc:bool=False):
 
 
 class AbstractTensor(TensorLike):
-
     _HANDLED_TYPES_ = (numbers.Number,)
 
     def __imul__(self, other) -> TensorLike:
@@ -112,10 +113,10 @@ class AbstractTensor(TensorLike):
 
 @implements(np.negative, ufunc=True)
 def negative_implementation(method, *args, **kwargs):
-    if method != '__call__':
+    if method != "__call__":
         msg = f"Method {method} method of {np.negative} is not allowed for tensors."
         raise LinalgInvalidTensorOperationError(msg)
-    if 'out' in kwargs:
+    if "out" in kwargs:
         msg = "The parameter 'out' is not allowed for tensors."
         raise LinalgOperationInputError(msg)
     obj = args[0]

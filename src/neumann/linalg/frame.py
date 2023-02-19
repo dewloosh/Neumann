@@ -15,7 +15,7 @@ from .utils import (
     normalize_frame,
     Gram,
     dual_frame,
-    transpose_axes
+    transpose_axes,
 )
 from ..utils import repeat
 from .meta import FrameLike, TensorLike, ArrayWrapper
@@ -590,8 +590,8 @@ class ReferenceFrame(FrameLike):
         else:
             # one return value
             return ReferenceFrame(result)
-        
-    def copy(self, deep:bool=False, name:str=None) -> "ReferenceFrame":
+
+    def copy(self, deep: bool = False, name: str = None) -> "ReferenceFrame":
         """
         Returns a shallow or deep copy of this object, depending of the
         argument `deepcopy` (default is False).
@@ -600,8 +600,8 @@ class ReferenceFrame(FrameLike):
             return self.__class__(dcopy(self.axes), name=name)
         else:
             return self.__class__(self.axes, name=name)
-        
-    def deepcopy(self, name:str=None) -> "ReferenceFrame":
+
+    def deepcopy(self, name: str = None) -> "ReferenceFrame":
         """
         Returns a deep copy of the frame.
         """

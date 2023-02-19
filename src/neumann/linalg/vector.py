@@ -181,8 +181,8 @@ class Vector(AbstractTensor):
         dcm = fcls.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
         array = dcm.T @ self._array
         return Vector(array, frame=self.frame)
-    
-    def copy(self, deep:bool=False, name:str=None) -> "Vector":
+
+    def copy(self, deep: bool = False, name: str = None) -> "Vector":
         """
         Returns a shallow or deep copy of this object, depending of the
         argument `deepcopy` (default is False).
@@ -191,8 +191,8 @@ class Vector(AbstractTensor):
             return self.__class__(dcopy(self.array), name=name)
         else:
             return self.__class__(self.array, name=name)
-        
-    def deepcopy(self, name:str=None) -> "Vector":
+
+    def deepcopy(self, name: str = None) -> "Vector":
         """
         Returns a deep copy of the frame.
         """

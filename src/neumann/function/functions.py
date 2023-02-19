@@ -101,7 +101,6 @@ def Matyas():
 
 
 if __name__ == "__main__":
-
     """
     check:
         - Himmelblau with initial = [-1.,-1.]. Problem with the Hessian
