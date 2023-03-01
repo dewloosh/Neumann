@@ -25,13 +25,12 @@ jobs:
           command: pip install pytest pytest-cov
       - run:
           name: Build wheel
-          command: |  # create whl and use pipenv to install dependencies
+          command: |
             pip install wheel twine
             python setup.py install
             python setup.py sdist bdist_wheel
       - run:
           name: Run tests
-          # This assumes pytest is installed via the install-package step above
           command: python -m pytest
   
   test_pypi_publish:
