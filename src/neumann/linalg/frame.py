@@ -648,11 +648,12 @@ class RectangularFrame(ReferenceFrame):
     :class:`~neumann.linalg.CartesianFrame`
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, assume_rectangular:bool=False, **kwargs):
         super().__init__(*args, **kwargs)
-        assert is_rectangular_frame(
-            self.axes
-        ), "This frame is not rectangular, check your input!"
+        if not assume_rectangular:
+            assert is_rectangular_frame(
+                self.axes
+            ), "This frame is not rectangular, check your input!"
 
     def is_rectangular(self):
         """
@@ -727,14 +728,15 @@ class CartesianFrame(RectangularFrame):
     :class:`~neumann.linalg.RectangularFrame`
     """
 
-    def __init__(self, *args, normalize: bool = False, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, normalize: bool = False, assume_cartesian:bool=False, **kwargs):
+        super().__init__(*args, assume_rectangular=assume_cartesian, **kwargs)
         if normalize:
             self.axes = normalize_frame(self.axes)
         else:
-            assert is_normal_frame(
-                self.axes
-            ), "This frame is not cartesian, check your input!"
+            if not assume_cartesian:
+                assert is_normal_frame(
+                    self.axes
+                ), "This frame is not cartesian, check your input!"
 
     def is_rectangular(self):
         """

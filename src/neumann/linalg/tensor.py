@@ -9,7 +9,7 @@ from dewloosh.core.tools.alphabet import latinrange
 from .frame import ReferenceFrame as Frame
 from .abstract import AbstractTensor
 from .top import tr_3333, tr_3333_jit
-from .utils import is_hermitian
+from .utils import is_hermitian, _transform_tensors2_multi
 
 
 __all__ = ["Tensor", "Tensor2", "Tensor4", "Tensor2x3", "Tensor4x3"]
@@ -199,7 +199,10 @@ class Tensor2(Tensor):
             return len(arr.shape) == 2 and is_hermitian(arr)
 
     def transform_components(self, Q: ndarray) -> ndarray:
-        return Q @ self.array @ Q.T
+        if len(Q.shape) == 3 and len(self.array.shape) == 3:
+            return _transform_tensors2_multi(self.array, Q)
+        else:
+            return Q @ self.array @ Q.T
 
 
 class Tensor2x3(Tensor2):
