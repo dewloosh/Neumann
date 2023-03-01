@@ -10,6 +10,51 @@ orbs:
   codecov: codecov/codecov@3
 
 jobs:
+  build_test:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout  # checkout source code to working directory
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: requirements.txt
+      - run:
+          command: pip install pytest pytest-cov
+      - run:
+          name: Build wheel
+          command: |  # create whl and use pipenv to install dependencies
+            pip install wheel twine
+            python setup.py install
+            python setup.py sdist bdist_wheel
+      - run:
+          name: Run tests
+          # This assumes pytest is installed via the install-package step above
+          command: python -m pytest
+  
+  test_pypi_publish:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout  # checkout source code to working directory
+      - run:
+          name: Deploy to testpypi
+          command: |  # create whl and use pipenv to install dependencies
+            pip install wheel twine
+            python setup.py sdist bdist_wheel
+            python -m twine upload --repository testpypi --skip-existing dist/*
+
+  pypi_publish:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout  # checkout source code to working directory
+      - run:
+          name: Deploy to pypi
+          command: |  # create whl and use pipenv to install dependencies
+            pip install wheel twine
+            python setup.py sdist bdist_wheel
+            python -m twine upload --skip-existing dist/*
+
   test38:  # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a docker executors: https://circleci.com/docs/2.0/executor-types/
     # You can specify an image from dockerhub or use one of the convenience images from CircleCI's Developer Hub
@@ -36,7 +81,7 @@ jobs:
           pkg-manager: pip
           pip-dependency-file: dev-requirements.txt
       - run:
-          command: pip install -e .
+          command: python setup.py install
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
@@ -70,7 +115,7 @@ jobs:
           pip-dependency-file: dev-requirements.txt
       - run:
           command: |
-            pip install -e .
+            python setup.py install
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
@@ -106,3 +151,21 @@ workflows:
     jobs:
       #- tox-test
       - test310
+
+  build_test_publish:
+    jobs:
+      - build_test
+      - test_pypi_publish:
+          requires:
+            - build_test
+          filters:
+            branches:
+              only:
+                - nightly
+      - pypi_publish:
+          requires:
+            - build_test
+          filters:
+            branches:
+              only:
+                - main
