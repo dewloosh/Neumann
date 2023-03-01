@@ -123,6 +123,9 @@ jobs:
           # This assumes pytest is installed via the install-package step above
           command: pytest --cov
       - codecov/upload
+
+      - store_artifacts:
+          path: $CIRCLE_WORKING_DIRECTORY/htmlcov
       
   tox-test:  # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a docker executors: https://circleci.com/docs/2.0/executor-types/
@@ -150,7 +153,7 @@ workflows:
   build_test_publish:
     jobs:
       - test310
-      - build_test
+      #- build_test
       - test_pypi_publish:
           requires:
             - build_test
