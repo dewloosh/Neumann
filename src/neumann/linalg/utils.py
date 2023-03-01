@@ -753,3 +753,12 @@ def linspace1d(start, stop, N) -> ndarray:
     for i in prange(N):
         res[i] = start + i * di
     return res
+
+
+@njit(nogil=True, parallel=True, cache=__cache)
+def _transform_tensors2_multi(arr: ndarray, Q: ndarray):
+    nE = arr.shape[0]
+    res = np.zeros_like(arr)
+    for iE in prange(nE):
+        res[iE, :, :] = Q[iE] @ arr[iE] @ Q[iE].T
+    return res
