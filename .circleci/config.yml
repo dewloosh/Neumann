@@ -44,7 +44,7 @@ jobs:
           command: |  # create whl and use pipenv to install dependencies
             pip install wheel twine
             python setup.py sdist bdist_wheel
-            python -m twine upload --repository testpypi --skip-existing dist/*
+            python -m twine upload --repository testpypi dist/*
 
   pypi_publish:
     docker:
