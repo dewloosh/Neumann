@@ -156,14 +156,14 @@ workflows:
       #- build_test
       - test_pypi_publish:
           requires:
-            - build_test
+            - test310
           filters:
             branches:
               only:
                 - nightly
       - pypi_publish:
           requires:
-            - build_test
+            - test310
           filters:
             branches:
               only:
