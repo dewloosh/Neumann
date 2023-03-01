@@ -43,7 +43,7 @@ jobs:
           command: |  # create whl and use pipenv to install dependencies
             pip install wheel twine
             python setup.py sdist bdist_wheel
-            python -m twine upload --repository testpypi dist/*
+            #python -m twine upload --repository testpypi dist/*
 
   pypi_publish:
     docker:
@@ -147,15 +147,9 @@ jobs:
           command: tox
 
 workflows:
-  main:  # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
-    # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
-    jobs:
-      #- tox-test
-      - test310
-
   build_test_publish:
     jobs:
+      - test310
       - build_test
       - test_pypi_publish:
           requires:
