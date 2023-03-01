@@ -18,6 +18,9 @@ jobs:
       - python/install-packages:
           pkg-manager: pip
           pip-dependency-file: requirements.txt
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: dev-requirements.txt
       - run:
           command: pip install pytest pytest-cov
       - run:
