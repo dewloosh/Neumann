@@ -6,7 +6,7 @@ orbs:
   # Orb commands and jobs help you with common scripting around a language/tool
   # so you dont have to copy and paste it everywhere.
   # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
-  python: circleci/python@2.0.3
+  python: circleci/python@2.1.1
   codecov: codecov/codecov@3
 
 jobs:
@@ -40,10 +40,10 @@ jobs:
       - checkout  # checkout source code to working directory
       - run:
           name: Deploy to testpypi
-          command: |  # create whl and use pipenv to install dependencies
+          command: |
             pip install wheel twine
             python setup.py sdist bdist_wheel
-            #python -m twine upload --repository testpypi dist/*
+            python -m twine upload --repository testpypi dist/*
 
   pypi_publish:
     docker:
@@ -52,7 +52,7 @@ jobs:
       - checkout  # checkout source code to working directory
       - run:
           name: Deploy to pypi
-          command: |  # create whl and use pipenv to install dependencies
+          command: |
             pip install wheel twine
             python setup.py sdist bdist_wheel
             python -m twine upload --skip-existing dist/*
