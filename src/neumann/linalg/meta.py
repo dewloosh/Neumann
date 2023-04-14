@@ -161,7 +161,7 @@ class ArrayWrapper(NDArrayOperatorsMixin, Wrapper):
         ~`neumann.linalg.meta.ArrayWrapper`
             The object the call was made upon.
         """
-        self._array[np.where(np.abs(self._array))<tol] = 0.0
+        self._array[np.where(np.abs(self._array) < tol)] = 0.0
         return self
 
     def __array__(self, dtype=None):
