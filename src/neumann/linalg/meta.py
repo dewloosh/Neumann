@@ -124,6 +124,7 @@ class ArrayWrapper(NDArrayOperatorsMixin, Wrapper):
         else:
             buf = np.array(*args, **kwargs)
         cls_params = dict() if cls_params is None else cls_params
+        buf = np.array(buf, dtype=float)
         self._array = self._array_cls_(
             shape=buf.shape, buffer=buf, dtype=buf.dtype, **cls_params
         )
@@ -137,14 +138,31 @@ class ArrayWrapper(NDArrayOperatorsMixin, Wrapper):
         return len(self._array.shape)
 
     @property
-    def minmax(self) -> Tuple:
+    def minmax(self) -> Tuple[float]:
         """
         Returns the minimum and maximum values of the array.
-
-        .. versionadded:: 0.0.4
-
         """
         return minmax(self._array)
+    
+    def chop(self, tol:float=1e-12) -> "ArrayWrapper":
+        """
+        Sets very small values (in an absolute sense) to zero.
+
+        .. versionadded:: 1.0.5
+        
+        Parameters
+        ----------
+        tol: float, Optional
+            The values whose absolute value is less than this limit are
+            set to zero. Default is 1e-12.
+        
+        Returns
+        -------
+        ~`neumann.linalg.meta.ArrayWrapper`
+            The object the call was made upon.
+        """
+        self._array[np.where(np.abs(self._array))<tol] = 0.0
+        return self
 
     def __array__(self, dtype=None):
         if dtype is not None:
@@ -219,11 +237,11 @@ class FrameLike(ArrayWrapper):
         ...
 
     @abstractmethod
-    def orient(self) -> "TensorLike":
+    def orient(self) -> "FrameLike":
         ...
 
     @abstractmethod
-    def orient_new(self) -> "TensorLike":
+    def orient_new(self) -> "FrameLike":
         ...
 
     @abstractmethod

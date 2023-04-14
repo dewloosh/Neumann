@@ -50,6 +50,7 @@ __all__ = [
     "linspace",
     "linspace1d",
     "inv",
+    "show_vector"
 ]
 
 
@@ -275,8 +276,48 @@ def cross(
     return np.cross(*inputs, *args, **kwargs)
 
 
+def show_vector(dcm: ndarray, arr: ndarray) -> ndarray:
+    """
+    Returns the coordinates of a single or multiple vectors in a frame specified
+    by one or several DCM matrices. The function can handle the following scenarios:
+    
+        - a single (1d) vector and a single (2d) dcm matrix (trivial case)
+        - a stack of vectors (2d) and a single (2d) dcm matrix
+        - a stack of fectors (2d) and dcm matrices for each vector in the stack (3d)
+        
+    .. versionadded:: 1.0.5
+
+    Parameters
+    ----------
+    dcm : numpy.ndarray
+        The dcm matrix of the transformation as a 2d or 3d float array.
+    arr : numpy.ndarray
+        1d or 2d float array of coordinates of a single vector. If it is 2d, then
+        it is assumed that the coordinates of the i-th vector are accessible as
+        `arr[i]`.
+
+    Returns
+    -------
+    numpy.ndarray
+        The new coordinates with the same shape as `arr`.
+    """
+    if len(arr.shape) == 1 and len(dcm.shape) == 2:
+        return _show_vector(dcm, arr)  # dcm @ arr
+    elif len(arr.shape) == 2 and len(dcm.shape) == 2:
+        return _show_vectors(dcm, arr)  # dcm @ arr
+    elif len(arr.shape) == 2 and len(dcm.shape) == 3:
+        return _show_vectors_multi(dcm, arr)  # dcm @ arr
+    else:
+        msg = (
+            "Mismatch in shapes!"
+            f"Input one has shape {dcm.shape} and input two has shape {arr.shape}."
+            "See the docs for the correct input shapes."
+        )
+        raise LinalgOperationInputError(msg)
+
+
 @njit(nogil=True, cache=__cache)
-def _show_vector(dcm: np.ndarray, arr: np.ndarray) -> ndarray:
+def _show_vector(dcm: ndarray, arr: ndarray) -> ndarray:
     """
     Returns the coordinates of a single vector in a frame specified
     by a DCM matrix.
@@ -297,7 +338,7 @@ def _show_vector(dcm: np.ndarray, arr: np.ndarray) -> ndarray:
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def _show_vectors(dcm: np.ndarray, arr: np.ndarray) -> ndarray:
+def _show_vectors(dcm: ndarray, arr: ndarray) -> ndarray:
     """
     Returns the coordinates of multiple vectors in a frame specified
     by a DCM matrix.
@@ -321,7 +362,7 @@ def _show_vectors(dcm: np.ndarray, arr: np.ndarray) -> ndarray:
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def _show_vectors_multi(dcm: np.ndarray, arr: np.ndarray) -> ndarray:
+def _show_vectors_multi(dcm: ndarray, arr: ndarray) -> ndarray:
     """
     Returns the coordinates of multiple vectors and multiple DCM matrices.
 
@@ -344,7 +385,7 @@ def _show_vectors_multi(dcm: np.ndarray, arr: np.ndarray) -> ndarray:
 
 
 @njit(nogil=True, parallel=True, cache=__cache)
-def _transpose_multi(dcm: np.ndarray) -> ndarray:
+def _transpose_multi(dcm: ndarray) -> ndarray:
     N = dcm.shape[0]
     res = np.zeros_like(dcm)
     for i in prange(N):
