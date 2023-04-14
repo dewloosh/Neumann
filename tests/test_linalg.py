@@ -61,6 +61,7 @@ class TestArray(LinalgTestCase):
         self.assertFailsProperly(TypeError, operator.mul, array, 'a')
         self.assertFailsProperly(
             TypeError, setattr, array._array, 'frame', 'a')
+        array.chop()
         np.sqrt(array, out=array)
         np.negative.at(array, [0, 1])
 

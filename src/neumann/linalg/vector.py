@@ -1,10 +1,9 @@
 from copy import deepcopy as dcopy
 
-import numpy as np
 from numpy import ndarray
 import numbers
 
-from .utils import _show_vector, _show_vectors
+from .utils import show_vector
 from .frame import ReferenceFrame as Frame
 from .abstract import AbstractTensor
 
@@ -35,6 +34,7 @@ class Vector(AbstractTensor):
     --------
     Import the necessary classes:
 
+    >>> import numpy as np
     >>> from neumann.linalg import Vector, ReferenceFrame
 
     Create a default frame in 3d space, and create 2 others, each
@@ -132,10 +132,7 @@ class Vector(AbstractTensor):
             if target is None:
                 target = self._frame_cls_(dim=self._array.shape[-1])
             dcm = self.frame.dcm(target=target)
-        if len(self.array.shape) == 1:
-            return _show_vector(dcm, self.array)  # dcm @ arr
-        else:
-            return _show_vectors(dcm, self.array)  # dcm @ arr
+        return show_vector(dcm, self.array)  # dcm @ arr
 
     def orient(self, *args, dcm: ndarray = None, **kwargs) -> "Vector":
         """
@@ -159,9 +156,17 @@ class Vector(AbstractTensor):
         if not isinstance(dcm, ndarray):
             fcls = self.__class__._frame_cls_
             dcm = fcls.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
-            self.array = dcm.T @ self._array
+            #self.array = dcm.T @ self._array
+            self.array = show_vector(dcm.T, self.array)
+            #self.array = np.linalg.inv(dcm) @ self._array
+            # FIXME check this
         else:
-            self.array = np.linalg.inv(dcm) @ self._array
+            self.array = show_vector(dcm.T, self.array)
+            #self.array = dcm.T @ self._array
+            # FIXME check if inversion is necessary here
+            # inversion might be necessary here because it is uncertain if the
+            # dcm matrix was fabricated properly.
+            #self.array = np.linalg.inv(dcm) @ self._array
         return self
 
     def orient_new(self, *args, **kwargs) -> "Vector":
@@ -180,6 +185,8 @@ class Vector(AbstractTensor):
         fcls = self.__class__._frame_cls_
         dcm = fcls.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
         array = dcm.T @ self._array
+        # FIXME check if inversion is necessary or not
+        #array = np.linalg.inv(dcm) @ self._array
         return Vector(array, frame=self.frame)
 
     def copy(self, deep: bool = False, name: str = None) -> "Vector":
