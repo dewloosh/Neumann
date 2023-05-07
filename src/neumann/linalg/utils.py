@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Iterable
 import numbers
 import itertools
 
@@ -7,6 +7,7 @@ from numpy import ndarray
 from numba import njit, prange, guvectorize as guv
 import sympy as sy
 from sympy import symbols, Matrix
+from sympy.physics.vector import ReferenceFrame as SymPyFrame
 
 from dewloosh.core.tools.alphabet import latinrange
 
@@ -50,8 +51,74 @@ __all__ = [
     "linspace",
     "linspace1d",
     "inv",
-    "show_vector"
+    "show_vector",
+    "show_frame",
+    "rotation_matrix"
 ]
+
+
+def rotation_matrix(
+    rot_type: str,
+    amounts: Iterable,
+    rot_order: Union[str, int] = ''
+) -> ndarray:
+    """
+    Returns a rotation matrix using the mechanism provided by
+    `sympy.physics.vector.ReferenceFrame.orientnew`.
+
+    Parameters
+    ----------
+    rot_type: str
+        The method used to generate the direction cosine matrix. Supported
+        methods are:
+
+        - ``'Axis'``: simple rotations about a single common axis
+        - ``'DCM'``: for setting the direction cosine matrix directly
+        - ``'Body'``: three successive rotations about new intermediate
+            axes, also called "Euler and Tait-Bryan angles"
+        - ``'Space'``: three successive rotations about the parent
+            frames' unit vectors
+        - ``'Quaternion'``: rotations defined by four parameters which
+            result in a singularity free direction cosine matrix
+            
+    amounts: Iterable
+        Expressions defining the rotation angles or direction cosine
+        matrix. These must match the ``rot_type``. See examples below for
+        details. The input types are:
+
+        - ``'Axis'``: 2-tuple (expr/sym/func, Vector)
+        - ``'DCM'``: Matrix, shape(3, 3)
+        - ``'Body'``: 3-tuple of expressions, symbols, or functions
+        - ``'Space'``: 3-tuple of expressions, symbols, or functions
+        - ``'Quaternion'``: 4-tuple of expressions, symbols, or
+            functions
+            
+    rot_order: str or int, Optional
+        If applicable, the order of the successive of rotations. The string
+        ``'123'`` and integer ``123`` are equivalent, for example. Required
+        for ``'Body'`` and ``'Space'``.
+
+    Returns
+    -------
+    ReferenceFrame
+        A new ReferenceFrame object.
+
+    See Also
+    --------
+    :func:`sympy.physics.vector.ReferenceFrame.orientnew`
+
+    Example
+    -------
+    Define a standard Cartesian frame and rotate it around axis 'Z'
+    with 180 degrees:
+
+    >>> from neumann.linalg.utils import rotation_matrix
+    >>> R = rotation_matrix('Space', [0, 0, np.pi], 'XYZ')
+    """
+    source = SymPyFrame("S")
+    target = source.orientnew("T", rot_type, amounts, rot_order)
+    dcm = np.array(target.dcm(source).evalf()).astype(float)
+    return dcm
 
 
 def permutation_tensor(dim: int = 3) -> ndarray:
@@ -89,19 +156,19 @@ def dot(
 
     Parameters
     ----------
-    a : TensorLike or ArrayLike
-        A tensor or an array.
-    b : TensorLike or ArrayLike
-        A tensor or an array.
-    out : ArrayLike, Optional
+    a: TensorLike or ArrayLike
+       A tensor or an array.
+    b: TensorLike or ArrayLike
+       A tensor or an array.
+    out: ArrayLike, Optional
         Output argument. This must have the exact kind that would be returned if it was
         not used. See `numpy.dot` for the details. Only if all inputs are ArrayLike.
         Default is None.
-    frame : FrameLike, Optinal
+    frame: FrameLike, Optinal
         The target frame of the output. Only if all inputs are TensorLike. If not specified,
         the returned tensor migh be returned in an arbitrary frame, depending on the inputs.
         Default is None.
-    axes : tuple or list, Optional
+    axes: tuple or list, Optional
         The indices along which contraction happens if any of the input tensors have a rank
         higher than 2. Default is None.
 
@@ -201,15 +268,15 @@ def cross(
     ----------
     *args : Tuple, Optional
         Positional arguments forwarded to NumPy, if all input objects are arrays.
-    a : TensorLike or ArrayLike
+    a: TensorLike or ArrayLike
         A tensor or an array.
-    b : TensorLike or ArrayLike
+    b: TensorLike or ArrayLike
         A tensor or an array.
-    frame : FrameLike, Optional
+    frame: FrameLike, Optional
         The target frame of the output. Only if all inputs are TensorLike. If not specified,
         the returned tensor migh be returned in an arbitrary frame, depending on the inputs.
         Default is None.
-    **kwargs : dict, Optional
+    **kwargs: dict, Optional
         Keyword arguments forwarded to `numpy.cross`. As of NumPy version '1.22.4', there
         are no keyword arguments for `numpy.cross`, this is to assure compliance with
         all future versions of numpy.
@@ -280,18 +347,18 @@ def show_vector(dcm: ndarray, arr: ndarray) -> ndarray:
     """
     Returns the coordinates of a single or multiple vectors in a frame specified
     by one or several DCM matrices. The function can handle the following scenarios:
-    
+
         - a single (1d) vector and a single (2d) dcm matrix (trivial case)
         - a stack of vectors (2d) and a single (2d) dcm matrix
         - a stack of fectors (2d) and dcm matrices for each vector in the stack (3d)
-        
+
     .. versionadded:: 1.0.5
 
     Parameters
     ----------
-    dcm : numpy.ndarray
+    dcm: numpy.ndarray
         The dcm matrix of the transformation as a 2d or 3d float array.
-    arr : numpy.ndarray
+    arr: numpy.ndarray
         1d or 2d float array of coordinates of a single vector. If it is 2d, then
         it is assumed that the coordinates of the i-th vector are accessible as
         `arr[i]`.
@@ -316,6 +383,22 @@ def show_vector(dcm: ndarray, arr: ndarray) -> ndarray:
         raise LinalgOperationInputError(msg)
 
 
+def show_frame(dcm: ndarray, arr: ndarray) -> ndarray:
+    if len(arr.shape) == 2 and len(dcm.shape) == 2:
+        return _show_frame(dcm, arr)  # dcm @ arr
+    elif len(arr.shape) == 3 and len(dcm.shape) == 2:
+        return _show_frames(dcm, arr)  # dcm @ arr
+    elif len(arr.shape) == 3 and len(dcm.shape) == 3:
+        return _show_frames_multi(dcm, arr)  # dcm @ arr
+    else:
+        msg = (
+            "Mismatch in shapes!"
+            f"Input one has shape {dcm.shape} and input two has shape {arr.shape}."
+            "See the docs for the correct input shapes."
+        )
+        raise LinalgOperationInputError(msg)
+
+
 @njit(nogil=True, cache=__cache)
 def _show_vector(dcm: ndarray, arr: ndarray) -> ndarray:
     """
@@ -324,9 +407,9 @@ def _show_vector(dcm: ndarray, arr: ndarray) -> ndarray:
 
     Parameters
     ----------
-    dcm : numpy.ndarray
+    dcm: numpy.ndarray
         The dcm matrix of the transformation as a 2d float array.
-    arr : numpy.ndarray
+    arr: numpy.ndarray
         1d float array of coordinates of a single vector.
 
     Returns
@@ -345,9 +428,9 @@ def _show_vectors(dcm: ndarray, arr: ndarray) -> ndarray:
 
     Parameters
     ----------
-    dcm : numpy.ndarray
+    dcm: numpy.ndarray
         The dcm matrix of the transformation as a 2d float array.
-    arr : numpy.ndarray
+    arr: numpy.ndarray
         2d float array of coordinates of multiple vectors.
 
     Returns
@@ -368,9 +451,9 @@ def _show_vectors_multi(dcm: ndarray, arr: ndarray) -> ndarray:
 
     Parameters
     ----------
-    dcm : numpy.ndarray
+    dcm: numpy.ndarray
         The dcm matrix of the transformation as a 3d float array.
-    arr : numpy.ndarray
+    arr: numpy.ndarray
         2d float array of coordinates of multiple vectors.
 
     Returns
@@ -381,6 +464,79 @@ def _show_vectors_multi(dcm: ndarray, arr: ndarray) -> ndarray:
     res = np.zeros_like(arr)
     for i in prange(arr.shape[0]):
         res[i] = dcm[i] @ arr[i, :]
+    return res
+
+
+@njit(nogil=True, parallel=True, cache=__cache)
+def _show_frame(dcm: ndarray, arr: ndarray) -> ndarray:
+    """
+    Returns the coordinates of a single frame in a target frame specified
+    by a DCM matrix.
+
+    Parameters
+    ----------
+    dcm: numpy.ndarray
+        The dcm matrix of the transformation as a 2d float array.
+    arr: numpy.ndarray
+        2d float array of coordinates of a single frame.
+
+    Returns
+    -------
+    numpy.ndarray
+        The new coordinates of the frame with the same shape as `arr`.
+    """
+    res = np.zeros_like(arr)
+    for i in prange(arr.shape[-1]): 
+        res[i, :] = dcm @ arr[i, :] 
+    return res
+
+
+@njit(nogil=True, parallel=True, cache=__cache)
+def _show_frames(dcm: ndarray, arr: ndarray) -> ndarray:
+    """
+    Returns the coordinates of multiple frames in a target frame specified
+    by a DCM matrix.
+
+    Parameters
+    ----------
+    dcm: numpy.ndarray
+        The dcm matrix of the transformation as a 2d float array.
+    arr: numpy.ndarray
+        3d float array of coordinates of multiple frames.
+
+    Returns
+    -------
+    numpy.ndarray
+        The new coordinates of the frames with the same shape as `arr`.
+    """
+    res = np.zeros_like(arr)
+    for i in prange(arr.shape[0]):
+        for j in prange(arr.shape[-1]): 
+            res[i, j, :] = dcm @ arr[i, j, :]
+    return res
+
+
+@njit(nogil=True, parallel=True, cache=__cache)
+def _show_frames_multi(dcm: ndarray, arr: ndarray) -> ndarray:
+    """
+    Returns the coordinates of multiple frames and multiple DCM matrices.
+
+    Parameters
+    ----------
+    dcm: numpy.ndarray
+        The dcm matrix of the transformation as a 3d float array.
+    arr: numpy.ndarray
+        3d float array of coordinates of multiple frames.
+
+    Returns
+    -------
+    numpy.ndarray
+        The new coordinates of the frames with the same shape as `arr`.
+    """
+    res = np.zeros_like(arr)
+    for i in prange(arr.shape[0]):
+        for j in prange(arr.shape[-1]): 
+            res[i, j, :] = dcm[i] @ arr[i, j, :]
     return res
 
 
@@ -408,7 +564,7 @@ def is_rectangular_frame(axes: ndarray) -> bool:
 
     Parameters
     ----------
-    axes : numpy.ndarray
+    axes: numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
     assert len(axes.shape) == 2, "Input is not a matrix!"
@@ -424,7 +580,7 @@ def is_normal_frame(axes: ndarray) -> bool:
 
     Parameters
     ----------
-    axes : numpy.ndarray
+    axes: numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
     return np.allclose(np.linalg.norm(axes, axis=1), 1.0)
@@ -436,7 +592,7 @@ def is_orthonormal_frame(axes: ndarray) -> bool:
 
     Parameters
     ----------
-    axes : numpy.ndarray
+    axes: numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
     return is_rectangular_frame(axes) and is_normal_frame(axes)
@@ -448,7 +604,7 @@ def is_independent_frame(axes: ndarray, tol: float = 0) -> bool:
 
     Parameters
     ----------
-    axes : numpy.ndarray
+    axes: numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
     return np.linalg.det(Gram(axes)) > tol
@@ -469,7 +625,7 @@ def normalize_frame(axes: ndarray) -> ndarray:
 
     Parameters
     ----------
-    axes : numpy.ndarray
+    axes: numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
     return np.array([normalize(a) for a in axes], dtype=axes.dtype)
@@ -481,7 +637,7 @@ def Gram(axes: ndarray) -> ndarray:
 
     Parameters
     ----------
-    axes : numpy.ndarray
+    axes: numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
     return axes @ axes.T
@@ -493,7 +649,7 @@ def dual_frame(axes: ndarray) -> ndarray:
 
     Parameters
     ----------
-    axes : numpy.ndarray
+    axes: numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
     return transpose_axes(np.linalg.inv(axes))

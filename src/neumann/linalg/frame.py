@@ -3,12 +3,10 @@ from copy import deepcopy as dcopy
 
 import numpy as np
 from numpy import ndarray
-from sympy.physics.vector import ReferenceFrame as SymPyFrame
 
 from dewloosh.core.typing import issequence
 
 from .utils import (
-    _transpose_multi,
     is_rectangular_frame,
     is_orthonormal_frame,
     is_normal_frame,
@@ -16,6 +14,8 @@ from .utils import (
     Gram,
     dual_frame,
     transpose_axes,
+    show_frame,
+    rotation_matrix
 )
 from ..utils import repeat
 from .meta import FrameLike, TensorLike, ArrayWrapper
@@ -24,7 +24,7 @@ from .meta import FrameLike, TensorLike, ArrayWrapper
 __all__ = ["ReferenceFrame", "RectangularFrame", "CartesianFrame"]
 
 
-def inplace_binary(obj: FrameLike, other, bop: Callable, rtype: FrameLike = None):
+def inplace_binary(obj: FrameLike, other, bop: Callable, rtype: FrameLike = None) -> FrameLike:
     """
     Performs a binary operation inplace. Components of registered tensorial entities
     are transformed accordingly and registered to the output frame.
@@ -55,12 +55,12 @@ class ReferenceFrame(FrameLike):
 
     Parameters
     ----------
-    axes : numpy.ndarray, Optional
+    axes: numpy.ndarray, Optional
         2d numpy array of floats specifying cartesian reference frames.
         Default is None.
-    dim : int, Optional
+    dim: int, Optional
         Dimension of the mesh. Default is 3.
-    name : str, Optional
+    name: str, Optional
         The name of the frame. Default is None.
 
     Notes
@@ -79,7 +79,7 @@ class ReferenceFrame(FrameLike):
 
     >>> from neumann.linalg import ReferenceFrame
     >>> A = ReferenceFrame(dim=3)
-    >>> B = A.orient_new('Body', [0, 0, np.pi], 'XYZ')
+    >>> B = A.orient_new('Space', [0, 0, np.pi], 'XYZ')
 
     If we define a tensorial quantity with components in a frame, the
     components of the quantity change if the frame changes:
@@ -141,7 +141,7 @@ class ReferenceFrame(FrameLike):
     use the `dcm` method:
 
     >>> source = ReferenceFrame(dim=3)
-    >>> target = source.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
+    >>> target = source.orient_new('Space', [0, 0, 90*np.pi/180],  'XYZ')
     >>> DCM = source.dcm(target=target)
 
     or equivalenty
@@ -150,7 +150,6 @@ class ReferenceFrame(FrameLike):
 
     See Also
     --------
-    :class:`sympy.physics.ReferenceFrame`
     :class:`~neumann.linalg.RectangularFrame`
     :class:`~neumann.linalg.CartesianFrame`
     """
@@ -270,7 +269,7 @@ class ReferenceFrame(FrameLike):
         else:
             if not issequence(value):
                 raise TypeError("'value' must be some kind of iterable")
-            buf = np.array(value)
+            buf = np.array(value).astype(float)
         value = self._array_cls_(shape=buf.shape, buffer=buf, dtype=buf.dtype)
         if value.shape == self._array.shape:
             if self._weakrefs and len(self._weakrefs) > 0:
@@ -281,7 +280,7 @@ class ReferenceFrame(FrameLike):
                     v.array = arr
             self._array = value
         else:
-            raise RuntimeError("Mismatch in data dimensinons!")
+            raise ValueError("Mismatch in data dimensinons!")
 
     def show(self, target: "ReferenceFrame" = None) -> ndarray:
         """
@@ -292,7 +291,8 @@ class ReferenceFrame(FrameLike):
         -------
         numpy.ndarray
         """
-        return self.dcm(target=target)
+        return self.dcm(source=target)
+        #return show_frame(self.dcm(target=target), eye_like(self.axes))
 
     def dcm(
         self, *, target: "ReferenceFrame" = None, source: "ReferenceFrame" = None
@@ -311,9 +311,9 @@ class ReferenceFrame(FrameLike):
 
         Parameters
         ----------
-        source : 'ReferenceFrame', Optional
+        source: 'ReferenceFrame', Optional
             Source frame. Default is None.
-        target : 'ReferenceFrame', Optional
+        target: 'ReferenceFrame', Optional
             Target frame. Default is None.
 
         Returns
@@ -326,7 +326,7 @@ class ReferenceFrame(FrameLike):
         >>> from neumann.linalg import ReferenceFrame
         >>> import numpy as np
         >>> source = ReferenceFrame(dim=3)
-        >>> target = source.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
+        >>> target = source.orient_new('Space', [0, 0, 90*np.pi/180],  'XYZ')
         >>> DCM = source.dcm(target=target)
         >>> arr_source = np.array([3 ** 0.5 / 2, 0.5, 0])
         >>> arr_target = DCM @ arr_source
@@ -337,7 +337,7 @@ class ReferenceFrame(FrameLike):
         elif target is not None:
             S, T = self.dcm(), target.dual().dcm()
             if len(S.shape) == 3:
-                return T @ _transpose_multi(S)
+                return T @ transpose_axes(S)
             elif len(S.shape) == 2:
                 return T @ transpose_axes(S)
             else:  # pragma: no cover
@@ -352,17 +352,9 @@ class ReferenceFrame(FrameLike):
 
     def orient(self, *args, **kwargs) -> "ReferenceFrame":
         """
-        Orients the current frame inplace.
-        See :func:`orient_new` for the possible arguments.
-
-        Parameters
-        ----------
-        args : tuple, Optional
-            A tuple of arguments to pass to the `orientnew`
-            function in `sympy`.
-        kwargs : dict, Optional
-            A dictionary of keyword arguments to pass to the
-            `orientnew` function in `sympy`.
+        Orients the current frame inplace. All arguments are forwarded
+        to :func:`~neumann.linalg.utils.rotation_matrix`, see there for the 
+        details.
 
         Returns
         -------
@@ -374,65 +366,32 @@ class ReferenceFrame(FrameLike):
         with 180 degrees:
 
         >>> A = ReferenceFrame(dim=3)
-        >>> A.orient('Body', [0, 0, np.pi], 'XYZ')
-        Array([[-1.0000000e+00,  1.2246468e-16,  0.0000000e+00],
+        >>> A.orient('Space', [0, 0, np.pi], 'XYZ')
+        array([[-1.0000000e+00,  1.2246468e-16,  0.0000000e+00],
                [-1.2246468e-16, -1.0000000e+00,  0.0000000e+00],
                [ 0.0000000e+00,  0.0000000e+00,  1.0000000e+00]])
 
         See Also
         --------
         :func:`orient_new`
+        :func:`~neumann.linalg.utils.rotation_matrix`
         """
-        source = SymPyFrame("S")
-        target = source.orientnew("T", *args, **kwargs)
-        dcm = np.array(target.dcm(source).evalf()).astype(float)
-        self._array = dcm @ self.axes
+        dcm = rotation_matrix(*args, **kwargs)
+        self._array = show_frame(dcm.T, self.axes)
         return self
 
     def orient_new(self, *args, name="", **kwargs) -> "ReferenceFrame":
         """
         Returns a new frame, oriented relative to the called object.
-        The orientation can be provided by all ways supported in
-        `sympy.physics.vector.ReferenceFrame.orientnew`.
+        All extra positional and keyword arguments are forwarded to 
+        :func:`~neumann.linalg.utils.rotation_matrix`, see there for the 
+        details.
 
         Parameters
         ----------
-        name : str
+        name: str
             Name for the new reference frame.
-        rot_type : str
-            The method used to generate the direction cosine matrix. Supported
-            methods are:
-
-            - ``'Axis'``: simple rotations about a single common axis
-            - ``'DCM'``: for setting the direction cosine matrix directly
-            - ``'Body'``: three successive rotations about new intermediate
-              axes, also called "Euler and Tait-Bryan angles"
-            - ``'Space'``: three successive rotations about the parent
-              frames' unit vectors
-            - ``'Quaternion'``: rotations defined by four parameters which
-              result in a singularity free direction cosine matrix
-        amounts : str
-            Expressions defining the rotation angles or direction cosine
-            matrix. These must match the ``rot_type``. See examples below for
-            details. The input types are:
-
-            - ``'Axis'``: 2-tuple (expr/sym/func, Vector)
-            - ``'DCM'``: Matrix, shape(3, 3)
-            - ``'Body'``: 3-tuple of expressions, symbols, or functions
-            - ``'Space'``: 3-tuple of expressions, symbols, or functions
-            - ``'Quaternion'``: 4-tuple of expressions, symbols, or
-              functions
-        rot_order : str or int, Optional
-            If applicable, the order of the successive of rotations. The string
-            ``'123'`` and integer ``123`` are equivalent, for example. Required
-            for ``'Body'`` and ``'Space'``.
-        *args : tuple, Optional
-            Extra positional arguments forwarded to `sympy.orientnew`.
-            Default is None.
-        **kwargs : dict, Optional
-            Extra keyword arguments forwarded to `sympy.orientnew`.
-            Default is None.
-
+        
         Returns
         -------
         ReferenceFrame
@@ -440,7 +399,8 @@ class ReferenceFrame(FrameLike):
 
         See Also
         --------
-        :func:`sympy.physics.vector.ReferenceFrame.orientnew`
+        :func:`orient`
+        :func:`~neumann.linalg.utils.rotation_matrix`
 
         Example
         -------
@@ -448,7 +408,7 @@ class ReferenceFrame(FrameLike):
         with 180 degrees:
 
         >>> A = ReferenceFrame(dim=3)
-        >>> B = A.orient_new('Body', [0, 0, np.pi], 'XYZ')
+        >>> B = A.orient_new('Space', [0, 0, np.pi], 'XYZ')
         """
         result = self.deepcopy(name=name)
         if (len(args) + len(kwargs)) == 0:
@@ -465,14 +425,14 @@ class ReferenceFrame(FrameLike):
 
         Parameters
         ----------
-        inplace : bool, Optional
+        inplace: bool, Optional
             If True, transformation is carried out on the instance the function call
             is made upon, otherwise a new frame is returned. Default is True.
 
         Returns
         -------
         ReferenceFrame
-            An exisitng (if inplace is True) or a new ReferenceFrame object.
+            An exisitng (if inplace is `True`) or a new ReferenceFrame object.
 
         Example
         -------
@@ -480,8 +440,8 @@ class ReferenceFrame(FrameLike):
         with 180 degrees:
 
         >>> A = ReferenceFrame(dim=3)
-        >>> A.rotate('Body', [0, 0, np.pi], 'XYZ')
-        Array([[-1.0000000e+00,  1.2246468e-16,  0.0000000e+00],
+        >>> A.rotate('Space', [0, 0, np.pi], 'XYZ')
+        array([[-1.0000000e+00,  1.2246468e-16,  0.0000000e+00],
                [-1.2246468e-16, -1.0000000e+00,  0.0000000e+00],
                [ 0.0000000e+00,  0.0000000e+00,  1.0000000e+00]])
 
@@ -714,8 +674,8 @@ class CartesianFrame(RectangularFrame):
     The only operation that results in a CartesianFrame object is a rotation:
 
     >>> A = CartesianFrame(dim=3)
-    >>> A.orient('Body', [0, 0, np.pi], 'XYZ')
-    Array([[-1.0000000e+00,  1.2246468e-16,  0.0000000e+00],
+    >>> A.orient('Space', [0, 0, np.pi], 'XYZ')
+    array([[-1.0000000e+00,  1.2246468e-16,  0.0000000e+00],
            [-1.2246468e-16, -1.0000000e+00,  0.0000000e+00],
            [ 0.0000000e+00,  0.0000000e+00,  1.0000000e+00]])
 

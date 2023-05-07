@@ -23,11 +23,11 @@ class Vector(AbstractTensor):
 
     Parameters
     ----------
-    args : tuple, Optional
+    args: tuple, Optional
         Positional arguments forwarded to `numpy.ndarray`.
-    frame : numpy.ndarray, Optional
+    frame: numpy.ndarray, Optional
         The reference frame the vector is represented by its coordinates.
-    kwargs : dict, Optional
+    kwargs: dict, Optional
         Keyword arguments forwarded to `numpy.ndarray`.
 
     Examples
@@ -117,9 +117,9 @@ class Vector(AbstractTensor):
 
         Parameters
         ----------
-        target : numpy.ndarray, Optional
+        target: numpy.ndarray, Optional
             Target frame.
-        dcm : numpy.ndarray, Optional
+        dcm: numpy.ndarray, Optional
             The DCM matrix of the transformation.
 
         Returns
@@ -141,7 +141,7 @@ class Vector(AbstractTensor):
 
         Parameters
         ----------
-        dcm : numpy.ndarray, Optional
+        dcm: numpy.ndarray, Optional
             The DCM matrix of the transformation.
 
         Returns
