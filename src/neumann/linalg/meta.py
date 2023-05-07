@@ -278,7 +278,7 @@ class TensorLike(ArrayWrapper):
     a tensor does.
     """
 
-    _frame_cls_ = None
+    _frame_cls_: FrameLike = None
     _rank_: int = None
 
     def __init__(

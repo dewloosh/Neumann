@@ -31,7 +31,7 @@ author = 'Bence Balogh'
 # The short X.Y version.
 version = neumann.__version__
 # The full version, including alpha/beta/rc tags.
-release = neumann.__version__ + '-git'
+release = neumann.__version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -54,9 +54,9 @@ extensions = [
 
     # Napoleon is a extension that enables Sphinx to parse both NumPy and Google style docstrings
     'sphinx.ext.napoleon',
-    
-    #'sphinx_gallery.gen_gallery',
-    #'sphinx_gallery.load_style',  # load CSS for gallery (needs SG >= 0.6)
+
+    # 'sphinx_gallery.gen_gallery',
+    # 'sphinx_gallery.load_style',  # load CSS for gallery (needs SG >= 0.6)
 
     'nbsphinx',  # to handle jupyter notebooks
     'nbsphinx_link',  # for including notebook files from outside the sphinx source root
@@ -65,16 +65,16 @@ extensions = [
     'sphinx.ext.mathjax',  # for math equations
     'sphinxcontrib.bibtex',  # for bibliographic references
     'sphinxcontrib.rsvgconverter',  # for SVG->PDF conversion in LaTeX output
-    
+
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     "sphinx.ext.extlinks",
-    
+
     'sphinx.ext.mathjax',
-    
+
     "sphinx_design",
     "sphinx_inline_tabs",
 ]
@@ -95,7 +95,7 @@ nitpicky = True
 nitpick_ignore = [
     ('', "Pygments lexer name 'ipython' is not known"),
     ('', "Pygments lexer name 'ipython3' is not known")
-    ]
+]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -103,16 +103,16 @@ pygments_dark_style = "github-dark"
 highlight_language = 'python3'
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/{.major}'.format(sys.version_info), None),
-    'numpy': ('https://numpy.org/doc/stable/', None),
-    'scipy': ('http://docs.scipy.org/doc/scipy/reference', None),
-    'matplotlib': ('https://matplotlib.org/stable', None),
-    'sphinx': ('https://www.sphinx-doc.org/en/master', None),
-    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
-    'awkward' : ('https://awkward-array.readthedocs.io/en/latest/', None)
+    'python': (r'https://docs.python.org/{.major}'.format(sys.version_info), None),
+    'numpy': (r'https://numpy.org/doc/stable/', None),
+    'scipy': (r'http://docs.scipy.org/doc/scipy/reference', None),
+    'matplotlib': (r'https://matplotlib.org/stable', None),
+    'sphinx': (r'https://www.sphinx-doc.org/en/master', None),
+    'pandas': (r'https://pandas.pydata.org/pandas-docs/stable/', None),
+    'awkward': (r'https://awkward-array.readthedocs.io/en/latest/', None)
 }
 
-# -- MathJax COnfiguration -------------------------------------------------
+# -- MathJax Configuration -------------------------------------------------
 
 mathjax3_config = {
     'tex': {'tags': 'ams', 'useLabelIds': True},
@@ -150,11 +150,11 @@ html_theme_options = {
         "color-brand-content": "#7C4DFF",
     },
     "dark_css_variables": {
-        #"color-brand-primary": "red",
-        #"color-brand-content": "#CC3333",
+        # "color-brand-primary": "red",
+        # "color-brand-content": "#CC3333",
         "color-brand-primary": "orange",
         "color-brand-content": "orange",
-        #"color-admonition-background": "orange",
+        # "color-admonition-background": "orange",
     },
     "footer_icons": [
         {

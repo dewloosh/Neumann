@@ -1,4 +1,3 @@
-from numba import njit
 import numpy as np
 from scipy.special import factorial as fact
 from numpy import outer
@@ -70,7 +69,7 @@ def weighted_least_squares(points, values, *args, deg=1, order=2, w=None, **kwar
     dim = points.shape[1]
     try:
         rec = values.shape[1]
-    except:
+    except Exception:
         rec = 1
 
     if isMLSWeightFunction(w):

@@ -123,7 +123,7 @@ class TestFrame(LinalgTestCase):
         f = ReferenceFrame(dim=3)
         self.assertFailsProperly(TypeError, setattr, f, 'name', 5)
         self.assertFailsProperly(TypeError, setattr, f, 'axes', "a")
-        self.assertFailsProperly(RuntimeError, setattr, f, 'axes', np.eye(5))
+        self.assertFailsProperly(ValueError, setattr, f, 'axes', np.eye(5))
         
         # copy and deepcopy
         f = ReferenceFrame(dim=3) 
