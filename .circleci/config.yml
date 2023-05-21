@@ -114,14 +114,16 @@ jobs:
           command: tox
 
 workflows:
-  build_test_publish:
+  main:
     jobs:
       - test-310
+
       - test-tox:
           filters:
             branches:
               only:
                 - tox
+
       - test_pypi_publish:
           context:
             - pypi deploy
@@ -130,7 +132,8 @@ workflows:
           filters:
             branches:
               only:
-                - nightly
+                - main
+                
       - pypi_publish:
           context:
             - pypi deploy
