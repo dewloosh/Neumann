@@ -6,11 +6,13 @@ from numpy import ndarray
 import sympy as sy
 
 from dewloosh.core.tools.alphabet import latinrange
+
 from .frame import ReferenceFrame as Frame
 from .abstract import AbstractTensor
 from .top import tr_3333, tr_3333_jit
 from .utils import is_hermitian, _transform_tensors2_multi
-
+from .exceptions import TensorShapeMismatchError
+from .imap import Voigt_index_map
 
 __all__ = ["Tensor", "Tensor2", "Tensor4", "Tensor2x3", "Tensor4x3"]
 
@@ -185,8 +187,13 @@ class Tensor(AbstractTensor):
 class Tensor2(Tensor):
     """
     A class to handle 2nd-order tensors. Some operations have dedicated implementations
-    that provide higher performence utilizing implicit parallelization. Examples include
-    the metric tensor, or the stress and strain tensors of elasticity.
+    that provide higher performence utilizing implicit parallelization. Examples 
+    for tensors of this class include the metric tensor, or the stress and strain tensors 
+    of elasticity.
+    
+    See also
+    --------
+    :class:"~neumann.linalg.tensor.Tensor2x3"
     """
 
     _rank_ = 2
@@ -206,15 +213,110 @@ class Tensor2(Tensor):
 
 
 class Tensor2x3(Tensor2):
-    ...
+    """
+    A class for second-order tensors, where each index ranges from 1 to 3.
+
+    Parameters
+    ----------
+    imap : dict, Optional
+        An invertible index map for second-order tensors that assigns to each pair
+        of indices a single index. The index map used to switch between 4d and 2d
+        representation is inferred from this input. The default is the Voigt indicial map:
+            0 : (0, 0)
+            1 : (1, 1)
+            2 : (2, 2)
+            3 : (1, 2)
+            4 : (0, 2)
+            5 : (0, 1)
+    """
+    
+    __imap__ = Voigt_index_map
+    
+    def __init__(self, *args, imap: dict = None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if isinstance(imap, dict):
+            self.__imap__ = imap
+
+    @property
+    def collapsed(self):
+        if self._array is not None:
+            return self._array.shape[-1] == 6
+        else:
+            raise ValueError("There is no data.")
+        
+    def expand(self) -> "Tensor2x3":
+        """
+        Changes the representation of the tensor to 2d.
+        """
+        if not self.collapsed:
+            return self
+        shape = self._array.shape
+        N = len(shape)
+        if N==1:
+            T = np.zeros((3, 3), dtype=self._array.dtype)
+        else:
+            if not N==2:
+                raise TensorShapeMismatchError((
+                    "Invalid shape! When collapsed, the underlying"
+                    " data must be 1 or 2 dimensional."
+                ))
+            T = np.zeros((shape[0], 3, 3), dtype=self._array.dtype)
+        m = self._array
+        imap = self.__imap__
+        for i, ij in imap.items():
+            T[..., ij[0], ij[1]] = m[..., i]
+        self._array = T
+        return self
+
+    def collapse(self) -> "Tensor2x3":
+        """
+        Changes the representation of the tensor to 1d.
+        """
+        if self.collapsed:
+            return self
+        shape = self._array.shape
+        N = len(shape)
+        if N==2:
+            m = np.zeros((6,), dtype=self._array.dtype)
+        else:
+            if not N==3:
+                raise TensorShapeMismatchError((
+                    "Invalid shape! When not collapsed, the underlying"
+                    " data must be 2 or 3 dimensional."
+                ))
+            m = np.zeros((shape[0], 6), dtype=self._array.dtype)
+        T = self._array
+        imap = self.__imap__
+        for i, ij in imap.items():
+            m[..., i] = T[..., ij[0], ij[1]]
+        self._array = m
+        return self
+    
+    def transform_components(self, dcm: np.ndarray) -> ndarray:
+        """
+        Returns the components of the transformed numerical tensor, based on
+        the provided direction cosine matrix.
+        """
+        if self.collapsed:
+            self.expand()
+            array = super().transform_components(dcm)
+            self.collapse()
+        else:
+            array = super().transform_components(dcm)
+        return array
 
 
 class Tensor4(Tensor):
     """
     A class to handle 4th-order tensors. Some operations have dedicated implementations
-    that provide higher performence utilizing implicit parallelization. Examples include
-    the piezo-optical tensor, the elasto-optical tensor, the flexoelectric tensor or the
+    that provide higher performence utilizing implicit parallelization. Examples of this class 
+    include the piezo-optical tensor, the elasto-optical tensor, the flexoelectric tensor or the
     elasticity tensor.
+    
+    See also
+    --------
+    :class:"~neumann.linalg.tensor.Tensor4x3"
     """
 
     _rank_ = 4
@@ -248,7 +350,7 @@ class Tensor4x3(Tensor):
         a `SymPy` matrix. Default is False.
     """
 
-    __imap__ = {0: (0, 0), 1: (1, 1), 2: (2, 2), 3: (1, 2), 4: (0, 2), 5: (0, 1)}
+    __imap__ = Voigt_index_map
 
     def __init__(self, *args, symbolic: bool = False, imap: dict = None, **kwargs):
         super().__init__(*args, **kwargs)

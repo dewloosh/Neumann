@@ -344,7 +344,25 @@ class TestTensor(LinalgTestCase):
         amounts[1] = 120 * np.pi / 180
         T.orient('Body', amounts, 'XYZ')
         T.orient_new('Body', amounts, 'XYZ')
-
+        # expand and collapse
+        T.expand()
+        T.expand()
+        T.collapse()
+        T.expand()
+        T.collapse()
+        T.collapse()
+        
+    def test_Tensor2x3_exceptions(self):
+        arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]).reshape(3, 3)
+        frame = ReferenceFrame(np.eye(3))
+        T = Tensor2x3(arr, frame=frame)
+        T.collapse()
+        T.expand()
+        T._array = np.zeros((3, 3, 3, 3), dtype=float)
+        self.assertFailsProperly(TensorShapeMismatchError, T.collapse)
+        T._array = np.zeros((3, 3, 3, 6), dtype=float)
+        self.assertFailsProperly(TensorShapeMismatchError, T.expand)
+    
     def test_Tensor4_bulk(self):
         frame = ReferenceFrame(np.eye(3))
         target = frame.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
@@ -389,7 +407,7 @@ class TestTensor(LinalgTestCase):
         Tensor4x3.symbolic(as_matrix=True)
         Tensor4x3.symbolic('sympy', as_matrix=True)
         Tensor4x3.symbolic(imap=imap)
-
+        
     def test_cross(self):
         """
         Tests for the dot product.
