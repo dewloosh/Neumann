@@ -7,7 +7,7 @@ from numba import njit, prange
 __cache = True
 
 
-def _tr_tensors2(arr:ndarray, Q: ndarray) -> ndarray:
+def _tr_tensors2(arr: ndarray, Q: ndarray) -> ndarray:
     shape_arr = arr.shape
     shape_Q = Q.shape
     n_shape_arr = len(shape_arr)
@@ -78,7 +78,7 @@ def _tr_tensors2_multi2(arr: ndarray, Q: ndarray) -> ndarray:
     return res
 
 
-def _tr_tensors4x3(arr:ndarray, Q: ndarray) -> ndarray:
+def _tr_tensors4x3(arr: ndarray, Q: ndarray) -> ndarray:
     shape_arr = arr.shape
     shape_Q = Q.shape
     n_shape_arr = len(shape_arr)
@@ -94,8 +94,7 @@ def _tr_tensors4x3(arr:ndarray, Q: ndarray) -> ndarray:
     elif n_shape_arr > 6 and n_shape_Q == 3:
         nX = np.prod(shape_arr[1:-4], dtype=int)
         arr = arr.reshape(
-            shape_arr[0], nX, 
-            shape_arr[-4], shape_arr[-3], shape_arr[-2], shape_arr[-1]
+            shape_arr[0], nX, shape_arr[-4], shape_arr[-3], shape_arr[-2], shape_arr[-1]
         )
         res = _tr_3333_multi2(arr, Q)
         res = res.reshape(shape_arr)

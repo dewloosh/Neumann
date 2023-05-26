@@ -11,7 +11,7 @@ from sympy.physics.vector import ReferenceFrame as SymPyFrame
 
 from dewloosh.core.tools.alphabet import latinrange
 
-from .meta import TensorLike, ArrayWrapper, FrameLike, ArrayLike
+from .meta import TensorLike, ArrayWrapper, FrameLike
 from .exceptions import LinalgOperationInputError, LinalgMissingInputError
 
 __cache = True
@@ -53,14 +53,12 @@ __all__ = [
     "inv",
     "show_vector",
     "show_frame",
-    "rotation_matrix"
+    "rotation_matrix",
 ]
 
 
 def rotation_matrix(
-    rot_type: str,
-    amounts: Iterable,
-    rot_order: Union[str, int] = ''
+    rot_type: str, amounts: Iterable, rot_order: Union[str, int] = ""
 ) -> ndarray:
     """
     Returns a rotation matrix using the mechanism provided by
@@ -80,7 +78,7 @@ def rotation_matrix(
             frames' unit vectors
         - ``'Quaternion'``: rotations defined by four parameters which
             result in a singularity free direction cosine matrix
-            
+
     amounts: Iterable
         Expressions defining the rotation angles or direction cosine
         matrix. These must match the ``rot_type``. See examples below for
@@ -92,7 +90,7 @@ def rotation_matrix(
         - ``'Space'``: 3-tuple of expressions, symbols, or functions
         - ``'Quaternion'``: 4-tuple of expressions, symbols, or
             functions
-            
+
     rot_order: str or int, Optional
         If applicable, the order of the successive of rotations. The string
         ``'123'`` and integer ``123`` are equivalent, for example. Required
@@ -486,8 +484,8 @@ def _show_frame(dcm: ndarray, arr: ndarray) -> ndarray:
         The new coordinates of the frame with the same shape as `arr`.
     """
     res = np.zeros_like(arr)
-    for i in prange(arr.shape[-1]): 
-        res[i, :] = dcm @ arr[i, :] 
+    for i in prange(arr.shape[-1]):
+        res[i, :] = dcm @ arr[i, :]
     return res
 
 
@@ -511,7 +509,7 @@ def _show_frames(dcm: ndarray, arr: ndarray) -> ndarray:
     """
     res = np.zeros_like(arr)
     for i in prange(arr.shape[0]):
-        for j in prange(arr.shape[-1]): 
+        for j in prange(arr.shape[-1]):
             res[i, j, :] = dcm @ arr[i, j, :]
     return res
 
@@ -535,7 +533,7 @@ def _show_frames_multi(dcm: ndarray, arr: ndarray) -> ndarray:
     """
     res = np.zeros_like(arr)
     for i in prange(arr.shape[0]):
-        for j in prange(arr.shape[-1]): 
+        for j in prange(arr.shape[-1]):
             res[i, j, :] = dcm[i] @ arr[i, j, :]
     return res
 
@@ -559,7 +557,7 @@ def transpose_axes(arr: ndarray) -> ndarray:
         shape = arr.shape
         indices = tuple(range(len(shape)))
         data_indices = indices[:-2]
-        tensor_indices = indices[len(shape)-2:]
+        tensor_indices = indices[len(shape) - 2 :]
         indices = data_indices + tensor_indices[::-1]
         return np.transpose(arr, indices)
 

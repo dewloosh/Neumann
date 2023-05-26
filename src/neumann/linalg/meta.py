@@ -145,19 +145,19 @@ class ArrayWrapper(NDArrayOperatorsMixin, Wrapper):
         Returns the minimum and maximum values of the array.
         """
         return minmax(self._array)
-    
-    def chop(self, tol:float=1e-12) -> "ArrayWrapper":
+
+    def chop(self, tol: float = 1e-12) -> "ArrayWrapper":
         """
         Sets very small values (in an absolute sense) to zero.
 
         .. versionadded:: 1.0.5
-        
+
         Parameters
         ----------
         tol: float, Optional
             The values whose absolute value is less than this limit are
             set to zero. Default is 1e-12.
-        
+
         Returns
         -------
         ~`neumann.linalg.meta.ArrayWrapper`
@@ -253,11 +253,11 @@ class FrameLike(ArrayWrapper):
     @abstractmethod
     def dual(self) -> "FrameLike":
         ...
-    
+
     @abstractmethod
-    def transpose(self, inplace:bool=False) -> "FrameLike":
+    def transpose(self, inplace: bool = False) -> "FrameLike":
         ...
-        
+
     @property
     def T(self) -> "FrameLike":
         """
@@ -320,16 +320,16 @@ class TensorLike(ArrayWrapper):
 
             arr = args[0]
             if bulk:
-                frame = self._frame_cls_(dim=arr.shape[1])
+                frame = self.__class__._frame_cls_(dim=arr.shape[1])
             else:
-                frame = self._frame_cls_(dim=arr.shape[0])
+                frame = self.__class__._frame_cls_(dim=arr.shape[0])
             cls_params["frame"] = frame
 
         kwargs["cls_params"] = cls_params
         super().__init__(*args, **kwargs)
 
         if self._array._frame is None:
-            self._array._frame = self._frame_cls_(dim=self._array.shape)
+            self._array._frame = self.__class__._frame_cls_(dim=self._array.shape)
 
         self.frame._register_tensorial_(self)
 
@@ -342,7 +342,7 @@ class TensorLike(ArrayWrapper):
                 self._rank = rank
         else:
             self._rank = None
-            
+
     def __deepcopy__(self, memo):
         return self.__copy__(memo)
 
@@ -350,8 +350,8 @@ class TensorLike(ArrayWrapper):
         cls = type(self)
         copy_function = copy if (memo is None) else partial(deepcopy, memo=memo)
         is_deep = memo is not None
-        frame_cls = self._frame_cls_
-        
+        frame_cls = cls._frame_cls_
+
         f = self.frame
         if is_deep:
             ax = deepcopy(f.axes)
@@ -359,11 +359,11 @@ class TensorLike(ArrayWrapper):
             frame = frame_cls(ax)
         else:
             frame = f
-        
+
         arr = copy_function(self.array)
         if is_deep:
             memo[id(self.array)] = arr
-            
+
         return cls(arr, frame=frame)
 
     @classmethod
@@ -440,18 +440,18 @@ class TensorLike(ArrayWrapper):
         Returns the transpose.
         """
         return self.transpose(inplace=False)
-    
-    def transpose(self, inplace:bool=False) -> "TensorLike":
+
+    def transpose(self, inplace: bool = False) -> "TensorLike":
         """
         Either transposes the array of the tensor, or returns a copy
         of it with the components transposed.
-        
+
         Parameters
         ----------
         inplace: bool, Optional
             If ``True``, the operation is performed on the instance the call
             is made upon. Default is False.
-        
+
         Note
         ----
         The rule of transposition differs from the one implemented in NumPy, as
@@ -461,7 +461,7 @@ class TensorLike(ArrayWrapper):
         shape = self.array.shape
         indices = tuple(range(len(shape)))
         data_indices = indices[:-r]
-        tensor_indices = indices[len(shape)-r:]
+        tensor_indices = indices[len(shape) - r :]
         indices = data_indices + tensor_indices[::-1]
         if inplace:
             self._array = np.transpose(self.array, indices)

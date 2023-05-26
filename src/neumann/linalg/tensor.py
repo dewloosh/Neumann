@@ -12,11 +12,11 @@ from .exceptions import TensorShapeMismatchError
 from .utils import is_hermitian, transpose_axes
 
 __all__ = [
-    "Tensor", 
-    "Tensor2", 
-    "Tensor4", 
-    "Tensor2x3", 
-    "Tensor4x3", 
+    "Tensor",
+    "Tensor2",
+    "Tensor4",
+    "Tensor2x3",
+    "Tensor4x3",
 ]
 
 
@@ -101,8 +101,7 @@ class Tensor(AbstractTensor):
             source = latinrange(r, start=ord("a") + r)
             terms = [t + s for s, t in zip(source, target)]
             command = ",".join(terms) + "," + "".join(source)
-            einsum_path = np.einsum_path(
-                command, *args, arr, optimize="greedy")[0]
+            einsum_path = np.einsum_path(command, *args, arr, optimize="greedy")[0]
             self.__class__._einsum_params_[r] = (command, einsum_path)
         else:
             command, einsum_path = self.__class__._einsum_params_[r]
@@ -191,8 +190,8 @@ class Tensor(AbstractTensor):
 class Tensor2(Tensor):
     """
     A class to handle second-order tensors. Some operations have dedicated implementations
-    that provide higher performence utilizing implicit parallelization. Examples 
-    for tensors of this class include the metric tensor, or the stress and strain tensors 
+    that provide higher performence utilizing implicit parallelization. Examples
+    for tensors of this class include the metric tensor, or the stress and strain tensors
     of elasticity.
 
     See also
@@ -252,7 +251,7 @@ class Tensor2x3(Tensor2):
 class Tensor4(Tensor):
     """
     A class to handle fourth-order tensors. Some operations have dedicated implementations
-    that provide higher performence utilizing implicit parallelization. Examples of this class 
+    that provide higher performence utilizing implicit parallelization. Examples of this class
     include the piezo-optical tensor, the elasto-optical tensor, the flexoelectric tensor or the
     elasticity tensor.
 
@@ -271,7 +270,7 @@ class Tensor4(Tensor):
             return len(shape) == 5 and is_hermitian
         else:
             return len(shape) == 4 and is_hermitian
-        
+
     def transform_components(self, dcm: ndarray) -> ndarray:
         """
         Returns the components of the transformed numerical tensor, based on

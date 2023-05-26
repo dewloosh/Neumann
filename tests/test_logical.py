@@ -2,11 +2,17 @@ import unittest
 import doctest
 
 import neumann.logical as logical
-from neumann.logical import (isclose, allclose, 
-                             isintarray, is1dintarray,
-                             isfloatarray, is1dfloatarray,
-                             isboolarray,
-                             issymmetric, is_none_or_false)
+from neumann.logical import (
+    isclose,
+    allclose,
+    isintarray,
+    is1dintarray,
+    isfloatarray,
+    is1dfloatarray,
+    isboolarray,
+    issymmetric,
+    is_none_or_false,
+)
 from neumann.linalg.utils import random_posdef_matrix
 import numpy as np
 
@@ -17,13 +23,12 @@ def load_tests(loader, tests, ignore):  # pragma: no cover
 
 
 class TestLogical(unittest.TestCase):
-    
     def test_istype(self):
         # 0d
         self.assertTrue(is_none_or_false(False))
         self.assertTrue(is_none_or_false(None))
         self.assertFalse(is_none_or_false(True))
-        self.assertFalse(is_none_or_false('a'))
+        self.assertFalse(is_none_or_false("a"))
         # 1d
         arr = np.zeros(2, dtype=int)
         self.assertTrue(isintarray(arr))
@@ -62,7 +67,7 @@ class TestLogical(unittest.TestCase):
         self.assertTrue(not isfloatarray(arr))
         self.assertTrue(not is1dfloatarray(arr))
         self.assertTrue(isboolarray(arr))
-        
+
     def test_issymmetric(self):
         self.assertTrue(issymmetric(random_posdef_matrix(2)))
         a = np.zeros((2, 2))
@@ -72,7 +77,7 @@ class TestLogical(unittest.TestCase):
         self.assertFalse(issymmetric(a))
         a[1, 0] = 1.0
         self.assertTrue(issymmetric(a))
-        
+
     def test_isclose(self):
         def assertAssert(fnc, *args, **kwargs):
             try:
@@ -80,6 +85,7 @@ class TestLogical(unittest.TestCase):
                 self.assertTrue(False)
             except AssertionError as e:
                 pass
+
         # 0d
         self.assertTrue(isclose(0, 0))
         self.assertTrue(not isclose(0, 1))
@@ -100,9 +106,7 @@ class TestLogical(unittest.TestCase):
         assertAssert(isclose, 0, 0, atol=None, rtol=None)
         assertAssert(isclose, 0, 0, atol=-1)
         assertAssert(isclose, 0, 0, rtol=-1)
-        
 
 
 if __name__ == "__main__":
-
     unittest.main()

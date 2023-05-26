@@ -70,30 +70,34 @@ class AbstractTensor(TensorLike):
             if not self.array.shape == other.array.shape:
                 raise TensorShapeMismatchError
             cls = self.__class__
-            fcls = self._frame_cls_
+            fcls = cls._frame_cls_
             frame = fcls(deepcopy(self.frame.axes))
             arr = self.array + other.show(self.frame)
             return cls(arr, frame=frame)
         else:
-            raise TypeError((
-                "Tensor addition is only supported between instances "
-                "of the same class."
-            ))
-            
+            raise TypeError(
+                (
+                    "Tensor addition is only supported between instances "
+                    "of the same class."
+                )
+            )
+
     def __sub__(self, other) -> TensorLike:
         if other.__class__ == self.__class__:
             if not self.array.shape == other.array.shape:
                 raise TensorShapeMismatchError
             cls = self.__class__
-            fcls = self._frame_cls_
+            fcls = cls._frame_cls_
             frame = fcls(deepcopy(self.frame.axes))
             arr = self.array - other.show(self.frame)
             return cls(arr, frame=frame)
         else:
-            raise TypeError((
-                "Tensor subtraction is only supported between instances "
-                "of the same class."
-            ))
+            raise TypeError(
+                (
+                    "Tensor subtraction is only supported between instances "
+                    "of the same class."
+                )
+            )
 
     def __isub__(self, other) -> TensorLike:
         if isinstance(other, numbers.Number):

@@ -507,8 +507,8 @@ class LinearProgrammingProblem:
         try:
             with suppress(StopIteration):
                 """
-                StopIteration: 
-                
+                StopIteration:
+
                 There is no permutation of columns that would produce a regular
                 mxm submatrix
                     -> there is no feasible basic solution

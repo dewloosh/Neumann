@@ -13,8 +13,8 @@ class ABCMeta_MetaFunction(ABCMeta_Weak):
     Metaclass for defining ABCs for algebraic structures.
     """
 
-    def __new__(metaclass, name, bases, namespace, *args, **kwargs):
-        cls = super().__new__(metaclass, name, bases, namespace, *args, **kwargs)
+    def __new__(metaclass, name, bases, namespace, /, **kwargs):
+        cls = super().__new__(metaclass, name, bases, namespace, **kwargs)
         if "value" in namespace:
             cls.f = namespace["value"]
 
