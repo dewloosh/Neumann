@@ -1,18 +1,23 @@
-from typing import Iterable
 from copy import deepcopy as dcopy
 
 import numpy as np
 from numpy import ndarray
-import sympy as sy
 
 from dewloosh.core.tools.alphabet import latinrange
+
 from .frame import ReferenceFrame as Frame
 from .abstract import AbstractTensor
-from .top import tr_3333, tr_3333_jit
-from .utils import is_hermitian, _transform_tensors2_multi
+from .tr import _tr_tensors2, _tr_tensors4x3
+from .exceptions import TensorShapeMismatchError
+from .utils import is_hermitian, transpose_axes
 
-
-__all__ = ["Tensor", "Tensor2", "Tensor4", "Tensor2x3", "Tensor4x3"]
+__all__ = [
+    "Tensor",
+    "Tensor2",
+    "Tensor4",
+    "Tensor2x3",
+    "Tensor4x3",
+]
 
 
 class Tensor(AbstractTensor):
@@ -21,11 +26,11 @@ class Tensor(AbstractTensor):
 
     Parameters
     ----------
-    args : tuple, Optional
+    args: tuple, Optional
         Positional arguments forwarded to `numpy.ndarray`.
-    frame : numpy.ndarray, Optional
+    frame: numpy.ndarray, Optional
         The reference frame the vector is represented by its coordinates.
-    kwargs : dict, Optional
+    kwargs: dict, Optional
         Keyword arguments forwarded to `numpy.ndarray`.
 
     Examples
@@ -111,9 +116,9 @@ class Tensor(AbstractTensor):
 
         Parameters
         ----------
-        target : numpy.ndarray, Optional
+        target: numpy.ndarray, Optional
             Target frame.
-        dcm : numpy.ndarray, Optional
+        dcm: numpy.ndarray, Optional
             The DCM matrix of the transformation.
 
         Returns
@@ -124,7 +129,7 @@ class Tensor(AbstractTensor):
         """
         if not isinstance(dcm, ndarray):
             if target is None:
-                target = Frame(dim=self._array.shape[-1])
+                target = Frame(dim=self.frame.axes.shape[-1])
             dcm = self.frame.dcm(target=target)
         return self.transform_components(dcm)
 
@@ -142,9 +147,9 @@ class Tensor(AbstractTensor):
         --------
         :func:`orient_new`
         """
-        fcls = self.__class__._frame_cls_
-        dcm = fcls.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
-        self.array = self.transform_components(dcm.T)
+        fcls: Frame = self.__class__._frame_cls_
+        dcm = fcls.eye(dim=self.frame.shape[-1]).orient_new(*args, **kwargs).dcm()
+        self.array = self.transform_components(transpose_axes(dcm))
         return self
 
     def orient_new(self, *args, **kwargs) -> "Tensor":
@@ -160,8 +165,8 @@ class Tensor(AbstractTensor):
         --------
         :func:`orient`
         """
-        fcls = self.__class__._frame_cls_
-        dcm = fcls.eye(dim=len(self)).orient_new(*args, **kwargs).dcm()
+        fcls: Frame = self.__class__._frame_cls_
+        dcm = fcls.eye(dim=self.frame.shape[-1]).orient_new(*args, **kwargs).dcm()
         array = self.transform_components(dcm.T)
         return self.__class__(array, frame=self.frame)
 
@@ -184,9 +189,14 @@ class Tensor(AbstractTensor):
 
 class Tensor2(Tensor):
     """
-    A class to handle 2nd-order tensors. Some operations have dedicated implementations
-    that provide higher performence utilizing implicit parallelization. Examples include
-    the metric tensor, or the stress and strain tensors of elasticity.
+    A class to handle second-order tensors. Some operations have dedicated implementations
+    that provide higher performence utilizing implicit parallelization. Examples
+    for tensors of this class include the metric tensor, or the stress and strain tensors
+    of elasticity.
+
+    See also
+    --------
+    :class:"~neumann.linalg.tensor.Tensor2x3"
     """
 
     _rank_ = 2
@@ -194,194 +204,113 @@ class Tensor2(Tensor):
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
         if bulk:
-            return len(arr.shape) == 3 and is_hermitian(arr[0])
+            return len(arr.shape) == 3 and arr.shape[-1] == arr.shape[-2]
         else:
-            return len(arr.shape) == 2 and is_hermitian(arr)
+            return len(arr.shape) == 2 and arr.shape[-1] == arr.shape[-2]
 
     def transform_components(self, Q: ndarray) -> ndarray:
-        if len(Q.shape) == 3 and len(self.array.shape) == 3:
-            return _transform_tensors2_multi(self.array, Q)
-        else:
-            return Q @ self.array @ Q.T
+        return _tr_tensors2(self.array, Q)
 
 
 class Tensor2x3(Tensor2):
-    ...
+    """
+    Dedicated class for second-order tensors, with 3 indices per axis.
+    Since the shape of the tensor is known, instances are able to automatically detect
+    if the provided components resemble a single item or a collection.
+    """
+
+    def __init__(self, *args, **kwargs):
+        if len(args) > 0 and isinstance(args[0], ndarray):
+            arr = args[0]
+            shape = arr.shape
+            if shape[-2:] == (3, 3):
+                if len(shape) >= 3:
+                    is_bulk = kwargs.get("bulk", True)
+                    if not is_bulk:
+                        raise ValueError("Incorrect input!")
+                    kwargs["bulk"] = is_bulk
+                else:
+                    if not len(shape) == 2:
+                        raise TensorShapeMismatchError("Invalid shape!")
+                    is_bulk = kwargs.get("bulk", False)
+                    if is_bulk:
+                        raise ValueError("Incorrect input!")
+            else:
+                raise TensorShapeMismatchError("Invalid shape!")
+
+        super().__init__(*args, **kwargs)
+
+    @classmethod
+    def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
+        if bulk:
+            return len(arr.shape) >= 3 and arr.shape[-2:] == (3, 3)
+        else:
+            return len(arr.shape) == 2 and arr.shape[-2:] == (3, 3)
 
 
 class Tensor4(Tensor):
     """
-    A class to handle 4th-order tensors. Some operations have dedicated implementations
-    that provide higher performence utilizing implicit parallelization. Examples include
-    the piezo-optical tensor, the elasto-optical tensor, the flexoelectric tensor or the
+    A class to handle fourth-order tensors. Some operations have dedicated implementations
+    that provide higher performence utilizing implicit parallelization. Examples of this class
+    include the piezo-optical tensor, the elasto-optical tensor, the flexoelectric tensor or the
     elasticity tensor.
+
+    See also
+    --------
+    :class:"~neumann.linalg.tensor.Tensor4x3"
     """
 
     _rank_ = 4
 
     @classmethod
     def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
+        shape = arr.shape
+        is_hermitian = (shape[-1],) * 4 == shape[-4:]
         if bulk:
-            return len(arr.shape) == 5 and is_hermitian(arr[0])
+            return len(shape) == 5 and is_hermitian
         else:
-            return len(arr.shape) == 4 and is_hermitian(arr)
+            return len(shape) == 4 and is_hermitian
 
-
-class Tensor4x3(Tensor):
-    """
-    A class for fourth-order tensors, where each index ranges from 1 to 3.
-
-    Parameters
-    ----------
-    imap : dict, Optional
-        An invertible index map for second-order tensors that assigns to each pair
-        of indices a single index. The index map used to switch between 4d and 2d
-        representation is inferred from this input. The default is the Voigt indicial map:
-            0 : (0, 0)
-            1 : (1, 1)
-            2 : (2, 2)
-            3 : (1, 2)
-            4 : (0, 2)
-            5 : (0, 1)
-    symbolic : bool, Optional
-        If True, the tensor is stored in symbolic form, and the components are stored as
-        a `SymPy` matrix. Default is False.
-    """
-
-    __imap__ = {0: (0, 0), 1: (1, 1), 2: (2, 2), 3: (1, 2), 4: (0, 2), 5: (0, 1)}
-
-    def __init__(self, *args, symbolic: bool = False, imap: dict = None, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        if isinstance(imap, dict):
-            self.__imap__ = imap
-
-        if symbolic:
-            self.transform_components = self._transform_sym_
-            self.dtype = object
-
-    @property
-    def collapsed(self):
-        if self._array is not None:
-            return self._array.shape[-1] == 6
-        else:
-            raise ValueError("There is no data.")
-
-    def expand(self) -> "Tensor4x3":
-        """
-        Changes the representation of the tensor to 4d.
-        """
-        if not self.collapsed:
-            return self
-        T = np.zeros((3, 3, 3, 3), dtype=self._array.dtype)
-        m = self._array
-        imap = self.imap()
-        for ij, ijkl in imap.items():
-            T[ijkl] = m[ij]
-        self._array = T
-        return self
-
-    def collapse(self) -> "Tensor4x3":
-        """
-        Changes the representation of the tensor to 2d.
-        """
-        if self.collapsed:
-            return self
-        m = np.zeros((6, 6), dtype=self._array.dtype)
-        T = self._array
-        imap = self.imap()
-        for ij, ijkl in imap.items():
-            m[ij] = T[ijkl]
-        self._array = m
-        return self
-
-    @classmethod
-    def imap(cls, imap1d: dict = None) -> dict:
-        """
-        Returns a 2d-to-4d index map used to collapse or expand a tensor,
-        based on the 1d-to-2d mapping of the class the function is called on,
-        or on the first argument, if it is a suitable candidate for an
-        index map.
-        """
-        if imap1d is None:
-            imap1d = cls.__imap__
-        indices = np.indices((6, 6))
-        it = np.nditer([*indices], ["multi_index"])
-        imap2d = dict()
-        for _ in it:
-            i, j = it.multi_index
-            imap2d[(i, j)] = imap1d[i] + imap1d[j]
-        return imap2d
-
-    @classmethod
-    def symbolic(
-        cls, *args, base: str = "C_", as_matrix: bool = False, imap: dict = None
-    ) -> Iterable:
-        """
-        Returns a symbolic representation of a 4th order 3x3x3x3 tensor.
-        If the argument 'as_matrix' is True, the function returns a 6x6 matrix,
-        that unfolds according to the argument 'imap', or if it's not provided,
-        the index map of the class the function is called on. If 'imap' is
-        provided, it must be a dictionary including exactly 6 keys and
-        values. The keys must be integers in the integer range (0, 6), the
-        values must be tuples on the integer range (0, 3).
-        The default mapping is the Voigt indicial map:
-            0 : (0, 0)
-            1 : (1, 1)
-            2 : (2, 2)
-            3 : (1, 2)
-            4 : (0, 2)
-            5 : (0, 1)
-        """
-        res = np.zeros((3, 3, 3, 3), dtype=object)
-        indices = np.indices((3, 3, 3, 3))
-        it = np.nditer([*indices], ["multi_index"])
-        for _ in it:
-            p, q, r, s = it.multi_index
-            if q >= p and s >= r:
-                sinds = np.array([p, q, r, s], dtype=np.int16) + 1
-                sym = sy.symbols(base + "_".join(sinds.astype(str)))
-                res[p, q, r, s] = sym
-                res[q, p, r, s] = sym
-                res[p, q, s, r] = sym
-                res[q, p, s, r] = sym
-                res[r, s, p, q] = sym
-                res[r, s, q, p] = sym
-                res[s, r, p, q] = sym
-                res[s, r, q, p] = sym
-        if as_matrix:
-            mat = np.zeros((6, 6), dtype=object)
-            imap = cls.imap(imap) if imap is None else imap
-            for ij, ijkl in imap.items():
-                mat[ij] = res[ijkl]
-            if "sympy" in args:
-                res = sy.Matrix(mat)
-            else:
-                res = mat
-        return res
-
-    def transform_components(self, dcm: np.ndarray) -> ndarray:
+    def transform_components(self, dcm: ndarray) -> ndarray:
         """
         Returns the components of the transformed numerical tensor, based on
         the provided direction cosine matrix.
         """
-        if self.collapsed:
-            self.expand()
-            array = tr_3333_jit(self._array, dcm)
-            self.collapse()
-        else:
-            array = tr_3333_jit(self._array, dcm)
-        return array
+        return _tr_tensors4x3(self._array, dcm)
 
-    def _transform_sym_(self, dcm: np.ndarray) -> ndarray:
-        """
-        Returns the components of the transformed symbolic tensor, based on
-        the provided direction cosine matrix.
-        """
-        if self.collapsed:
-            self.expand()
-            array = tr_3333(self._array, dcm, dtype=object)
-            self.collapse()
+
+class Tensor4x3(Tensor4):
+    """
+    Dedicated class for fourth order tensors, with 3 indices per axis.
+    Since the shape of the tensor is known, instances are able to automatically detect
+    if the provided components resemble a single item or a collection.
+    """
+
+    def __init__(self, *args, **kwargs):
+        if len(args) > 0 and isinstance(args[0], ndarray):
+            arr = args[0]
+            shape = arr.shape
+            if shape[-4:] == (3, 3, 3, 3):
+                if len(shape) >= 5:
+                    is_bulk = kwargs.get("bulk", True)
+                    if not is_bulk:
+                        raise ValueError("Incorrect input!")
+                    kwargs["bulk"] = is_bulk
+                else:
+                    if not len(shape) == 4:
+                        raise TensorShapeMismatchError("Invalid shape!")
+                    is_bulk = kwargs.get("bulk", False)
+                    if is_bulk:
+                        raise ValueError("Incorrect input!")
+            else:
+                raise TensorShapeMismatchError("Invalid shape!")
+
+        super().__init__(*args, **kwargs)
+
+    @classmethod
+    def _verify_input(cls, arr: ndarray, *_, bulk: bool = False, **kwargs) -> bool:
+        is_hermitian = arr.shape[-4:] == (3, 3, 3, 3)
+        if bulk:
+            return len(arr.shape) >= 5 and is_hermitian
         else:
-            array = tr_3333(self._array, dcm, dtype=object)
-        return array
+            return len(arr.shape) == 4 and is_hermitian

@@ -15,7 +15,7 @@ from .utils import (
     dual_frame,
     transpose_axes,
     show_frame,
-    rotation_matrix
+    rotation_matrix,
 )
 from ..utils import repeat
 from .meta import FrameLike, TensorLike, ArrayWrapper
@@ -24,7 +24,9 @@ from .meta import FrameLike, TensorLike, ArrayWrapper
 __all__ = ["ReferenceFrame", "RectangularFrame", "CartesianFrame"]
 
 
-def inplace_binary(obj: FrameLike, other, bop: Callable, rtype: FrameLike = None) -> FrameLike:
+def inplace_binary(
+    obj: FrameLike, other, bop: Callable, rtype: FrameLike = None
+) -> FrameLike:
     """
     Performs a binary operation inplace. Components of registered tensorial entities
     are transformed accordingly and registered to the output frame.
@@ -171,18 +173,21 @@ class ReferenceFrame(FrameLike):
         super().__init__(axes, *args)
         self._name = name
 
+    @property
     def is_rectangular(self):
         """
         Returns True if the frame is a rectangular one.
         """
         return is_rectangular_frame(self.axes)
 
+    @property
     def is_cartesian(self):
         """
         Returns True if the frame is a cartesian (orthonormal) one.
         """
         return is_orthonormal_frame(self.axes)
 
+    @property
     def is_independent(self) -> bool:
         """
         Returns True if the base vectors that make up the frame are linearly
@@ -292,7 +297,6 @@ class ReferenceFrame(FrameLike):
         numpy.ndarray
         """
         return self.dcm(source=target)
-        #return show_frame(self.dcm(target=target), eye_like(self.axes))
 
     def dcm(
         self, *, target: "ReferenceFrame" = None, source: "ReferenceFrame" = None
@@ -350,10 +354,32 @@ class ReferenceFrame(FrameLike):
         # The DCM from the ambient frame to the current frame is returned.
         return self.axes
 
+    def transpose(self, inplace: bool = False) -> "ReferenceFrame":
+        """
+        Either transposes the array of the frame, or returns a copy
+        of it with the components transposed.
+
+        Parameters
+        ----------
+        inplace: bool, Optional
+            If ``True``, the operation is performed on the instance the call
+            is made upon. Default is False.
+
+        Note
+        ----
+        The rule of transposition differs from the one implemented in NumPy, as
+        only tensorial axes are being transposed.
+        """
+        if inplace:
+            self.axes = transpose_axes(self.axes)
+            return self
+        else:
+            return self.__class__(transpose_axes(self.axes))
+
     def orient(self, *args, **kwargs) -> "ReferenceFrame":
         """
         Orients the current frame inplace. All arguments are forwarded
-        to :func:`~neumann.linalg.utils.rotation_matrix`, see there for the 
+        to :func:`~neumann.linalg.utils.rotation_matrix`, see there for the
         details.
 
         Returns
@@ -377,21 +403,21 @@ class ReferenceFrame(FrameLike):
         :func:`~neumann.linalg.utils.rotation_matrix`
         """
         dcm = rotation_matrix(*args, **kwargs)
-        self._array = show_frame(dcm.T, self.axes)
+        self._array = show_frame(transpose_axes(dcm), self.axes)
         return self
 
     def orient_new(self, *args, name="", **kwargs) -> "ReferenceFrame":
         """
         Returns a new frame, oriented relative to the called object.
-        All extra positional and keyword arguments are forwarded to 
-        :func:`~neumann.linalg.utils.rotation_matrix`, see there for the 
+        All extra positional and keyword arguments are forwarded to
+        :func:`~neumann.linalg.utils.rotation_matrix`, see there for the
         details.
 
         Parameters
         ----------
         name: str
             Name for the new reference frame.
-        
+
         Returns
         -------
         ReferenceFrame
@@ -608,19 +634,21 @@ class RectangularFrame(ReferenceFrame):
     :class:`~neumann.linalg.CartesianFrame`
     """
 
-    def __init__(self, *args, assume_rectangular:bool=False, **kwargs):
+    def __init__(self, *args, assume_rectangular: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
         if not assume_rectangular:
             assert is_rectangular_frame(
                 self.axes
             ), "This frame is not rectangular, check your input!"
 
+    @property
     def is_rectangular(self):
         """
         Returns True if the frame is a rectangular one.
         """
         return True
 
+    @property
     def is_independent(self) -> bool:
         """
         Returns True if the base vectors that make up the frame are linearly
@@ -688,7 +716,9 @@ class CartesianFrame(RectangularFrame):
     :class:`~neumann.linalg.RectangularFrame`
     """
 
-    def __init__(self, *args, normalize: bool = False, assume_cartesian:bool=False, **kwargs):
+    def __init__(
+        self, *args, normalize: bool = False, assume_cartesian: bool = False, **kwargs
+    ):
         super().__init__(*args, assume_rectangular=assume_cartesian, **kwargs)
         if normalize:
             self.axes = normalize_frame(self.axes)
@@ -698,12 +728,14 @@ class CartesianFrame(RectangularFrame):
                     self.axes
                 ), "This frame is not cartesian, check your input!"
 
+    @property
     def is_rectangular(self):
         """
         Returns True if the frame is a rectangular one.
         """
         return True
 
+    @property
     def is_cartesian(self):
         """
         Returns True if the frame is a cartesian (orthonormal) one.

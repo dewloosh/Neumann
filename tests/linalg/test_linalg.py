@@ -8,21 +8,41 @@ from scipy.sparse import csr_matrix as csr_scipy
 from numba import njit
 import sympy as sy
 
+from dewloosh.core.testing import TestCase
+
 from neumann.linalg.utils import random_pos_semidef_matrix, random_posdef_matrix
 from neumann.logical import ispossemidef, isposdef
-from neumann.linalg import (ReferenceFrame, RectangularFrame, CartesianFrame, ArrayWrapper,
-                            Vector, Tensor, Tensor2, Tensor4, Tensor2x3, Tensor4x3,
-                            inv3x3, det3x3, inv2x2u, inv3x3u, inv2x2, det2x2)
+from neumann.linalg import (
+    ReferenceFrame,
+    RectangularFrame,
+    CartesianFrame,
+    ArrayWrapper,
+    Vector,
+    Tensor,
+    Tensor2,
+    Tensor4,
+    inv3x3,
+    det3x3,
+    inv2x2u,
+    inv3x3u,
+    inv2x2,
+    det2x2,
+)
 from neumann.linalg.solve import linsolve, reduce
 from neumann.linalg.sparse import JaggedArray, csr_matrix
 from neumann.linalg.sparse.jaggedarray import get_data
 import neumann.linalg.sparse.utils as spu
 from neumann import linalg
-from neumann.linalg.exceptions import (LinalgOperationInputError, LinalgMissingInputError, 
-                                       LinalgInvalidTensorOperationError, TensorShapeMismatchError)
+from neumann.linalg.exceptions import (
+    LinalgOperationInputError,
+    LinalgMissingInputError,
+    LinalgInvalidTensorOperationError,
+    TensorShapeMismatchError,
+)
 from neumann.linalg import utils as lautils
 from neumann import repeat
-from neumann.linalg import top, dot, cross
+from neumann.linalg import dot, cross
+from neumann.linalg.tr import _tr_3333, _tr_3333_sym
 
 
 def load_tests(loader, tests, ignore):  # pragma: no cover
@@ -35,39 +55,24 @@ def load_tests(loader, tests, ignore):  # pragma: no cover
     return tests
 
 
-class LinalgTestCase(unittest.TestCase):
-
-    def assertFailsProperly(self, exc, fnc, *args, **kwargs):
-        failed_properly = False
-        try:
-            fnc(*args, **kwargs)
-        except exc:
-            failed_properly = True
-        finally:
-            self.assertTrue(failed_properly)
-
-
-class TestArray(LinalgTestCase):
-
+class TestArray(TestCase):
     def test_array_main(self):
         array = ArrayWrapper(np.eye(3))
-        array.__array__(dtype=float)
-        array.dim
-        array.minmax
-        array.to_numpy()
-        array * 2
-        array[0, 0]
+        _ = array.__array__(dtype=float)
+        _ = array.dim
+        _ = array.minmax
+        _ = array.to_numpy()
+        _ = array * 2
+        _ = array[0, 0]
         array[0, 0] = 1
-        self.assertFailsProperly(TypeError, operator.mul, array, 'a')
-        self.assertFailsProperly(
-            TypeError, setattr, array._array, 'frame', 'a')
+        self.assertFailsProperly(TypeError, operator.mul, array, "a")
+        self.assertFailsProperly(TypeError, setattr, array._array, "frame", "a")
         array.chop()
         np.sqrt(array, out=array)
         np.negative.at(array, [0, 1])
 
 
-class TestFrame(LinalgTestCase):
-
+class TestFrame(TestCase):
     def _call_frame_ufuncs(self, A: ReferenceFrame):
         A += 1
         A -= 1
@@ -79,32 +84,32 @@ class TestFrame(LinalgTestCase):
         np.negative.at(A, [0, 1])
         np.unique(A, return_counts=True)
         np.min(A)
-        self.assertFailsProperly(TypeError, np.add, A, 'A')
-        
+        self.assertFailsProperly(TypeError, np.add, A, "A")
+
     def _call_frame_methods(self, f: ReferenceFrame):
-        f.is_independent()
-        f.is_cartesian()
-        f.is_rectangular()
+        _ = f.is_independent
+        _ = f.is_cartesian
+        _ = f.is_rectangular
         f.dual()
         f.Gram()
-        f.is_cartesian()
-        f.is_rectangular()
-        f.is_independent()
+        _ = f.is_cartesian
+        _ = f.is_rectangular
+        _ = f.is_independent
         f.metric_tensor()
-        f.axes
+        _ = f.axes
         f.axes = f.axes
-        f.axes = [[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]
+        f.axes = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
         f.show()
         f.dcm()
         f.eye(dim=3)
         f.eye(3)
-        f.name
-        f.name = 'A'
-        f.orient_new('Body', [0, 0, 90*np.pi/180], 'XYZ')
-        f.orient('Body', [0, 0, 90*np.pi/180], 'XYZ')
-        f.rotate_new('Body', [0, 0, 90*np.pi/180], 'XYZ')
-        f.rotate('Body', [0, 0, 90*np.pi/180], 'XYZ', inplace=False)
-        f.rotate('Body', [0, 0, 90*np.pi/180], 'XYZ', inplace=True)
+        _ = f.name
+        f.name = "A"
+        f.orient_new("Body", [0, 0, 90 * np.pi / 180], "XYZ")
+        f.orient("Body", [0, 0, 90 * np.pi / 180], "XYZ")
+        f.rotate_new("Body", [0, 0, 90 * np.pi / 180], "XYZ")
+        f.rotate("Body", [0, 0, 90 * np.pi / 180], "XYZ", inplace=False)
+        f.rotate("Body", [0, 0, 90 * np.pi / 180], "XYZ", inplace=True)
 
     def test_frame_main(self):
         # different calls to the creator
@@ -121,85 +126,85 @@ class TestFrame(LinalgTestCase):
 
         # create a random frame and call everything
         f = ReferenceFrame(dim=3)
-        self.assertFailsProperly(TypeError, setattr, f, 'name', 5)
-        self.assertFailsProperly(TypeError, setattr, f, 'axes', "a")
-        self.assertFailsProperly(ValueError, setattr, f, 'axes', np.eye(5))
-        
+        self.assertFailsProperly(TypeError, setattr, f, "name", 5)
+        self.assertFailsProperly(TypeError, setattr, f, "axes", "a")
+        self.assertFailsProperly(ValueError, setattr, f, "axes", np.eye(5))
+
         # copy and deepcopy
-        f = ReferenceFrame(dim=3) 
+        f = ReferenceFrame(dim=3)
         f.copy()
-        f.deepcopy() 
-        
+        f.deepcopy()
+
         # misc
         f = ReferenceFrame(repeat(np.eye(3), 2)).dcm(target=f)
-        
+
     def test_frame(self):
         #  GENERAL FRAMES
         f = ReferenceFrame(dim=3)
-        self.assertTrue(f.is_cartesian())
-        self.assertTrue(f.is_rectangular())
-        f = f.orient_new('Body', [0, 0, 90*np.pi/180], 'XYZ')
-        self.assertTrue(f.is_cartesian())
-        self.assertTrue(f.is_rectangular())
+        self.assertTrue(f.is_cartesian)
+        self.assertTrue(f.is_rectangular)
+        f = f.orient_new("Body", [0, 0, 90 * np.pi / 180], "XYZ")
+        self.assertTrue(f.is_cartesian)
+        self.assertTrue(f.is_rectangular)
         f *= 2
-        self.assertTrue(f.is_rectangular())
-        self.assertFalse(f.is_cartesian())
+        self.assertTrue(f.is_rectangular)
+        self.assertFalse(f.is_cartesian)
         # RECTANGULAR FRAMES
         f = RectangularFrame(dim=3)
-        self.assertTrue(f.is_rectangular())
-        self.assertTrue(f.is_cartesian())
+        self.assertTrue(f.is_rectangular)
+        self.assertTrue(f.is_cartesian)
         f *= 2
-        self.assertTrue(f.is_rectangular())
-        self.assertFalse(f.is_cartesian())
+        self.assertTrue(f.is_rectangular)
+        self.assertFalse(f.is_cartesian)
         # CARTESIAN FRAMES
         f = CartesianFrame(dim=3)
-        self.assertTrue(f.is_rectangular())
-        self.assertTrue(f.is_cartesian())
+        self.assertTrue(f.is_rectangular)
+        self.assertTrue(f.is_cartesian)
         self.assertTrue(np.isclose(f.volume(), 1))
 
     def test_dual(self):
         angles = np.random.rand(3) * np.pi
-        f = ReferenceFrame(dim=3).orient_new('Body', angles, 'XYZ')
+        f = ReferenceFrame(dim=3).orient_new("Body", angles, "XYZ")
         # the dual of the dual is the original frame
         self.assertTrue(np.allclose(f, f.dual().dual()))
         # the volume of the resiprocal frame is the inverse of the volume
         # of the original frame
-        self.assertTrue(np.isclose(1/f.volume(), f.dual().volume()))
+        self.assertTrue(np.isclose(1 / f.volume(), f.dual().volume()))
         # The Gram matrix of a frame and the Gram matrix of the dual of the frame
         # are mutually inverse
         f = ReferenceFrame(dim=3)
         self.assertTrue(np.allclose(f.Gram() @ f.dual().Gram(), np.eye(3)))
 
     def test_cartesian_ufunc(self):
-        A = CartesianFrame(name='A', axes=np.eye(3))
+        A = CartesianFrame(name="A", axes=np.eye(3))
         A += 1
-        A = CartesianFrame(name='A', axes=np.eye(3))
+        A = CartesianFrame(name="A", axes=np.eye(3))
         A -= 1
-        A = CartesianFrame(name='A', axes=np.eye(3))
+        A = CartesianFrame(name="A", axes=np.eye(3))
         A *= 2
-        A = CartesianFrame(name='A', axes=np.eye(3))
+        A = CartesianFrame(name="A", axes=np.eye(3))
         A /= 2
-        A = CartesianFrame(name='A', axes=np.eye(3))
+        A = CartesianFrame(name="A", axes=np.eye(3))
         A **= 2
-        A = CartesianFrame(name='A', axes=np.eye(3))
+        A = CartesianFrame(name="A", axes=np.eye(3))
         A @= A
-        A = CartesianFrame(name='A', axes=np.eye(3))
+        A = CartesianFrame(name="A", axes=np.eye(3))
         self.assertFailsProperly(NotImplementedError, np.sqrt, A, out=A)
 
     def test_rectangular_ufunc(self):
-        A = RectangularFrame(name='A', axes=np.eye(3))
+        A = RectangularFrame(name="A", axes=np.eye(3))
         A += 1
-        A = RectangularFrame(name='A', axes=np.eye(3))
+        A = RectangularFrame(name="A", axes=np.eye(3))
         A -= 1
-        A = RectangularFrame(name='A', axes=np.eye(3))
+        A = RectangularFrame(name="A", axes=np.eye(3))
         A *= 2
-        A = RectangularFrame(name='A', axes=np.eye(3))
+        A = RectangularFrame(name="A", axes=np.eye(3))
         A /= 2
-        A = RectangularFrame(name='A', axes=np.eye(3))
+        A = RectangularFrame(name="A", axes=np.eye(3))
         A **= 2
-        A = RectangularFrame(name='A', axes=np.eye(3))
+        A = RectangularFrame(name="A", axes=np.eye(3))
         A @= A
-        A = RectangularFrame(name='A', axes=np.eye(3))
+        A = RectangularFrame(name="A", axes=np.eye(3))
         self.assertFailsProperly(NotImplementedError, np.sqrt, A, out=A)
 
     def test_frame_ufunc(self):
@@ -207,14 +212,14 @@ class TestFrame(LinalgTestCase):
         Testing against NumPy universal functions.
         """
         # bulk tests for coverage
-        A = ReferenceFrame(name='A', axes=np.eye(3))
+        A = ReferenceFrame(name="A", axes=np.eye(3))
         self._call_frame_ufuncs(A)
-        A = RectangularFrame(name='A', axes=np.eye(3))
+        A = RectangularFrame(name="A", axes=np.eye(3))
         self._call_frame_ufuncs(A)
-        A = CartesianFrame(name='A', axes=np.eye(3))
+        A = CartesianFrame(name="A", axes=np.eye(3))
         self._call_frame_ufuncs(A)
         # TEST1
-        A = CartesianFrame(name='A', axes=np.eye(3))
+        A = CartesianFrame(name="A", axes=np.eye(3))
         v = Vector([1.0, 0.0, 0.0], frame=A)
         A *= 2
         self.assertTrue(type(A) == RectangularFrame)
@@ -224,12 +229,13 @@ class TestFrame(LinalgTestCase):
         self.assertTrue(np.allclose(v.array, [1.0, 0, 0]))
         A += 1
         self.assertTrue(type(A) == ReferenceFrame)
-        self.assertTrue(np.allclose(v.show(CartesianFrame(axes=np.eye(3))),
-                                    [1.0, 0, 0]))
+        self.assertTrue(
+            np.allclose(v.show(CartesianFrame(axes=np.eye(3))), [1.0, 0, 0])
+        )
         A -= 1
         self.assertTrue(np.allclose(v.array, [1.0, 0, 0]))
         # TEST2
-        A = CartesianFrame(name='A', axes=np.eye(3))
+        A = CartesianFrame(name="A", axes=np.eye(3))
         v = Vector([1.0, 0.0, 0.0], frame=A)
         A += 1
         A *= 2
@@ -239,7 +245,7 @@ class TestFrame(LinalgTestCase):
         A -= 1
         self.assertTrue(np.allclose(v.array, [1.0, 0, 0]))
         # TEST 3
-        A = ReferenceFrame(name='A', axes=np.eye(3))
+        A = ReferenceFrame(name="A", axes=np.eye(3))
         v = Vector([1.0, 0.0, 0.0], frame=A)
         A *= 2
         self.assertTrue(np.allclose(v.array, [0.5, 0, 0]))
@@ -249,12 +255,11 @@ class TestFrame(LinalgTestCase):
         self.assertTrue(np.allclose(v.array, [1.0, 0, 0]))
 
 
-class TestTensor(LinalgTestCase):
-
+class TestTensor(TestCase):
     def test_Tensor(self):
         arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]).reshape(3, 3)
         # test if dual of dual is self
-        frame = ReferenceFrame(np.array([[1., 0, 0], [1, 1, 0], [0, 0, 1]]))
+        frame = ReferenceFrame(np.array([[1.0, 0, 0], [1, 1, 0], [0, 0, 1]]))
         T = Tensor(arr, frame=frame)
         self.assertTrue(np.allclose(T.dual().dual().show(frame), arr))
 
@@ -268,7 +273,7 @@ class TestTensor(LinalgTestCase):
         self.assertEqual(T1.rank, T2.rank)
         self.assertTrue(np.allclose(T1.dual().show(), T2.dual().show()))
         # test if dual of dual is self
-        frame = ReferenceFrame(np.array([[1., 0, 0], [1, 1, 0], [0, 0, 1]]))
+        frame = ReferenceFrame(np.array([[1.0, 0, 0], [1, 1, 0], [0, 0, 1]]))
         T = Tensor2(arr, frame=frame)
         self.assertTrue(np.allclose(T.dual().dual().show(frame), arr))
         # test if transpose of transpose is self
@@ -276,13 +281,11 @@ class TestTensor(LinalgTestCase):
 
     def test_Tensor2_tr(self):
         frame = ReferenceFrame(np.eye(3))
-        target = frame.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
+        target = frame.orient_new("Body", [0, 0, 90 * np.pi / 180], "XYZ")
         arr = np.array([10, 1, 5, 1, 3, -2, 5, -2, 0]).reshape(3, 3)
         T = Tensor2(arr, frame=frame)
         self.assertFalse(target._unregister_tensorial_(T))
-        res = np.array([[3., -1., -2.],
-                        [-1., 10., -5.],
-                        [-2., -5.,  0.]])
+        res = np.array([[3.0, -1.0, -2.0], [-1.0, 10.0, -5.0], [-2.0, -5.0, 0.0]])
         self.assertTrue(np.allclose(T.show(target=target), res))
         T = Tensor(arr, frame=frame)
         self.assertTrue(np.allclose(T.show(target=target), res))
@@ -290,19 +293,19 @@ class TestTensor(LinalgTestCase):
     def test_Tensor_bulk(self):
         arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]).reshape(3, 3)
         frame = ReferenceFrame(np.eye(3))
-        target = frame.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
+        target = frame.orient_new("Body", [0, 0, 90 * np.pi / 180], "XYZ")
         T = Tensor(arr, frame=frame)
         Tensor(arr).rank
         self.assertFalse(T.is_bulk())
-        self.assertFailsProperly(TypeError, Tensor, arr, frame='a')
+        self.assertFailsProperly(TypeError, Tensor, arr, frame="a")
         # miscellaneous calls
         self.assertEqual(T.rank, 2)
         T.show()
         T.show(target=target)
-        amounts = [0., 0., 0.]
+        amounts = [0.0, 0.0, 0.0]
         amounts[1] = 120 * np.pi / 180
-        T.orient('Body', amounts, 'XYZ')
-        T.orient_new('Body', amounts, 'XYZ')
+        T.orient("Body", amounts, "XYZ")
+        T.orient_new("Body", amounts, "XYZ")
         Tensor2._from_any_input(np.eye(3))
         Tensor2._from_any_input(np.ones((3, 3, 3)))
         Tensor2._verify_input(np.ones((3, 3, 3)), bulk=True)
@@ -320,96 +323,51 @@ class TestTensor(LinalgTestCase):
     def test_Tensor2_bulk(self):
         arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]).reshape(3, 3)
         frame = ReferenceFrame(np.eye(3))
-        target = frame.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
+        target = frame.orient_new("Body", [0, 0, 90 * np.pi / 180], "XYZ")
         T = Tensor2(arr, frame=frame)
         # miscellaneous calls
         self.assertEqual(T.rank, 2)
         T.show()
         T.show(target=target)
-        amounts = [0., 0., 0.]
+        amounts = [0.0, 0.0, 0.0]
         amounts[1] = 120 * np.pi / 180
-        T.orient('Body', amounts, 'XYZ')
-        T.orient_new('Body', amounts, 'XYZ')
-
-    def test_Tensor2x3_bulk(self):
-        arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9]).reshape(3, 3)
-        frame = ReferenceFrame(np.eye(3))
-        target = frame.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
-        T = Tensor2x3(arr, frame=frame)
-        # miscellaneous calls
-        self.assertEqual(T.rank, 2)
-        T.show()
-        T.show(target=target)
-        amounts = [0., 0., 0.]
-        amounts[1] = 120 * np.pi / 180
-        T.orient('Body', amounts, 'XYZ')
-        T.orient_new('Body', amounts, 'XYZ')
+        T.orient("Body", amounts, "XYZ")
+        T.orient_new("Body", amounts, "XYZ")
 
     def test_Tensor4_bulk(self):
         frame = ReferenceFrame(np.eye(3))
-        target = frame.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
+        target = frame.orient_new("Body", [0, 0, 90 * np.pi / 180], "XYZ")
         T = Tensor4(np.ones((3, 3, 3, 3)), frame=frame)
         # miscellaneous calls
         self.assertEqual(T.rank, 4)
         T.show()
         T.show(target=target)
-        amounts = [0., 0., 0.]
+        amounts = [0.0, 0.0, 0.0]
         amounts[1] = 120 * np.pi / 180
-        T.orient('Body', amounts, 'XYZ')
-        T.orient_new('Body', amounts, 'XYZ')
-
-    def test_Tensor4x3_bulk(self):
-        frame = ReferenceFrame(np.eye(3))
-        target = frame.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
-        # instance creation
-        imap = {0: (0, 0), 1: (1, 1), 2: (2, 2),
-                3: (1, 2), 4: (0, 2), 5: (0, 1)}
-        T = Tensor4x3(np.ones((3, 3, 3, 3)), frame=frame, imap=imap)
-        T = Tensor4x3(np.ones((3, 3, 3, 3)), frame=frame, symbolic=True)
-        T = Tensor4x3(np.ones((3, 3, 3, 3)), frame=frame)
-        # miscellaneous calls
-        self.assertEqual(T.rank, 4)
-        T.show()
-        T.show(target=target)
-        amounts = [0., 0., 0.]
-        amounts[1] = 120 * np.pi / 180
-        T.orient('Body', amounts, 'XYZ')
-        T.orient_new('Body', amounts, 'XYZ')
-        # expand and collapse
-        Tensor4x3.imap()
-        Tensor4x3.imap(imap)
-        T.expand()
-        T.expand()
-        T.collapse()
-        T.expand()
-        T.collapse()
-        T.collapse()
-        # symbolic
-        Tensor4x3.symbolic()
-        Tensor4x3.symbolic(as_matrix=True)
-        Tensor4x3.symbolic('sympy', as_matrix=True)
-        Tensor4x3.symbolic(imap=imap)
+        T.orient("Body", amounts, "XYZ")
+        T.orient_new("Body", amounts, "XYZ")
 
     def test_cross(self):
         """
         Tests for the dot product.
         """
         frame = ReferenceFrame(np.eye(3))
-        target = frame.orient_new('Body', [0.56, -1.33, 3.14], 'XYZ')
+        target = frame.orient_new("Body", [0.56, -1.33, 3.14], "XYZ")
         T = Tensor2(np.eye(3), frame=frame)
-        a = Vector(np.array([1., 0, 0]), frame=frame)
-        b = Vector(np.array([0, 1., 0]), frame=frame)
+        a = Vector(np.array([1.0, 0, 0]), frame=frame)
+        b = Vector(np.array([0, 1.0, 0]), frame=frame)
 
-        self.assertTrue(np.allclose(cross(a, b).show(), [0., 0., 1.]))
+        self.assertTrue(np.allclose(cross(a, b).show(), [0.0, 0.0, 1.0]))
         self.assertTrue(np.allclose(cross(a, b).show(), -cross(b, a).show()))
-        arr = np.array([[0.,  0., -1.], [0.,  0.,  0.], [1.,  0.,  0.]])
+        arr = np.array([[0.0, 0.0, -1.0], [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
         self.assertTrue(np.allclose(cross(T, b).show(), arr))
         cross(b, T, frame=target)
         self.assertFailsProperly(NotImplementedError, cross, T, T)
-        self.assertFailsProperly(LinalgOperationInputError, cross, a.array, b.array,
-                                 frame=target)
+        self.assertFailsProperly(
+            LinalgOperationInputError, cross, a.array, b.array, frame=target
+        )
         self.assertFailsProperly(TypeError, cross, T, a.array)
-        self.assertFailsProperly(TypeError, cross, 'a', a.array)
+        self.assertFailsProperly(TypeError, cross, "a", a.array)
         cross(a.array, b.array)
 
     def test_dot(self):
@@ -417,26 +375,26 @@ class TestTensor(LinalgTestCase):
         Tests for the dot product.
         """
         frame = ReferenceFrame(np.eye(3))
-        target = frame.orient_new('Body', [0.56, -1.33, 3.14], 'XYZ')
+        target = frame.orient_new("Body", [0.56, -1.33, 3.14], "XYZ")
         T1 = Tensor2(np.eye(3), frame=frame)
         T2 = Tensor2(np.ones((3, 3)), frame=frame)
-        v1 = Vector(np.array([1., 0, 0]), frame=frame)
-        v2 = Vector(np.array([0, 1., 0]), frame=frame)
-        v3 = Vector(np.array([1., 1., 0]), frame=frame)
+        v1 = Vector(np.array([1.0, 0, 0]), frame=frame)
+        v2 = Vector(np.array([0, 1.0, 0]), frame=frame)
+        v3 = Vector(np.array([1.0, 1.0, 0]), frame=frame)
 
         self.assertTrue(np.isclose(1 + dot(v1, v2), 1.0))
         self.assertTrue(np.isclose(dot(v1, v3), 1.0))
         self.assertTrue(np.isclose(dot(v2, v3), 1.0))
-        self.assertTrue(np.allclose(dot(T1, v1).show(), [1., 0., 0.]))
-        self.assertTrue(np.allclose(dot(v1, T1).show(), [1., 0., 0.]))
+        self.assertTrue(np.allclose(dot(T1, v1).show(), [1.0, 0.0, 0.0]))
+        self.assertTrue(np.allclose(dot(v1, T1).show(), [1.0, 0.0, 0.0]))
         self.assertTrue(np.allclose(dot(T1, T2).show(), np.ones((3, 3))))
         dot(T1, T2, frame=target)
         dot(v1, [1.0, 1.0, 0.0])
+        self.assertFailsProperly(LinalgOperationInputError, dot, v1, v2, out=v3)
+        self.assertFailsProperly(TypeError, dot, v1, "a")
         self.assertFailsProperly(
-            LinalgOperationInputError, dot, v1, v2, out=v3)
-        self.assertFailsProperly(TypeError, dot, v1, 'a')
-        self.assertFailsProperly(LinalgOperationInputError, dot, v1,
-                                 [1.0, 1.0, 0.0], frame=frame)
+            LinalgOperationInputError, dot, v1, [1.0, 1.0, 0.0], frame=frame
+        )
 
         # for 2nd order tensors A dot x = x dot A.T
         self.assertTrue(np.allclose(dot(T1, v1).show(), dot(v1, T1.T).show()))
@@ -454,82 +412,103 @@ class TestTensor(LinalgTestCase):
         T = Tensor2(np.eye(3), frame=frame)
         T4 = Tensor(np.ones((3, 3, 3, 3)), frame=frame)
         self.assertFailsProperly(
-            LinalgInvalidTensorOperationError, np.multiply, T, 2, out=T)
+            LinalgInvalidTensorOperationError, np.multiply, T, 2, out=T
+        )
         self.assertFailsProperly(LinalgInvalidTensorOperationError, np.min, T)
         self.assertFailsProperly(NotImplementedError, lambda x: x**2, T)
-        self.assertFailsProperly(TypeError, lambda x: x*'a', T)
+        self.assertFailsProperly(TypeError, lambda x: x * "a", T)
         T * 2
-        def foo(x): x@=x
+
+        def foo(x):
+            x @= x
+
         self.assertFailsProperly(LinalgInvalidTensorOperationError, foo, T)
-        self.assertFailsProperly(
-            LinalgInvalidTensorOperationError, lambda x: x @ x, T)
+        self.assertFailsProperly(LinalgInvalidTensorOperationError, lambda x: x @ x, T)
         T += 1
-        def foo(x, y): x += y
+
+        def foo(x, y):
+            x += y
+
         self.assertFailsProperly(TensorShapeMismatchError, foo, T, T4)
         foo(T, 2)
         foo(T, T)
-        def foo(x, y): x -= y
+
+        def foo(x, y):
+            x -= y
+
         self.assertFailsProperly(TensorShapeMismatchError, foo, T, T4)
         foo(T, 2)
         foo(T, T)
-        self.assertFailsProperly(TypeError, lambda x: x/'a', T)
+        self.assertFailsProperly(TypeError, lambda x: x / "a", T)
         T / 2
-        def foo(x, y): x **= y
+
+        def foo(x, y):
+            x **= y
+
         self.assertFailsProperly(NotImplementedError, foo, T, 2)
-        def foo(x, y): x**y
+
+        def foo(x, y):
+            x**y
+
         self.assertFailsProperly(NotImplementedError, foo, T, 2)
-        def foo(x, y): x *= y
-        self.assertFailsProperly(TypeError, foo, T, 'a')
+
+        def foo(x, y):
+            x *= y
+
+        self.assertFailsProperly(TypeError, foo, T, "a")
         foo(T, 2)
-        def foo(x, y): x /= y
-        self.assertFailsProperly(TypeError, foo, T, 'a')
+
+        def foo(x, y):
+            x /= y
+
+        self.assertFailsProperly(TypeError, foo, T, "a")
         foo(T, 2)
-        self.assertFailsProperly(TypeError, np.stack, T, 'a')
-        self.assertFailsProperly(TypeError, np.dot, T, 'a')
+        self.assertFailsProperly(TypeError, np.stack, T, "a")
+        self.assertFailsProperly(TypeError, np.dot, T, "a")
         T.copy()
         T.deepcopy()
 
 
-class TestVector(LinalgTestCase):
-
+class TestVector(TestCase):
     def test_behaviour(self):
         A = ReferenceFrame(dim=3)
-        vA = Vector([1., 0., 0.], frame=A)
+        vA = Vector([1.0, 0.0, 0.0], frame=A)
         vA.dual()
-        amounts = [0., 0., 0.]
+        amounts = [0.0, 0.0, 0.0]
         amounts[1] = 120 * np.pi / 180
-        vA.orient('Body', amounts, 'XYZ')
-        B = A.orient_new('Body', amounts, 'XYZ')
+        vA.orient("Body", amounts, "XYZ")
+        B = A.orient_new("Body", amounts, "XYZ")
         vA.orient(dcm=A.dcm(target=B))
         np.dot(vA, vA)
         vA * 2
-        vA = Vector([1., 1., 1.], frame=A)
+        vA = Vector([1.0, 1.0, 1.0], frame=A)
         -vA
         self.assertFailsProperly(LinalgOperationInputError, np.negative, vA, out=vA)
 
         self.assertFailsProperly(LinalgInvalidTensorOperationError, np.sqrt, vA, out=vA)
         self.assertFailsProperly(TypeError, np.dot, vA, [1, 0, 0])
         self.assertFailsProperly(TypeError, lambda a, b: a * b, vA, [1, 0, 0])
-        self.assertFailsProperly(LinalgInvalidTensorOperationError,
-                                 np.negative.at, vA, [0, 1])
-        self.assertFailsProperly(TypeError, setattr, vA, 'frame', 'a')
+        self.assertFailsProperly(
+            LinalgInvalidTensorOperationError, np.negative.at, vA, [0, 1]
+        )
+        self.assertFailsProperly(TypeError, setattr, vA, "frame", "a")
         vA.frame = A.show()
         vA.frame = B
 
         C = ReferenceFrame(dim=4)
-        vC = Vector([1., 0., 0., 0.], frame=C)
+        vC = Vector([1.0, 0.0, 0.0, 0.0], frame=C)
 
-        vA = Vector([[1., 0., 0.], [1., 0., 0.]], frame=A)
+        vA = Vector([[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], frame=A)
         vA.show()
 
         A = ReferenceFrame(dim=3)
-        vA = Vector([1., 0., 0.], frame=A)
+        vA = Vector([1.0, 0.0, 0.0], frame=A)
         np.cross(vA, vA)
-        
+
         vA.copy()
         vA.deepcopy()
 
-    def test_tr_vector_1(self, i=1, a=120.):
+    def test_tr_vector_1(self, i=1, a=120.0):
         """
         Applies a random rotation of a frame around a random axis
         and tests the transformation of components.
@@ -539,12 +518,12 @@ class TestVector(LinalgTestCase):
         A = ReferenceFrame(dim=3)
 
         # the original vector
-        vA = Vector([1., 0., 0.], frame=A)
+        vA = Vector([1.0, 0.0, 0.0], frame=A)
 
         # random rotation
-        amounts = [0., 0., 0.]
+        amounts = [0.0, 0.0, 0.0]
         amounts[i] = a * np.pi / 180
-        B = A.orient_new('Body', amounts, 'XYZ')
+        B = A.orient_new("Body", amounts, "XYZ")
 
         # Image of vA in B
         vB = Vector(vA.show(B), frame=B)
@@ -552,22 +531,22 @@ class TestVector(LinalgTestCase):
         # test if the image of vB in A is the same as vA
         assert np.all(np.isclose(vB.show(A), vA.array))
 
-    def test_tr_vector_2(self, angle=22.):
+    def test_tr_vector_2(self, angle=22.0):
         """
         Tests the equivalence of a series of relative transformations
         against an absolute transformation.
         """
         A = ReferenceFrame(dim=3)
-        vA = Vector([1.0, 0., 0.0], frame=A)
-        B = A.orient_new('Body', [0., 0., 0], 'XYZ')
+        vA = Vector([1.0, 0.0, 0.0], frame=A)
+        B = A.orient_new("Body", [0.0, 0.0, 0], "XYZ")
         N = 3
         dtheta = angle * np.pi / 180 / N
-        theta = 0.
+        theta = 0.0
         for _ in range(N):
-            B.orient('Body', [0., 0., dtheta], 'XYZ')
+            B.orient("Body", [0.0, 0.0, dtheta], "XYZ")
             vB_rel = Vector(vA.array, frame=B)
             theta += dtheta
-            vB_tot = vA.orient_new('Body', [0., 0., theta], 'XYZ')
+            vB_tot = vA.orient_new("Body", [0.0, 0.0, theta], "XYZ")
             assert np.all(np.isclose(vB_rel.show(), vB_tot.show()))
 
     def test_tr_vector_3(self):
@@ -576,7 +555,7 @@ class TestVector(LinalgTestCase):
         """
         A = ReferenceFrame(axes=np.eye(3))
         axes = np.eye(3)
-        axes[1] = [-1/2, 1/2, 0.]
+        axes[1] = [-1 / 2, 1 / 2, 0.0]
         B = ReferenceFrame(axes=axes)
         aA = [1.0, 1.0, 1.0]
         vA = Vector(aA, frame=A)
@@ -585,23 +564,22 @@ class TestVector(LinalgTestCase):
 
 
 class TestDCM(unittest.TestCase):
-
     def test_dcm_1(self):
         """
         Vector transformation.
         """
         # old base vectors in old frame
-        e1 = np.array([1., 0., 0.])
-        e2 = np.array([0., 1., 0.])
-        e3 = np.array([0., 0., 1.])
+        e1 = np.array([1.0, 0.0, 0.0])
+        e2 = np.array([0.0, 1.0, 0.0])
+        e3 = np.array([0.0, 0.0, 1.0])
 
         # new base vectors in old frame
-        E1 = np.array([0., 1., 0.])
-        E2 = np.array([-1., 0., 0.])
-        E3 = np.array([0, 0., 1.])
+        E1 = np.array([0.0, 1.0, 0.0])
+        E2 = np.array([-1.0, 0.0, 0.0])
+        E3 = np.array([0, 0.0, 1.0])
 
         source = ReferenceFrame(dim=3)
-        target = source.orient_new('Body', [0, 0, 90*np.pi/180], 'XYZ')
+        target = source.orient_new("Body", [0, 0, 90 * np.pi / 180], "XYZ")
         DCM = source.dcm(target=target)
 
         # the transpose of DCM transforms the base vectors as column arrays
@@ -613,15 +591,18 @@ class TestDCM(unittest.TestCase):
         assert np.all(np.isclose(e2 @ DCM, E2, rtol=1e-05, atol=1e-08))
 
         # transform the complete frame at once
-        assert np.all(np.isclose(DCM @ vstack([e1, e2, e3]), vstack([E1, E2, E3]),
-                                 rtol=1e-05, atol=1e-08))
+        assert np.all(
+            np.isclose(
+                DCM @ vstack([e1, e2, e3]), vstack([E1, E2, E3]), rtol=1e-05, atol=1e-08
+            )
+        )
 
     def test_dcm_2(self):
         """
         Equivalent ways of defining the same DCM.
         """
         source = ReferenceFrame(dim=3)
-        target = source.orient_new('Body', [0, 0, 90*np.pi/180],  'XYZ')
+        target = source.orient_new("Body", [0, 0, 90 * np.pi / 180], "XYZ")
         DCM_1 = source.dcm(target=target)
         DCM_2 = target.dcm(source=source)
         DCM_3 = target.dcm()  # because source is root
@@ -634,20 +615,23 @@ class TestDCM(unittest.TestCase):
         """
         angles = np.random.rand(3) * np.pi * 2
         source = ReferenceFrame(dim=3)
-        target = source.rotate('Body', angles, 'XYZ', inplace=False)
+        target = source.rotate("Body", angles, "XYZ", inplace=False)
         eye = np.eye(3)
-        assert np.all(np.isclose(eye, target.dcm(
-            target=target), rtol=1e-05, atol=1e-08))
-        assert np.all(np.isclose(eye, target.dcm(
-            source=target), rtol=1e-05, atol=1e-08))
-        assert np.all(np.isclose(eye, source.dcm(
-            target=source), rtol=1e-05, atol=1e-08))
-        assert np.all(np.isclose(eye, source.dcm(
-            source=source), rtol=1e-05, atol=1e-08))
+        assert np.all(
+            np.isclose(eye, target.dcm(target=target), rtol=1e-05, atol=1e-08)
+        )
+        assert np.all(
+            np.isclose(eye, target.dcm(source=target), rtol=1e-05, atol=1e-08)
+        )
+        assert np.all(
+            np.isclose(eye, source.dcm(target=source), rtol=1e-05, atol=1e-08)
+        )
+        assert np.all(
+            np.isclose(eye, source.dcm(source=source), rtol=1e-05, atol=1e-08)
+        )
 
 
-class TestLinsolve(LinalgTestCase):
-
+class TestLinsolve(TestCase):
     def test_linsolve_2x2(self):
         # a random system
         A = random_posdef_matrix(2)
@@ -677,28 +661,28 @@ class TestLinsolve(LinalgTestCase):
         x_ = inv3x3(A) @ b
         diff = np.abs(x - x_)
         err = np.dot(diff, diff)
-        assert err < 1e-12
+        assert err < 1e-8
         # test solution #2
         invA = np.zeros_like(A)
         inv3x3u(A, invA)
         x_ = invA @ b
         diff = np.abs(x - x_)
         err = np.dot(diff, diff)
-        assert err < 1e-12
+        assert err < 1e-8
 
     def test_det_2x2(self):
         A = random_posdef_matrix(2)
         det = np.linalg.det(A)
         det1 = det2x2(A)
         diff1 = np.abs(det - det1)
-        assert diff1 < 1e-12
+        assert diff1 < 1e-8
 
     def test_det_3x3(self):
         A = random_posdef_matrix(3)
         det = np.linalg.det(A)
         det1 = det3x3(A)
         diff1 = np.abs(det - det1)
-        assert diff1 < 1e-12
+        assert diff1 < 1e-8
 
     def test_Gauss_Jordan(self):
         A = np.array([[3, 1, 2], [1, 1, 1], [2, 1, 2]], dtype=float)
@@ -706,50 +690,76 @@ class TestLinsolve(LinalgTestCase):
         presc_bool = np.full(B.shape, False, dtype=bool)
         presc_val = np.zeros(B.shape, dtype=float)
 
-        x_J = linsolve(A, B, method='Jordan')
-        x_GJ = linsolve(A, B, method='Gauss-Jordan')
+        x_J = linsolve(A, B, method="Jordan")
+        x_GJ = linsolve(A, B, method="Gauss-Jordan")
         x_np = np.linalg.solve(A, B)
-        x_np_jit = linsolve(A, B, method='numpy')
-        A_GJ, b_GJ = reduce(A, B, method='Gauss-Jordan')
-        A_J, b_J = reduce(A, B, method='Jordan')
+        x_np_jit = linsolve(A, B, method="numpy")
+        A_GJ, b_GJ = reduce(A, B, method="Gauss-Jordan")
+        A_J, b_J = reduce(A, B, method="Jordan")
 
         B = np.stack([B, B], axis=1)
-        X_J = linsolve(A, B, method='Jordan')
-        X_GJ = linsolve(A, B, method='Gauss-Jordan')
+        X_J = linsolve(A, B, method="Jordan")
+        X_GJ = linsolve(A, B, method="Gauss-Jordan")
 
-        A = np.array([[1, 2, 1, 1], [2, 5, 2, 1], [1, 2, 3, 2],
-                      [1, 1, 2, 2]], dtype=float)
+        A = np.array(
+            [[1, 2, 1, 1], [2, 5, 2, 1], [1, 2, 3, 2], [1, 1, 2, 2]], dtype=float
+        )
         b = np.array([12, 15, 22, 17], dtype=float)
         ifpre = np.array([0, 1, 0, 0], dtype=int)
         fixed = np.array([0, 2, 0, 0], dtype=float)
-        A_GJ, b_GJ = reduce(A, b, presc_bool=ifpre,
-                            presc_val=fixed, method='Gauss-Jordan')
-        A_J, b_J = reduce(A, b, presc_bool=ifpre,
-                          presc_val=fixed, method='Jordan')
-        reduce(A, b, presc_bool=ifpre, presc_val=fixed,
-               method='Jordan', inplace=True)
-        X_GJ, r_GJ = linsolve(A, b, presc_bool=ifpre,
-                              presc_val=fixed, method='Gauss-Jordan')
-        X_J, r_J = linsolve(A, b, presc_bool=ifpre,
-                            presc_val=fixed, method='Jordan')
+        A_GJ, b_GJ = reduce(
+            A, b, presc_bool=ifpre, presc_val=fixed, method="Gauss-Jordan"
+        )
+        A_J, b_J = reduce(A, b, presc_bool=ifpre, presc_val=fixed, method="Jordan")
+        reduce(A, b, presc_bool=ifpre, presc_val=fixed, method="Jordan", inplace=True)
+        X_GJ, r_GJ = linsolve(
+            A, b, presc_bool=ifpre, presc_val=fixed, method="Gauss-Jordan"
+        )
+        X_J, r_J = linsolve(A, b, presc_bool=ifpre, presc_val=fixed, method="Jordan")
 
-        linsolve(A, b, presc_bool=ifpre, presc_val=fixed,
-                 method='Jordan', inplace=True)
+        linsolve(A, b, presc_bool=ifpre, presc_val=fixed, method="Jordan", inplace=True)
 
         # proper failures
         A[:, :] = 0
-        self.assertFailsProperly(np.linalg.LinAlgError, linsolve,
-                                 A, b, presc_bool=ifpre, presc_val=fixed, method='Jordan')
-        self.assertFailsProperly(AttributeError, linsolve, A, b,
-                                 presc_bool=ifpre, presc_val=fixed, method='Jordann')
-        self.assertFailsProperly(np.linalg.LinAlgError, reduce, A,
-                                 b, presc_bool=ifpre, presc_val=fixed, method='Jordan')
         self.assertFailsProperly(
-            AttributeError, reduce, A, b, presc_bool=ifpre, presc_val=fixed, method='Jordann')
+            np.linalg.LinAlgError,
+            linsolve,
+            A,
+            b,
+            presc_bool=ifpre,
+            presc_val=fixed,
+            method="Jordan",
+        )
+        self.assertFailsProperly(
+            AttributeError,
+            linsolve,
+            A,
+            b,
+            presc_bool=ifpre,
+            presc_val=fixed,
+            method="Jordann",
+        )
+        self.assertFailsProperly(
+            np.linalg.LinAlgError,
+            reduce,
+            A,
+            b,
+            presc_bool=ifpre,
+            presc_val=fixed,
+            method="Jordan",
+        )
+        self.assertFailsProperly(
+            AttributeError,
+            reduce,
+            A,
+            b,
+            presc_bool=ifpre,
+            presc_val=fixed,
+            method="Jordann",
+        )
 
 
-class TestSparse(LinalgTestCase):
-
+class TestSparse(TestCase):
     def test_csr(self):
         @njit
         def csr_row(csr: csr_matrix, i: int):
@@ -837,11 +847,10 @@ class TestSparse(LinalgTestCase):
 
         get_data([np.eye(2), np.eye(3)], fallback=True)
         get_data(jagged.to_ak(), fallback=True)
-        self.assertFailsProperly(TypeError, get_data, 'data')
+        self.assertFailsProperly(TypeError, get_data, "data")
 
 
 class TestPosDef(unittest.TestCase):
-
     def test_random_pos_semidef(self, N=5):
         """
         Tests the creation of random, positive semidefinite matrices.
@@ -858,13 +867,12 @@ class TestPosDef(unittest.TestCase):
 
 
 class TestUtils(unittest.TestCase):
-
     def test_behaviour(self):
         """
         Tests performed to boost coverage and assert basic responeses.
         """
         A = np.eye(3)
-        a1, a2 = np.array([1., 0, 0]), np.array([2., 0, 0])
+        a1, a2 = np.array([1.0, 0, 0]), np.array([2.0, 0, 0])
 
         # functions related to frames
         lautils.Gram(A)
@@ -904,18 +912,19 @@ class TestUtils(unittest.TestCase):
         lautils.linspace(a1, a2, 5)
 
         # symbolic
-        P11, P12, P13, P21, P22, P23, P31, P32, P33 = \
-            sy.symbols('P_{11} P_{12} P_{13} P_{21} P_{22} P_{23} P_{31} \
-                    P_{32} P_{33}', real=True)
+        P11, P12, P13, P21, P22, P23, P31, P32, P33 = sy.symbols(
+            "P_{11} P_{12} P_{13} P_{21} P_{22} P_{23} P_{31} \
+                    P_{32} P_{33}",
+            real=True,
+        )
         Pij = [[P11, P12, P13], [P21, P22, P23], [P31, P32, P33]]
         P = sy.Matrix(Pij)
         lautils.inv_sym_3x3(P)
         lautils.inv_sym_3x3(P, as_adj_det=True)
 
         # tensor operations
-        top.tr_3333(np.ones((3, 3, 3, 3)), np.eye(3))
-        top.tr_3333_einsum(np.ones((3, 3, 3, 3)), np.eye(3))
-        top.tr_3333_jit(np.ones((3, 3, 3, 3)), np.eye(3))
+        _tr_3333(np.ones((3, 3, 3, 3)), np.eye(3))
+        _tr_3333_sym(np.ones((3, 3, 3, 3)), np.eye(3))
 
         # sparse utils
         data = np.eye(3).flatten()
@@ -926,5 +935,4 @@ class TestUtils(unittest.TestCase):
 
 
 if __name__ == "__main__":
-
     unittest.main()

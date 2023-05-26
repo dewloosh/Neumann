@@ -4,6 +4,7 @@ from numpy.linalg import LinAlgError
 import sympy as sy
 from sympy.utilities.iterables import multiset_permutations
 from copy import copy, deepcopy
+from contextlib import suppress
 
 try:
     from collections.abc import Iterable
@@ -504,38 +505,39 @@ class LinearProgrammingProblem:
 
         stop = False
         try:
-            if order is not None:
-                if isinstance(order, Iterable):
-                    permutations = iter([order])
-            else:
-                order = [i for i in range(n)]
-                permutations = multiset_permutations(order)
-            while not stop:
-                order = next(permutations)
-                A_ = A[:, order]
-                B_ = A_[:, :m]
-                try:
-                    B_inv = np.linalg.inv(B_)
-                    xB = np.matmul(B_inv, b)
-                    stop = all(xB >= 0)
-                except LinAlgError:
-                    """
-                    If there is no error, it means that calculation
-                    of xB was succesful, which is only possible if the
-                    current permutation defines a positive definite submatrix.
-                    Note that this is cheaper than checking the eigenvalues,
-                    since it only requires the eigenvalues to be all positive,
-                    and does not involve calculating their actual values.
-                    """
-                    pass
-        except StopIteration:
-            """
-            There is no permutation of columns that would produce a regular
-            mxm submatrix
-                -> there is no feasible basic solution
-                    -> there is no feasible solution
-            """
-            pass
+            with suppress(StopIteration):
+                """
+                StopIteration:
+
+                There is no permutation of columns that would produce a regular
+                mxm submatrix
+                    -> there is no feasible basic solution
+                        -> there is no feasible solution
+                """
+                if order is not None:
+                    if isinstance(order, Iterable):
+                        permutations = iter([order])
+                else:
+                    order = [i for i in range(n)]
+                    permutations = multiset_permutations(order)
+                while not stop:
+                    order = next(permutations)
+                    A_ = A[:, order]
+                    B_ = A_[:, :m]
+                    with suppress(LinAlgError):
+                        B_inv = np.linalg.inv(B_)
+                        xB = np.matmul(B_inv, b)
+                        stop = all(xB >= 0)
+                        """
+                        LinAlgError:
+                        
+                        If there is no error, it means that calculation
+                        of xB was succesful, which is only possible if the
+                        current permutation defines a positive definite submatrix.
+                        Note that this is cheaper than checking the eigenvalues,
+                        since it only requires the eigenvalues to be all positive,
+                        and does not involve calculating their actual values.
+                        """
         finally:
             if stop:
                 N_ = A_[:, m:]

@@ -2,6 +2,8 @@ from abc import abstractmethod
 import weakref
 from typing import Tuple, Union
 import numbers
+from functools import partial
+from copy import copy, deepcopy
 
 import numpy as np
 from numpy import array_repr, array_str, ndarray
@@ -143,19 +145,19 @@ class ArrayWrapper(NDArrayOperatorsMixin, Wrapper):
         Returns the minimum and maximum values of the array.
         """
         return minmax(self._array)
-    
-    def chop(self, tol:float=1e-12) -> "ArrayWrapper":
+
+    def chop(self, tol: float = 1e-12) -> "ArrayWrapper":
         """
         Sets very small values (in an absolute sense) to zero.
 
         .. versionadded:: 1.0.5
-        
+
         Parameters
         ----------
         tol: float, Optional
             The values whose absolute value is less than this limit are
             set to zero. Default is 1e-12.
-        
+
         Returns
         -------
         ~`neumann.linalg.meta.ArrayWrapper`
@@ -252,6 +254,17 @@ class FrameLike(ArrayWrapper):
     def dual(self) -> "FrameLike":
         ...
 
+    @abstractmethod
+    def transpose(self, inplace: bool = False) -> "FrameLike":
+        ...
+
+    @property
+    def T(self) -> "FrameLike":
+        """
+        Returns the transpose.
+        """
+        return self.transpose(inplace=False)
+
     def _register_tensorial_(self, v: "TensorLike"):
         """
         Registers tensorial objects by appending a weak reference to the set
@@ -307,16 +320,16 @@ class TensorLike(ArrayWrapper):
 
             arr = args[0]
             if bulk:
-                frame = self._frame_cls_(dim=arr.shape[1])
+                frame = self.__class__._frame_cls_(dim=arr.shape[1])
             else:
-                frame = self._frame_cls_(dim=arr.shape[0])
+                frame = self.__class__._frame_cls_(dim=arr.shape[0])
             cls_params["frame"] = frame
 
         kwargs["cls_params"] = cls_params
         super().__init__(*args, **kwargs)
 
         if self._array._frame is None:
-            self._array._frame = self._frame_cls_(dim=self._array.shape)
+            self._array._frame = self.__class__._frame_cls_(dim=self._array.shape)
 
         self.frame._register_tensorial_(self)
 
@@ -329,6 +342,29 @@ class TensorLike(ArrayWrapper):
                 self._rank = rank
         else:
             self._rank = None
+
+    def __deepcopy__(self, memo):
+        return self.__copy__(memo)
+
+    def __copy__(self, memo=None):
+        cls = type(self)
+        copy_function = copy if (memo is None) else partial(deepcopy, memo=memo)
+        is_deep = memo is not None
+        frame_cls = cls._frame_cls_
+
+        f = self.frame
+        if is_deep:
+            ax = deepcopy(f.axes)
+            memo[id(f.axes)] = ax
+            frame = frame_cls(ax)
+        else:
+            frame = f
+
+        arr = copy_function(self.array)
+        if is_deep:
+            memo[id(self.array)] = arr
+
+        return cls(arr, frame=frame)
 
     @classmethod
     def _from_any_input(cls, *args, **kwargs) -> "TensorLike":
@@ -403,9 +439,37 @@ class TensorLike(ArrayWrapper):
         """
         Returns the transpose.
         """
-        f = self.frame
-        frame = f.__class__(np.copy(f.axes))
-        return self.__class__(self.array.T, frame=frame)
+        return self.transpose(inplace=False)
+
+    def transpose(self, inplace: bool = False) -> "TensorLike":
+        """
+        Either transposes the array of the tensor, or returns a copy
+        of it with the components transposed.
+
+        Parameters
+        ----------
+        inplace: bool, Optional
+            If ``True``, the operation is performed on the instance the call
+            is made upon. Default is False.
+
+        Note
+        ----
+        The rule of transposition differs from the one implemented in NumPy, as
+        only tensorial axes are being transposed.
+        """
+        r = self.rank
+        shape = self.array.shape
+        indices = tuple(range(len(shape)))
+        data_indices = indices[:-r]
+        tensor_indices = indices[len(shape) - r :]
+        indices = data_indices + tensor_indices[::-1]
+        if inplace:
+            self._array = np.transpose(self.array, indices)
+            return self
+        else:
+            f = self.frame
+            frame = f.__class__(np.copy(f.axes))
+            return self.__class__(np.transpose(self.array, indices), frame=frame)
 
     @abstractmethod
     def show(self) -> Array:

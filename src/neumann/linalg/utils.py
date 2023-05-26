@@ -53,14 +53,12 @@ __all__ = [
     "inv",
     "show_vector",
     "show_frame",
-    "rotation_matrix"
+    "rotation_matrix",
 ]
 
 
 def rotation_matrix(
-    rot_type: str,
-    amounts: Iterable,
-    rot_order: Union[str, int] = ''
+    rot_type: str, amounts: Iterable, rot_order: Union[str, int] = ""
 ) -> ndarray:
     """
     Returns a rotation matrix using the mechanism provided by
@@ -80,7 +78,7 @@ def rotation_matrix(
             frames' unit vectors
         - ``'Quaternion'``: rotations defined by four parameters which
             result in a singularity free direction cosine matrix
-            
+
     amounts: Iterable
         Expressions defining the rotation angles or direction cosine
         matrix. These must match the ``rot_type``. See examples below for
@@ -92,7 +90,7 @@ def rotation_matrix(
         - ``'Space'``: 3-tuple of expressions, symbols, or functions
         - ``'Quaternion'``: 4-tuple of expressions, symbols, or
             functions
-            
+
     rot_order: str or int, Optional
         If applicable, the order of the successive of rotations. The string
         ``'123'`` and integer ``123`` are equivalent, for example. Required
@@ -486,8 +484,8 @@ def _show_frame(dcm: ndarray, arr: ndarray) -> ndarray:
         The new coordinates of the frame with the same shape as `arr`.
     """
     res = np.zeros_like(arr)
-    for i in prange(arr.shape[-1]): 
-        res[i, :] = dcm @ arr[i, :] 
+    for i in prange(arr.shape[-1]):
+        res[i, :] = dcm @ arr[i, :]
     return res
 
 
@@ -511,7 +509,7 @@ def _show_frames(dcm: ndarray, arr: ndarray) -> ndarray:
     """
     res = np.zeros_like(arr)
     for i in prange(arr.shape[0]):
-        for j in prange(arr.shape[-1]): 
+        for j in prange(arr.shape[-1]):
             res[i, j, :] = dcm @ arr[i, j, :]
     return res
 
@@ -535,7 +533,7 @@ def _show_frames_multi(dcm: ndarray, arr: ndarray) -> ndarray:
     """
     res = np.zeros_like(arr)
     for i in prange(arr.shape[0]):
-        for j in prange(arr.shape[-1]): 
+        for j in prange(arr.shape[-1]):
             res[i, j, :] = dcm[i] @ arr[i, j, :]
     return res
 
@@ -545,17 +543,23 @@ def _transpose_multi(dcm: ndarray) -> ndarray:
     N = dcm.shape[0]
     res = np.zeros_like(dcm)
     for i in prange(N):
-        res[i] = dcm[i].T
+        res[i, :, :] = dcm[i].T
     return res
 
 
-def transpose_axes(a: ndarray, axes=None) -> ndarray:
-    if len(a.shape) == 2:
-        return a.T
-    elif len(a.shape) == 3:
-        return _transpose_multi(a)
+def transpose_axes(arr: ndarray) -> ndarray:
+    if len(arr.shape) == 2:
+        return arr.T
+    elif len(arr.shape) == 3:
+        # FIXME this might be unnecessary
+        return _transpose_multi(arr)
     else:
-        return np.transpose(a, axes)
+        shape = arr.shape
+        indices = tuple(range(len(shape)))
+        data_indices = indices[:-2]
+        tensor_indices = indices[len(shape) - 2 :]
+        indices = data_indices + tensor_indices[::-1]
+        return np.transpose(arr, indices)
 
 
 def is_rectangular_frame(axes: ndarray) -> bool:
@@ -640,7 +644,7 @@ def Gram(axes: ndarray) -> ndarray:
     axes: numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
-    return axes @ axes.T
+    return axes @ transpose_axes(axes)
 
 
 def dual_frame(axes: ndarray) -> ndarray:
@@ -949,13 +953,4 @@ def linspace1d(start, stop, N) -> ndarray:
     di = (stop - start) / (N - 1)
     for i in prange(N):
         res[i] = start + i * di
-    return res
-
-
-@njit(nogil=True, parallel=True, cache=__cache)
-def _transform_tensors2_multi(arr: ndarray, Q: ndarray):
-    nE = arr.shape[0]
-    res = np.zeros_like(arr)
-    for iE in prange(nE):
-        res[iE, :, :] = Q[iE] @ arr[iE] @ Q[iE].T
     return res

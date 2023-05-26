@@ -142,7 +142,7 @@ def weighted_least_squares(points, values, *args, deg=1, order=2, w=None, **kwar
                     return np.array([0, 0, 0])
 
         else:
-            raise
+            raise NotImplementedError
     elif deg == 2:
         if dim == 1:
 
@@ -184,9 +184,9 @@ def weighted_least_squares(points, values, *args, deg=1, order=2, w=None, **kwar
                     return np.array([0, 0, 0, 0, 0, 1])
 
         else:
-            raise
+            raise NotImplementedError
     else:
-        raise
+        raise NotImplementedError
 
     # moment matrix
     nData = points.shape[0]
