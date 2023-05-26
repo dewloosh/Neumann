@@ -11,7 +11,7 @@ from sympy.physics.vector import ReferenceFrame as SymPyFrame
 
 from dewloosh.core.tools.alphabet import latinrange
 
-from .meta import TensorLike, ArrayWrapper, FrameLike
+from .meta import TensorLike, ArrayWrapper, FrameLike, ArrayLike
 from .exceptions import LinalgOperationInputError, LinalgMissingInputError
 
 __cache = True
@@ -545,17 +545,23 @@ def _transpose_multi(dcm: ndarray) -> ndarray:
     N = dcm.shape[0]
     res = np.zeros_like(dcm)
     for i in prange(N):
-        res[i] = dcm[i].T
+        res[i, :, :] = dcm[i].T
     return res
 
 
-def transpose_axes(a: ndarray, axes=None) -> ndarray:
-    if len(a.shape) == 2:
-        return a.T
-    elif len(a.shape) == 3:
-        return _transpose_multi(a)
+def transpose_axes(arr: ndarray) -> ndarray:
+    if len(arr.shape) == 2:
+        return arr.T
+    elif len(arr.shape) == 3:
+        # FIXME this might be unnecessary
+        return _transpose_multi(arr)
     else:
-        return np.transpose(a, axes)
+        shape = arr.shape
+        indices = tuple(range(len(shape)))
+        data_indices = indices[:-2]
+        tensor_indices = indices[len(shape)-2:]
+        indices = data_indices + tensor_indices[::-1]
+        return np.transpose(arr, indices)
 
 
 def is_rectangular_frame(axes: ndarray) -> bool:
@@ -640,7 +646,7 @@ def Gram(axes: ndarray) -> ndarray:
     axes: numpy.ndarray
         A matrix where the i-th row is the i-th basis vector.
     """
-    return axes @ axes.T
+    return axes @ transpose_axes(axes)
 
 
 def dual_frame(axes: ndarray) -> ndarray:
@@ -949,13 +955,4 @@ def linspace1d(start, stop, N) -> ndarray:
     di = (stop - start) / (N - 1)
     for i in prange(N):
         res[i] = start + i * di
-    return res
-
-
-@njit(nogil=True, parallel=True, cache=__cache)
-def _transform_tensors2_multi(arr: ndarray, Q: ndarray):
-    nE = arr.shape[0]
-    res = np.zeros_like(arr)
-    for iE in prange(nE):
-        res[iE, :, :] = Q[iE] @ arr[iE] @ Q[iE].T
     return res

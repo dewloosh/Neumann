@@ -280,9 +280,9 @@ def repeat(a: ndarray, N: int = 1) -> ndarray:
 
     Parameters
     ----------
-    a : numpy.ndarray
+    a: numpy.ndarray
         Input array.
-    N : int, Optional
+    N: int, Optional
         Number of repetitions. Default is 1.
 
     Returns
