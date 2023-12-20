@@ -5,3 +5,4 @@ numpy==1.23.5
 scipy>=1.9.3
 awkward>=2.0.8
 sympy>=1.11.1
+fonttools>=4.43.0 # not directly required, pinned by Snyk to avoid a vulnerability
